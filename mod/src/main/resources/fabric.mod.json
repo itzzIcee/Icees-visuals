@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "icees-visuals",
   "version": "${version}",
-  "name": "Icees Visuals",
-  "description": "Sakura-styled visuals client: living skies, wings, halos, capes, knife tricks and an Orbit menu.",
+  "name": "Icee's Sakura Visuals",
+  "description": "Sakura-styled visuals client for Fabric 1.21.1: living skies, wings, halos, capes and Orbit menu (Right Shift).",
   "authors": ["Icees"],
   "contact": {},
   "license": "MIT",
@@ -15,8 +15,11 @@
   "mixins": ["icees-visuals.mixins.json"],
   "depends": {
     "fabricloader": ">=0.16.0",
-    "minecraft": "~1.21.1",
+    "minecraft": "1.21.1",
     "java": ">=21",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "sodium": "*"
   }
 }

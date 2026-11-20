@@ -3,8 +3,7 @@
   "package": "com.icees.visuals.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "WorldRendererMixin",
-    "GameRendererMixin"
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
