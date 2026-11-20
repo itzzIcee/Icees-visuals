@@ -10,8 +10,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Force sky + fog (+ sunrise) colours. Clouds stay vanilla so they don't turn into
- * a stuck grey panoramic wash.
+ * Force sky / fog / sunrise / cloud colours.
+ * Cloud tint is required so looking up at night isn't a greyscale cloud wall
+ * (vanilla multiplies CLOUD_COLOR toward dark grey after dusk).
  */
 @Mixin(EnvironmentAttributeProbe.class)
 public class EnvironmentAttributeProbeMixin {
@@ -34,6 +35,12 @@ public class EnvironmentAttributeProbeMixin {
 		if (attribute == EnvironmentAttributes.SUNRISE_SUNSET_COLOR) {
 			@SuppressWarnings("unchecked")
 			Value v = (Value) (Object) IceesConfig.skyStyle.toSunriseArgb();
+			cir.setReturnValue(v);
+			return;
+		}
+		if (attribute == EnvironmentAttributes.CLOUD_COLOR) {
+			@SuppressWarnings("unchecked")
+			Value v = (Value) (Object) IceesConfig.skyStyle.toCloudArgb();
 			cir.setReturnValue(v);
 		}
 	}

@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "SkyRendererMixin",
+    "CloudRendererMixin",
     "AtmosphericFogMixin",
     "EnvironmentAttributeProbeMixin",
     "ItemInHandRendererMixin",

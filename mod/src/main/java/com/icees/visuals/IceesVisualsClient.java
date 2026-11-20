@@ -2,7 +2,6 @@ package com.icees.visuals;
 
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.cosmetics.CosmeticRenderer;
-import com.icees.visuals.cosmetics.KnifeHudRenderer;
 import com.icees.visuals.cpvp.MotionBlurRenderer;
 import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
@@ -46,15 +45,10 @@ public final class IceesVisualsClient implements ClientModInitializer {
 		);
 		HudElementRegistry.attachElementAfter(
 			VanillaHudElements.MISC_OVERLAYS,
-			Identifier.fromNamespaceAndPath(MOD_ID, "knife_hud"),
-			(graphics, tickCounter) -> KnifeHudRenderer.render(graphics)
-		);
-		HudElementRegistry.attachElementAfter(
-			VanillaHudElements.MISC_OVERLAYS,
 			Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.7 — Right Shift opens Orbit");
+		LOGGER.info("Icee's Sakura Visuals 1.0.9 — Right Shift opens Orbit");
 	}
 }

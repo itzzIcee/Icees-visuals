@@ -2,16 +2,19 @@ package com.icees.visuals.sky;
 
 import net.minecraft.util.ARGB;
 
-/** Punchy, clearly distinct skies (easy to see vs vanilla). */
+/**
+ * Punchy skies. SKY/FOG use RGB (no alpha) — EnvironmentAttributes.SKY_COLOR is RGB_COLOR.
+ * Clouds use ARGB so they stay visible and tinted even at night.
+ */
 public enum SkyStyle {
-	SAKURA("Sakura", "Bright pink blossom sky.", 1.00f, 0.45f, 0.68f),
-	GALAXY("Galaxy", "Deep violet nebula sky.", 0.28f, 0.08f, 0.55f),
-	AETHER("Aether", "Silver-white overcast glow.", 0.78f, 0.82f, 0.90f),
-	NOCTURNE("Nocturne", "Dark lilac night sky.", 0.28f, 0.12f, 0.42f),
-	AMETHYST("Amethyst", "Rich purple crystal sky.", 0.32f, 0.05f, 0.48f),
-	OPALINE("Opaline", "Pearl cyan-lavender sky.", 0.45f, 0.82f, 0.95f),
-	RAIN("Rain", "Heavy steel-blue rain sky.", 0.28f, 0.34f, 0.42f),
-	FIRE("Fire", "Burning orange ember sky.", 0.98f, 0.32f, 0.12f);
+	SAKURA("Sakura", "Bright pink blossom sky.", 1.00f, 0.52f, 0.72f),
+	GALAXY("Galaxy", "Deep violet nebula sky.", 0.42f, 0.18f, 0.72f),
+	AETHER("Aether", "Silver-white overcast glow.", 0.82f, 0.86f, 0.94f),
+	NOCTURNE("Nocturne", "Dark lilac night sky.", 0.38f, 0.22f, 0.55f),
+	AMETHYST("Amethyst", "Rich purple crystal sky.", 0.48f, 0.16f, 0.68f),
+	OPALINE("Opaline", "Pearl cyan-lavender sky.", 0.52f, 0.86f, 0.96f),
+	RAIN("Rain", "Heavy steel-blue rain sky.", 0.38f, 0.48f, 0.58f),
+	FIRE("Fire", "Burning orange ember sky.", 1.00f, 0.42f, 0.18f);
 
 	public final String title;
 	public final String description;
@@ -25,25 +28,41 @@ public enum SkyStyle {
 		this.b = b;
 	}
 
+	/** RGB_COLOR attribute — alpha must stay 0 like vanilla biome skies. */
 	public int toSkyArgb() {
-		return ARGB.colorFromFloat(1.0f, r, g, b);
+		return rgb(r, g, b);
 	}
 
 	public int toSunriseArgb() {
-		return ARGB.colorFromFloat(0.95f, Math.min(1f, r + 0.2f), Math.min(1f, g + 0.1f), Math.min(1f, b + 0.08f));
+		return ARGB.colorFromFloat(0.95f, Math.min(1f, r + 0.22f), Math.min(1f, g + 0.12f), Math.min(1f, b + 0.1f));
 	}
 
 	public int toFogArgb() {
-		// Slightly darker / hazier for fog so the disc still reads
-		return ARGB.colorFromFloat(1.0f, r * 0.85f, g * 0.85f, b * 0.85f);
+		return rgb(r * 0.88f, g * 0.88f, b * 0.88f);
 	}
 
+	/** Soft tinted clouds — readable white core + sky hue (ARGB for CLOUD_COLOR). */
 	public int toCloudArgb() {
-		// Soft tinted clouds matching the sky (keep some white so they stay readable)
-		float cr = Math.min(1f, r * 0.55f + 0.45f);
-		float cg = Math.min(1f, g * 0.55f + 0.45f);
-		float cb = Math.min(1f, b * 0.55f + 0.45f);
-		return ARGB.colorFromFloat(0.92f, cr, cg, cb);
+		float cr = Math.min(1f, r * 0.4f + 0.6f);
+		float cg = Math.min(1f, g * 0.4f + 0.6f);
+		float cb = Math.min(1f, b * 0.4f + 0.6f);
+		return ARGB.colorFromFloat(0.95f, cr, cg, cb);
+	}
+
+	/** Opaque disc colour for renderSkyDisc (shader reads alpha). */
+	public int toSkyDiscArgb() {
+		return ARGB.colorFromFloat(1.0f, r, g, b);
+	}
+
+	private static int rgb(float r, float g, float b) {
+		int ri = MthClamp(r);
+		int gi = MthClamp(g);
+		int bi = MthClamp(b);
+		return (ri << 16) | (gi << 8) | bi;
+	}
+
+	private static int MthClamp(float v) {
+		return Math.max(0, Math.min(255, Math.round(v * 255f)));
 	}
 
 	public SkyStyle next() {
