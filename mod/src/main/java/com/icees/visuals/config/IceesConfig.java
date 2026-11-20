@@ -63,7 +63,7 @@ public final class IceesConfig {
 
 	/* —— Block Overlay —— */
 	public static boolean blockOverlay = true;
-	public static OverlayMaterial overlayMaterial = OverlayMaterial.SAKURA;
+	public static OverlayMaterial overlayMaterial = OverlayMaterial.RAINBOW;
 	public static int overlayBrightness = 3;
 	public static boolean overlayCustomColor = false;
 	public static int overlayHue = 330;
@@ -91,6 +91,18 @@ public final class IceesConfig {
 	public static boolean pvpSpearParticles = true;
 	public static int pvpParticleSize = 3;
 	public static CosmeticTint pvpTint = new CosmeticTint(true, 330, 70, 100);
+
+	/* —— Weapon hit animations / FX —— */
+	public static boolean pvpStunslam = true;
+	public static int pvpStunslamSize = 3;
+	public static boolean pvpMace = true;
+	public static int pvpMaceSize = 3;
+	public static boolean pvpSpear = true;
+	public static int pvpSpearSize = 3;
+	public static boolean pvpSword = true;
+	public static int pvpSwordSize = 3;
+	public static boolean pvpAxe = true;
+	public static int pvpAxeSize = 3;
 
 	/* —— Orbit GUI colours —— */
 	public static boolean guiCustomColor = false;
@@ -131,29 +143,12 @@ public final class IceesConfig {
 	}
 
 	public static float[] overlayColor(float time) {
-		return switch (overlayMaterial) {
-			case RAINBOW -> {
-				float h = (time * 10f + (overlayCustomColor ? overlayHue : 0)) % 360f;
-				if (h < 0) h += 360f;
-				yield hsvToRgb(h, 0.9f, 1f);
-			}
-			case CHROME -> {
-				float shimmer = 0.78f + 0.22f * (0.5f + 0.5f * (float) Math.sin(time * 0.4f));
-				yield new float[]{shimmer, shimmer * 1.02f, Math.min(1f, shimmer * 1.08f)};
-			}
-			case SILVER -> overlayCustomColor
-				? hsvToRgb(overlayHue, Math.min(0.25f, overlaySat / 100f), overlayVal / 100f)
-				: new float[]{0.82f, 0.86f, 0.92f};
-			case GOLD -> overlayCustomColor
-				? hsvToRgb(overlayHue, overlaySat / 100f, overlayVal / 100f)
-				: new float[]{0.95f, 0.78f, 0.28f};
-			case SAKURA -> overlayCustomColor
-				? hsvToRgb(overlayHue, overlaySat / 100f, overlayVal / 100f)
-				: new float[]{1.00f, 0.62f, 0.78f};
-			case SOLID -> overlayCustomColor
-				? hsvToRgb(overlayHue, overlaySat / 100f, overlayVal / 100f)
-				: new float[]{1f, 1f, 1f};
-		};
+		if (overlayMaterial == OverlayMaterial.CUSTOM) {
+			return hsvToRgb(overlayHue, overlaySat / 100f, overlayVal / 100f);
+		}
+		float h = (time * 10f) % 360f;
+		if (h < 0) h += 360f;
+		return hsvToRgb(h, 0.9f, 1f);
 	}
 
 	/** Accent RGB for Orbit GUI (0–1). */
@@ -242,9 +237,11 @@ public final class IceesConfig {
 			shieldTint.loadFrom(data.shieldTint, legacy);
 
 			blockOverlay = data.blockOverlay;
-			overlayMaterial = safeEnum(OverlayMaterial.class, data.overlayMaterial, OverlayMaterial.SAKURA);
+			overlayMaterial = OverlayMaterial.fromSaved(data.overlayMaterial);
 			if (data.overlayBrightness >= 1 && data.overlayBrightness <= 5) overlayBrightness = data.overlayBrightness;
-			overlayCustomColor = data.overlayCustomColor;
+			overlayCustomColor = data.overlayCustomColor || overlayMaterial == OverlayMaterial.CUSTOM;
+			if (overlayCustomColor) overlayMaterial = OverlayMaterial.CUSTOM;
+			else overlayMaterial = OverlayMaterial.RAINBOW;
 			overlayHue = Math.floorMod(data.overlayHue, 360);
 			if (data.overlaySat >= 0 && data.overlaySat <= 100) overlaySat = data.overlaySat;
 			if (data.overlayVal >= 0 && data.overlayVal <= 100) overlayVal = data.overlayVal;
@@ -268,6 +265,16 @@ public final class IceesConfig {
 			pvpSpearParticles = data.pvpSpearParticles;
 			if (data.pvpParticleSize >= 1 && data.pvpParticleSize <= 5) pvpParticleSize = data.pvpParticleSize;
 			pvpTint.loadFrom(data.pvpTint, new CosmeticTint(true, 330, 70, 100));
+			pvpStunslam = data.pvpStunslam;
+			if (data.pvpStunslamSize >= 1 && data.pvpStunslamSize <= 5) pvpStunslamSize = data.pvpStunslamSize;
+			pvpMace = data.pvpMace;
+			if (data.pvpMaceSize >= 1 && data.pvpMaceSize <= 5) pvpMaceSize = data.pvpMaceSize;
+			pvpSpear = data.pvpSpear;
+			if (data.pvpSpearSize >= 1 && data.pvpSpearSize <= 5) pvpSpearSize = data.pvpSpearSize;
+			pvpSword = data.pvpSword;
+			if (data.pvpSwordSize >= 1 && data.pvpSwordSize <= 5) pvpSwordSize = data.pvpSwordSize;
+			pvpAxe = data.pvpAxe;
+			if (data.pvpAxeSize >= 1 && data.pvpAxeSize <= 5) pvpAxeSize = data.pvpAxeSize;
 
 			guiCustomColor = data.guiCustomColor;
 			guiRainbow = data.guiRainbow;
@@ -306,7 +313,7 @@ public final class IceesConfig {
 		data.blockOverlay = blockOverlay;
 		data.overlayMaterial = overlayMaterial.name();
 		data.overlayBrightness = overlayBrightness;
-		data.overlayCustomColor = overlayCustomColor;
+		data.overlayCustomColor = overlayMaterial == OverlayMaterial.CUSTOM;
 		data.overlayHue = overlayHue; data.overlaySat = overlaySat; data.overlayVal = overlayVal;
 		data.motionBlur = motionBlur; data.motionBlurStrength = motionBlurStrength;
 		data.noHurtCam = noHurtCam; data.fullbright = fullbright; data.lowParticles = lowParticles;
@@ -317,6 +324,11 @@ public final class IceesConfig {
 		data.pvpHitParticles = pvpHitParticles; data.pvpMaceParticles = pvpMaceParticles;
 		data.pvpSpearParticles = pvpSpearParticles; data.pvpParticleSize = pvpParticleSize;
 		data.pvpTint = pvpTint.copy();
+		data.pvpStunslam = pvpStunslam; data.pvpStunslamSize = pvpStunslamSize;
+		data.pvpMace = pvpMace; data.pvpMaceSize = pvpMaceSize;
+		data.pvpSpear = pvpSpear; data.pvpSpearSize = pvpSpearSize;
+		data.pvpSword = pvpSword; data.pvpSwordSize = pvpSwordSize;
+		data.pvpAxe = pvpAxe; data.pvpAxeSize = pvpAxeSize;
 		data.guiCustomColor = guiCustomColor; data.guiRainbow = guiRainbow;
 		data.guiHue = guiHue; data.guiSat = guiSat; data.guiVal = guiVal;
 		data.orbitKeyCode = orbitKeyCode;
@@ -354,7 +366,7 @@ public final class IceesConfig {
 		int cosmeticBrightness = 5; int cosmeticSize = 4; int cosmeticThickness = 4;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
-		boolean blockOverlay = true; String overlayMaterial = "SAKURA"; int overlayBrightness = 3;
+		boolean blockOverlay = true; String overlayMaterial = "RAINBOW"; int overlayBrightness = 3;
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;
 		boolean noHurtCam = true; boolean fullbright = false; boolean lowParticles = false;
@@ -363,6 +375,11 @@ public final class IceesConfig {
 		int pvpHitHue = 330; int pvpHitSat = 70; int pvpHitVal = 100;
 		boolean pvpHitParticles = true; boolean pvpMaceParticles = true; boolean pvpSpearParticles = true;
 		int pvpParticleSize = 3; CosmeticTint pvpTint;
+		boolean pvpStunslam = true; int pvpStunslamSize = 3;
+		boolean pvpMace = true; int pvpMaceSize = 3;
+		boolean pvpSpear = true; int pvpSpearSize = 3;
+		boolean pvpSword = true; int pvpSwordSize = 3;
+		boolean pvpAxe = true; int pvpAxeSize = 3;
 		boolean guiCustomColor = false; boolean guiRainbow = false;
 		int guiHue = 330; int guiSat = 55; int guiVal = 100;
 		int orbitKeyCode = 344;

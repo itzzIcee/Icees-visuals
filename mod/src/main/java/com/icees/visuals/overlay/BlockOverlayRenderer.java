@@ -14,7 +14,7 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
-/** Custom looking-at block outline — colour / brightness / chrome / rainbow. */
+/** Looking-at block outline — Rainbow or Custom colour. */
 public final class BlockOverlayRenderer {
 	private BlockOverlayRenderer() {}
 
@@ -48,13 +48,10 @@ public final class BlockOverlayRenderer {
 		VertexConsumer lines = consumers.getBuffer(RenderTypes.lines());
 		ShapeRenderer.renderShape(matrices, lines, outline.shape(), ox, oy, oz, color, width);
 
-		// Extra chrome/rainbow shimmer pass
-		if (IceesConfig.overlayMaterial == OverlayMaterial.CHROME
-			|| IceesConfig.overlayMaterial == OverlayMaterial.RAINBOW
-			|| IceesConfig.overlayMaterial == OverlayMaterial.SILVER) {
+		if (IceesConfig.overlayMaterial == OverlayMaterial.RAINBOW) {
 			float shimmer = 0.6f + 0.4f * (0.5f + 0.5f * Mth.sin(time * 0.45f));
-			int shine = ARGB.colorFromFloat(0.55f, shimmer, shimmer, Math.min(1f, shimmer + 0.05f));
-			ShapeRenderer.renderShape(matrices, lines, outline.shape(), ox, oy, oz, shine, width + 1.5f);
+			int shine = ARGB.colorFromFloat(0.45f, shimmer, shimmer, Math.min(1f, shimmer + 0.05f));
+			ShapeRenderer.renderShape(matrices, lines, outline.shape(), ox, oy, oz, shine, width + 1.2f);
 		}
 		return false;
 	}

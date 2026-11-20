@@ -170,41 +170,38 @@ public class OrbitScreen extends Screen {
 				addHit(x, y, w, 22, "Block Overlay  ·  " + onOff(IceesConfig.blockOverlay), IceesConfig.blockOverlay,
 					() -> IceesConfig.blockOverlay = !IceesConfig.blockOverlay);
 				y += 26;
-				addHit(x, y, w, 20, "Material  →  " + IceesConfig.overlayMaterial.title, false,
-					() -> IceesConfig.overlayMaterial = IceesConfig.overlayMaterial.next());
-				y += 24;
+				addHit(x, y, w / 2 - 4, 22, (IceesConfig.overlayMaterial == OverlayMaterial.RAINBOW ? "●  " : "○  ") + "Rainbow",
+					IceesConfig.overlayMaterial == OverlayMaterial.RAINBOW, () -> {
+						IceesConfig.overlayMaterial = OverlayMaterial.RAINBOW;
+						IceesConfig.overlayCustomColor = false;
+						IceesConfig.blockOverlay = true;
+					});
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 22, (IceesConfig.overlayMaterial == OverlayMaterial.CUSTOM ? "●  " : "○  ") + "Custom",
+					IceesConfig.overlayMaterial == OverlayMaterial.CUSTOM, () -> {
+						IceesConfig.overlayMaterial = OverlayMaterial.CUSTOM;
+						IceesConfig.overlayCustomColor = true;
+						IceesConfig.blockOverlay = true;
+					});
+				y += 28;
 				addHit(x, y, w, 20, "Brightness  ·  " + IceesConfig.overlayBrightness + " / 5", false, () -> {
 					IceesConfig.overlayBrightness = IceesConfig.overlayBrightness >= 5 ? 1 : IceesConfig.overlayBrightness + 1;
 				});
 				y += 24;
-				addHit(x, y, w, 20, "Custom Color  ·  " + onOff(IceesConfig.overlayCustomColor), IceesConfig.overlayCustomColor,
-					() -> IceesConfig.overlayCustomColor = !IceesConfig.overlayCustomColor);
-				y += 24;
 				addHit(x, y, w / 3 - 4, 20, "Hue  ·  " + IceesConfig.overlayHue, false, () -> {
 					IceesConfig.overlayHue = (IceesConfig.overlayHue + 15) % 360;
+					IceesConfig.overlayMaterial = OverlayMaterial.CUSTOM;
 					IceesConfig.overlayCustomColor = true;
 				});
 				addHit(x + w / 3 + 2, y, w / 3 - 4, 20, "Sat  ·  " + IceesConfig.overlaySat, false, () -> {
 					IceesConfig.overlaySat = IceesConfig.overlaySat >= 100 ? 0 : IceesConfig.overlaySat + 10;
+					IceesConfig.overlayMaterial = OverlayMaterial.CUSTOM;
 					IceesConfig.overlayCustomColor = true;
 				});
 				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 20, "Val  ·  " + IceesConfig.overlayVal, false, () -> {
 					IceesConfig.overlayVal = IceesConfig.overlayVal >= 100 ? 20 : IceesConfig.overlayVal + 10;
+					IceesConfig.overlayMaterial = OverlayMaterial.CUSTOM;
 					IceesConfig.overlayCustomColor = true;
 				});
-				y += 28;
-				int col = 0;
-				for (OverlayMaterial mat : OverlayMaterial.values()) {
-					int bx = x + (col % 2) * (w / 2 + 6);
-					int by = y + (col / 2) * 22;
-					boolean on = IceesConfig.overlayMaterial == mat;
-					OverlayMaterial selected = mat;
-					addHit(bx, by, w / 2 - 6, 20, (on ? "●  " : "○  ") + mat.title, on, () -> {
-						IceesConfig.overlayMaterial = selected;
-						IceesConfig.blockOverlay = true;
-					});
-					col++;
-				}
 			}
 			case CPVP -> {
 				addHit(x, y, w, 22, "Motion Blur  ·  " + onOff(IceesConfig.motionBlur), IceesConfig.motionBlur,
@@ -355,7 +352,7 @@ public class OrbitScreen extends Screen {
 			case SKIES -> IceesConfig.customSky ? IceesConfig.skyStyle.description : "Custom Sky OFF — vanilla sky restored.";
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
-			case OVERLAY -> "Look at a block — outline colour / chrome / rainbow.";
+			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
 			case GUI -> "Paint the Orbit menu — Hue / Sat / Val or Rainbow.";
 			case KEYBIND -> listeningKey ? "Waiting for a key…" : "Click the row, then press a new key.";
