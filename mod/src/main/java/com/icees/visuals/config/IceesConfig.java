@@ -11,7 +11,6 @@ import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.overlay.OverlayMaterial;
-import com.icees.visuals.sky.SkyStyle;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.ARGB;
 import org.lwjgl.glfw.GLFW;
@@ -26,8 +25,6 @@ public final class IceesConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("icees-visuals.json");
 
-	public static boolean customSky = true;
-	public static SkyStyle skyStyle = SkyStyle.SAKURA;
 	public static boolean wings = true;
 	public static WingStyle wingStyle = WingStyle.PETAL;
 	public static boolean halo = true;
@@ -195,8 +192,6 @@ public final class IceesConfig {
 		try (Reader reader = Files.newBufferedReader(PATH)) {
 			Data data = GSON.fromJson(reader, Data.class);
 			if (data == null) return;
-			customSky = data.customSky;
-			skyStyle = safeEnum(SkyStyle.class, data.skyStyle, SkyStyle.SAKURA);
 			wings = data.wings;
 			wingStyle = safeEnum(WingStyle.class, data.wingStyle, WingStyle.PETAL);
 			halo = data.halo;
@@ -291,7 +286,6 @@ public final class IceesConfig {
 	public static void save() {
 		cosmeticThickness = cosmeticSize;
 		Data data = new Data();
-		data.customSky = customSky; data.skyStyle = skyStyle.name();
 		data.wings = wings; data.wingStyle = wingStyle.name();
 		data.halo = halo; data.haloStyle = haloStyle.name();
 		data.hat = hat; data.hatStyle = hatStyle.name();
@@ -354,7 +348,6 @@ public final class IceesConfig {
 
 	@SuppressWarnings("unused")
 	private static final class Data {
-		boolean customSky = true; String skyStyle = "SAKURA";
 		boolean wings = true; String wingStyle = "PETAL";
 		boolean halo = true; String haloStyle = "BLOSSOM";
 		boolean hat = true; String hatStyle = "STRAW_RED";

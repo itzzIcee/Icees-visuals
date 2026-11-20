@@ -3,7 +3,7 @@
   "id": "icees-visuals",
   "version": "${version}",
   "name": "Icee's Sakura Visuals",
-  "description": "Sakura-styled visuals client for Fabric 1.21.11: living skies, fall themes, cosmetics and Orbit menu.",
+  "description": "Sakura-styled visuals client for Fabric 1.21.11: fall themes, cosmetics and Orbit menu.",
   "authors": ["Icees"],
   "license": "MIT",
   "icon": "assets/icees-visuals/icon.png",

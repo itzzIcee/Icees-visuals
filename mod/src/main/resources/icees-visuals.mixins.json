@@ -3,10 +3,6 @@
   "package": "com.icees.visuals.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "SkyRendererMixin",
-    "CloudRendererMixin",
-    "AtmosphericFogMixin",
-    "EnvironmentAttributeProbeMixin",
     "GameRendererMixin",
     "ClientLevelMixin"
   ],

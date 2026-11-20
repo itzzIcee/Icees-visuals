@@ -45,6 +45,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.12 — themes float in the air");
+		LOGGER.info("Icee's Sakura Visuals 1.0.13 — skies removed");
 	}
 }

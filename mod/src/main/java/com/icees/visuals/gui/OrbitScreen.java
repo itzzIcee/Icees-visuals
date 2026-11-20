@@ -5,7 +5,6 @@ import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
-import com.icees.visuals.sky.SkyStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,9 +32,9 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { SKIES, COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
 
-	private Tab tab = Tab.SKIES;
+	private Tab tab = Tab.COSMETICS;
 	private int panelX, panelY;
 	private final int panelW = 520;
 	private final int panelH = 520;
@@ -76,7 +75,6 @@ public class OrbitScreen extends Screen {
 
 		int tx = panelX + 20;
 		int ty = panelY + 64;
-		addTab(tx, ty, "Skies", Tab.SKIES); tx += 48;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
@@ -89,23 +87,6 @@ public class OrbitScreen extends Screen {
 		int w = panelW - 56;
 
 		switch (tab) {
-			case SKIES -> {
-				addHit(x, y, w, 22, "Custom Sky  ·  " + onOff(IceesConfig.customSky), IceesConfig.customSky,
-					() -> IceesConfig.customSky = !IceesConfig.customSky);
-				y += 26;
-				int col = 0;
-				for (SkyStyle style : SkyStyle.values()) {
-					int bx = x + (col % 2) * (w / 2 + 8);
-					int by = y + (col / 2) * 26;
-					boolean on = IceesConfig.skyStyle == style;
-					SkyStyle selected = style;
-					addHit(bx, by, w / 2 - 8, 22, (on ? "●  " : "○  ") + style.title, on, () -> {
-						IceesConfig.skyStyle = selected;
-						IceesConfig.customSky = true;
-					});
-					col++;
-				}
-			}
 			case COSMETICS -> {
 				addHit(x, y, w, 18, "Wings  ·  " + onOff(IceesConfig.wings) + "  ·  " + IceesConfig.wingStyle.title, IceesConfig.wings,
 					() -> IceesConfig.wings = !IceesConfig.wings);
@@ -349,7 +330,6 @@ public class OrbitScreen extends Screen {
 		}
 
 		String tip = switch (tab) {
-			case SKIES -> IceesConfig.customSky ? IceesConfig.skyStyle.description : "Custom Sky OFF — vanilla sky restored.";
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
