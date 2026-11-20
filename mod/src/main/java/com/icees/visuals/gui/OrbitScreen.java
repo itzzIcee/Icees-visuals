@@ -1,10 +1,13 @@
 package com.icees.visuals.gui;
 
 import com.icees.visuals.config.IceesConfig;
+import com.icees.visuals.cosmetics.KnifeMaterial;
 import com.icees.visuals.cosmetics.KnifeStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
+import com.icees.visuals.overlay.OverlayMaterial;
 import com.icees.visuals.sky.SkyStyle;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -31,12 +34,12 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { SKIES, COSMETICS, KNIVES, THEMES, KEYBIND }
+	private enum Tab { SKIES, COSMETICS, KNIVES, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
 
 	private Tab tab = Tab.SKIES;
 	private int panelX, panelY;
-	private final int panelW = 500;
-	private final int panelH = 420;
+	private final int panelW = 520;
+	private final int panelH = 460;
 	private boolean listeningKey;
 	private final List<Hit> hits = new ArrayList<>();
 	private final List<TabHit> tabHits = new ArrayList<>();
@@ -55,11 +58,10 @@ public class OrbitScreen extends Screen {
 		rebuildHits();
 	}
 
-	/** Kill vanilla menu dirt / blur / panorama. */
 	@Override
 	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-		graphics.fill(0, 0, width, height, 0xAA080510);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEX_SCRIM, 0, 0, 0f, 0f, width, height, 256, 256, ARGB.colorFromFloat(0.55f, 1f, 0.7f, 0.85f));
+		graphics.fill(0, 0, width, height, SakuraTheme.scrim());
+		graphics.blit(RenderPipelines.GUI_TEXTURED, TEX_SCRIM, 0, 0, 0f, 0f, width, height, 256, 256, SakuraTheme.scrimTint());
 	}
 
 	@Override
@@ -73,12 +75,15 @@ public class OrbitScreen extends Screen {
 		panelX = (this.width - panelW) / 2;
 		panelY = (this.height - panelH) / 2;
 
-		int tx = panelX + 28;
+		int tx = panelX + 20;
 		int ty = panelY + 64;
-		addTab(tx, ty, "Skies", Tab.SKIES); tx += 60;
-		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 92;
-		addTab(tx, ty, "Knives", Tab.KNIVES); tx += 68;
-		addTab(tx, ty, "Themes", Tab.THEMES); tx += 74;
+		addTab(tx, ty, "Skies", Tab.SKIES); tx += 48;
+		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
+		addTab(tx, ty, "Knives", Tab.KNIVES); tx += 52;
+		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
+		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
+		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
+		addTab(tx, ty, "GUI", Tab.GUI); tx += 36;
 		addTab(tx, ty, "Key", Tab.KEYBIND);
 
 		int x = panelX + 28;
@@ -87,16 +92,16 @@ public class OrbitScreen extends Screen {
 
 		switch (tab) {
 			case SKIES -> {
-				addHit(x, y, w, 26, "Custom Sky  ·  " + onOff(IceesConfig.customSky), IceesConfig.customSky,
+				addHit(x, y, w, 22, "Custom Sky  ·  " + onOff(IceesConfig.customSky), IceesConfig.customSky,
 					() -> IceesConfig.customSky = !IceesConfig.customSky);
-				y += 32;
+				y += 26;
 				int col = 0;
 				for (SkyStyle style : SkyStyle.values()) {
 					int bx = x + (col % 2) * (w / 2 + 8);
-					int by = y + (col / 2) * 28;
+					int by = y + (col / 2) * 26;
 					boolean on = IceesConfig.skyStyle == style;
 					SkyStyle selected = style;
-					addHit(bx, by, w / 2 - 8, 24, (on ? "●  " : "○  ") + style.title, on, () -> {
+					addHit(bx, by, w / 2 - 8, 22, (on ? "●  " : "○  ") + style.title, on, () -> {
 						IceesConfig.skyStyle = selected;
 						IceesConfig.customSky = true;
 					});
@@ -104,81 +109,207 @@ public class OrbitScreen extends Screen {
 				}
 			}
 			case COSMETICS -> {
-				addHit(x, y, w, 20, "Wings  ·  " + onOff(IceesConfig.wings) + "  ·  form " + IceesConfig.wingStyle.title, IceesConfig.wings,
+				addHit(x, y, w, 18, "Wings  ·  " + onOff(IceesConfig.wings) + "  ·  " + IceesConfig.wingStyle.title, IceesConfig.wings,
 					() -> IceesConfig.wings = !IceesConfig.wings);
-				y += 22;
-				addHit(x, y, w, 18, "Wing form  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
 				y += 20;
-				addHit(x, y, w, 20, "Halo  ·  " + onOff(IceesConfig.halo) + "  ·  form " + IceesConfig.haloStyle.title, IceesConfig.halo,
+				addHit(x, y, w, 16, "Wing form  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
+				y += 18;
+				addHit(x, y, w, 18, "Halo  ·  " + onOff(IceesConfig.halo) + "  ·  " + IceesConfig.haloStyle.title, IceesConfig.halo,
 					() -> IceesConfig.halo = !IceesConfig.halo);
-				y += 22;
-				addHit(x, y, w, 18, "Halo form  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
 				y += 20;
-				addHit(x, y, w, 20, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  form " + IceesConfig.capeStyle.title, IceesConfig.cape,
+				addHit(x, y, w, 16, "Halo form  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
+				y += 18;
+				addHit(x, y, w, 18, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  " + IceesConfig.capeStyle.title, IceesConfig.cape,
 					() -> IceesConfig.cape = !IceesConfig.cape);
-				y += 22;
-				addHit(x, y, w, 18, "Cape form  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
 				y += 20;
-				addHit(x, y, w, 20, "Aura  ·  " + onOff(IceesConfig.aura) + "  ·  form " + IceesConfig.auraStyle.title, IceesConfig.aura,
+				addHit(x, y, w, 16, "Cape form  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
+				y += 18;
+				addHit(x, y, w, 18, "Aura  ·  " + onOff(IceesConfig.aura) + "  ·  " + IceesConfig.auraStyle.title, IceesConfig.aura,
 					() -> IceesConfig.aura = !IceesConfig.aura);
-				y += 22;
-				addHit(x, y, w, 18, "Aura form  →", false, () -> IceesConfig.auraStyle = IceesConfig.auraStyle.next());
 				y += 20;
-				addHit(x, y, w, 18, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
+				addHit(x, y, w, 16, "Aura form  →", false, () -> IceesConfig.auraStyle = IceesConfig.auraStyle.next());
+				y += 18;
+				addHit(x, y, w, 16, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
 					() -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles);
-				y += 22;
-				addHit(x, y, w / 2 - 4, 20, "Size  ·  " + IceesConfig.cosmeticSize + " / 5", false, () -> {
+				y += 20;
+				addHit(x, y, w / 2 - 4, 18, "Size  ·  " + IceesConfig.cosmeticSize + " / 5", false, () -> {
 					IceesConfig.cosmeticSize = IceesConfig.cosmeticSize >= 5 ? 1 : IceesConfig.cosmeticSize + 1;
 					IceesConfig.cosmeticThickness = IceesConfig.cosmeticSize;
 				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 20, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 18, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
 					IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
 				});
-				y += 22;
-				addHit(x, y, w, 20, "Custom Color  ·  " + onOff(IceesConfig.customColor), IceesConfig.customColor,
+				y += 20;
+				addHit(x, y, w, 18, "Custom Color  ·  " + onOff(IceesConfig.customColor), IceesConfig.customColor,
 					() -> IceesConfig.customColor = !IceesConfig.customColor);
-				y += 22;
-				addHit(x, y, w / 3 - 4, 20, "Hue  ·  " + IceesConfig.cosmeticHue, false, () -> {
+				y += 20;
+				addHit(x, y, w / 3 - 4, 18, "Hue  ·  " + IceesConfig.cosmeticHue, false, () -> {
 					IceesConfig.cosmeticHue = (IceesConfig.cosmeticHue + 15) % 360;
 					IceesConfig.customColor = true;
 				});
-				addHit(x + w / 3 + 2, y, w / 3 - 4, 20, "Sat  ·  " + IceesConfig.cosmeticSat, false, () -> {
+				addHit(x + w / 3 + 2, y, w / 3 - 4, 18, "Sat  ·  " + IceesConfig.cosmeticSat, false, () -> {
 					IceesConfig.cosmeticSat = IceesConfig.cosmeticSat >= 100 ? 0 : IceesConfig.cosmeticSat + 10;
 					IceesConfig.customColor = true;
 				});
-				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 20, "Val  ·  " + IceesConfig.cosmeticVal, false, () -> {
+				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 18, "Val  ·  " + IceesConfig.cosmeticVal, false, () -> {
 					IceesConfig.cosmeticVal = IceesConfig.cosmeticVal >= 100 ? 20 : IceesConfig.cosmeticVal + 10;
 					IceesConfig.customColor = true;
 				});
 			}
 			case KNIVES -> {
-				addHit(x, y, w, 26, "Knife Animations  ·  " + onOff(IceesConfig.knife), IceesConfig.knife,
+				addHit(x, y, w, 18, "Knives  ·  " + onOff(IceesConfig.knife) + "  (only with sword)", IceesConfig.knife,
 					() -> IceesConfig.knife = !IceesConfig.knife);
-				y += 34;
+				y += 20;
+				addHit(x, y, w, 16, "Form  →  " + IceesConfig.knifeStyle.title, false, () -> {
+					IceesConfig.knifeStyle = IceesConfig.knifeStyle.next();
+					IceesConfig.knife = true;
+				});
+				y += 18;
+				addHit(x, y, w, 16, "Material  →  " + IceesConfig.knifeMaterial.title, false,
+					() -> IceesConfig.knifeMaterial = IceesConfig.knifeMaterial.next());
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Size  ·  " + IceesConfig.knifeSize + " / 5", false, () -> {
+					IceesConfig.knifeSize = IceesConfig.knifeSize >= 5 ? 1 : IceesConfig.knifeSize + 1;
+				});
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Custom Color  ·  " + onOff(IceesConfig.knifeCustomColor), IceesConfig.knifeCustomColor,
+					() -> IceesConfig.knifeCustomColor = !IceesConfig.knifeCustomColor);
+				y += 18;
+				addHit(x, y, w / 3 - 4, 16, "Hue  ·  " + IceesConfig.knifeHue, false, () -> {
+					IceesConfig.knifeHue = (IceesConfig.knifeHue + 15) % 360;
+					IceesConfig.knifeCustomColor = true;
+				});
+				addHit(x + w / 3 + 2, y, w / 3 - 4, 16, "Sat  ·  " + IceesConfig.knifeSat, false, () -> {
+					IceesConfig.knifeSat = IceesConfig.knifeSat >= 100 ? 0 : IceesConfig.knifeSat + 10;
+					IceesConfig.knifeCustomColor = true;
+				});
+				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 16, "Val  ·  " + IceesConfig.knifeVal, false, () -> {
+					IceesConfig.knifeVal = IceesConfig.knifeVal >= 100 ? 20 : IceesConfig.knifeVal + 10;
+					IceesConfig.knifeCustomColor = true;
+				});
+				y += 22;
+				int col = 0;
 				for (KnifeStyle style : KnifeStyle.values()) {
+					int bx = x + (col % 2) * (w / 2 + 6);
+					int by = y + (col / 2) * 18;
 					boolean on = IceesConfig.knifeStyle == style;
 					KnifeStyle selected = style;
-					addHit(x, y, w, 24, (on ? "●  " : "○  ") + style.title, on, () -> {
+					addHit(bx, by, w / 2 - 6, 16, (on ? "●  " : "○  ") + style.title, on, () -> {
 						IceesConfig.knifeStyle = selected;
 						IceesConfig.knife = true;
 					});
-					y += 26;
+					col++;
 				}
 			}
 			case THEMES -> {
 				for (FallTheme theme : FallTheme.values()) {
 					boolean on = IceesConfig.fallTheme == theme;
 					FallTheme selected = theme;
-					addHit(x, y, w, 24, (on ? "●  " : "○  ") + theme.title, on, () -> IceesConfig.fallTheme = selected);
-					y += 26;
+					addHit(x, y, w, 22, (on ? "●  " : "○  ") + theme.title, on, () -> IceesConfig.fallTheme = selected);
+					y += 24;
 				}
-				y += 10;
-				addHit(x, y, w, 24, "Fall Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
+				y += 8;
+				addHit(x, y, w, 22, "Fall Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
 					IceesConfig.fallIntensity = IceesConfig.fallIntensity >= 5 ? 1 : IceesConfig.fallIntensity + 1;
 				});
-				y += 30;
-				addHit(x, y, w, 24, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
+				y += 26;
+				addHit(x, y, w, 22, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
 					() -> IceesConfig.trail = !IceesConfig.trail);
+			}
+			case OVERLAY -> {
+				addHit(x, y, w, 22, "Block Overlay  ·  " + onOff(IceesConfig.blockOverlay), IceesConfig.blockOverlay,
+					() -> IceesConfig.blockOverlay = !IceesConfig.blockOverlay);
+				y += 26;
+				addHit(x, y, w, 20, "Material  →  " + IceesConfig.overlayMaterial.title, false,
+					() -> IceesConfig.overlayMaterial = IceesConfig.overlayMaterial.next());
+				y += 24;
+				addHit(x, y, w, 20, "Brightness  ·  " + IceesConfig.overlayBrightness + " / 5", false, () -> {
+					IceesConfig.overlayBrightness = IceesConfig.overlayBrightness >= 5 ? 1 : IceesConfig.overlayBrightness + 1;
+				});
+				y += 24;
+				addHit(x, y, w, 20, "Custom Color  ·  " + onOff(IceesConfig.overlayCustomColor), IceesConfig.overlayCustomColor,
+					() -> IceesConfig.overlayCustomColor = !IceesConfig.overlayCustomColor);
+				y += 24;
+				addHit(x, y, w / 3 - 4, 20, "Hue  ·  " + IceesConfig.overlayHue, false, () -> {
+					IceesConfig.overlayHue = (IceesConfig.overlayHue + 15) % 360;
+					IceesConfig.overlayCustomColor = true;
+				});
+				addHit(x + w / 3 + 2, y, w / 3 - 4, 20, "Sat  ·  " + IceesConfig.overlaySat, false, () -> {
+					IceesConfig.overlaySat = IceesConfig.overlaySat >= 100 ? 0 : IceesConfig.overlaySat + 10;
+					IceesConfig.overlayCustomColor = true;
+				});
+				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 20, "Val  ·  " + IceesConfig.overlayVal, false, () -> {
+					IceesConfig.overlayVal = IceesConfig.overlayVal >= 100 ? 20 : IceesConfig.overlayVal + 10;
+					IceesConfig.overlayCustomColor = true;
+				});
+				y += 28;
+				int col = 0;
+				for (OverlayMaterial mat : OverlayMaterial.values()) {
+					int bx = x + (col % 2) * (w / 2 + 6);
+					int by = y + (col / 2) * 22;
+					boolean on = IceesConfig.overlayMaterial == mat;
+					OverlayMaterial selected = mat;
+					addHit(bx, by, w / 2 - 6, 20, (on ? "●  " : "○  ") + mat.title, on, () -> {
+						IceesConfig.overlayMaterial = selected;
+						IceesConfig.blockOverlay = true;
+					});
+					col++;
+				}
+			}
+			case CPVP -> {
+				addHit(x, y, w, 22, "Motion Blur  ·  " + onOff(IceesConfig.motionBlur), IceesConfig.motionBlur,
+					() -> IceesConfig.motionBlur = !IceesConfig.motionBlur);
+				y += 26;
+				addHit(x, y, w, 20, "Blur Strength  ·  " + IceesConfig.motionBlurStrength + " / 5", false, () -> {
+					IceesConfig.motionBlurStrength = IceesConfig.motionBlurStrength >= 5 ? 1 : IceesConfig.motionBlurStrength + 1;
+					IceesConfig.motionBlur = true;
+				});
+				y += 26;
+				addHit(x, y, w, 22, "No Hurt Cam  ·  " + onOff(IceesConfig.noHurtCam), IceesConfig.noHurtCam,
+					() -> IceesConfig.noHurtCam = !IceesConfig.noHurtCam);
+				y += 26;
+				addHit(x, y, w, 22, "Fullbright  ·  " + onOff(IceesConfig.fullbright), IceesConfig.fullbright, () -> {
+					IceesConfig.fullbright = !IceesConfig.fullbright;
+					IceesConfig.applyFullbright(Minecraft.getInstance());
+				});
+				y += 26;
+				addHit(x, y, w, 22, "Low Particles (FPS)  ·  " + onOff(IceesConfig.lowParticles), IceesConfig.lowParticles,
+					() -> IceesConfig.lowParticles = !IceesConfig.lowParticles);
+			}
+			case GUI -> {
+				addHit(x, y, w, 22, "Custom GUI Color  ·  " + onOff(IceesConfig.guiCustomColor), IceesConfig.guiCustomColor,
+					() -> IceesConfig.guiCustomColor = !IceesConfig.guiCustomColor);
+				y += 26;
+				addHit(x, y, w, 22, "Rainbow GUI  ·  " + onOff(IceesConfig.guiRainbow), IceesConfig.guiRainbow,
+					() -> IceesConfig.guiRainbow = !IceesConfig.guiRainbow);
+				y += 26;
+				addHit(x, y, w / 3 - 4, 22, "Hue  ·  " + IceesConfig.guiHue, false, () -> {
+					IceesConfig.guiHue = (IceesConfig.guiHue + 15) % 360;
+					IceesConfig.guiCustomColor = true;
+					IceesConfig.guiRainbow = false;
+				});
+				addHit(x + w / 3 + 2, y, w / 3 - 4, 22, "Sat  ·  " + IceesConfig.guiSat, false, () -> {
+					IceesConfig.guiSat = IceesConfig.guiSat >= 100 ? 0 : IceesConfig.guiSat + 10;
+					IceesConfig.guiCustomColor = true;
+					IceesConfig.guiRainbow = false;
+				});
+				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 22, "Val  ·  " + IceesConfig.guiVal, false, () -> {
+					IceesConfig.guiVal = IceesConfig.guiVal >= 100 ? 20 : IceesConfig.guiVal + 10;
+					IceesConfig.guiCustomColor = true;
+					IceesConfig.guiRainbow = false;
+				});
+				y += 32;
+				addHit(x, y, w, 22, "Reset GUI to Sakura pink", false, () -> {
+					IceesConfig.guiCustomColor = false;
+					IceesConfig.guiRainbow = false;
+					IceesConfig.guiHue = 330;
+					IceesConfig.guiSat = 55;
+					IceesConfig.guiVal = 100;
+				});
+				y += 36;
+				// live colour preview swatch
+				float[] accent = IceesConfig.guiAccentRgb();
+				addHit(x, y, w, 28, "Accent preview  ·  H" + IceesConfig.guiHue + " S" + IceesConfig.guiSat + " V" + IceesConfig.guiVal,
+					true, () -> {});
 			}
 			case KEYBIND -> {
 				String keyName = listeningKey ? "press any key…" : keyLabel(IceesConfig.orbitKeyCode);
@@ -193,7 +324,7 @@ public class OrbitScreen extends Screen {
 	}
 
 	private void addTab(int x, int y, String label, Tab value) {
-		tabHits.add(new TabHit(x, y, this.font.width(label) + 14, 16, value, label));
+		tabHits.add(new TabHit(x, y, this.font.width(label) + 10, 16, value, label));
 	}
 
 	private void addHit(int x, int y, int w, int h, String label, boolean active, Runnable action) {
@@ -224,8 +355,9 @@ public class OrbitScreen extends Screen {
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 		float appear = Math.min(1f, (System.currentTimeMillis() - openMs) / 420f);
+		float[] accent = IceesConfig.guiAccentRgb();
 
-		int bloom = ARGB.colorFromFloat(0.45f * appear, 1f, 0.55f, 0.72f);
+		int bloom = ARGB.colorFromFloat(0.45f * appear, accent[0], accent[1] * 0.7f, accent[2] * 0.85f);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, TEX_BLOOM,
 			panelX - 110, panelY - 90, 0f, 0f, panelW + 220, panelH + 180, 512, 512, bloom);
 
@@ -233,17 +365,17 @@ public class OrbitScreen extends Screen {
 			panelX - 12, panelY - 12, 0f, 0f, panelW + 24, panelH + 24, 512, 512, -1);
 
 		Component brand = Component.literal("Icee's visuals").withStyle(Style.EMPTY.withFont(TITLE_FONT));
-		graphics.drawString(this.font, brand, panelX + 30, panelY + 16, SakuraTheme.TITLE_GLOW, false);
-		graphics.drawString(this.font, brand, panelX + 28, panelY + 14, SakuraTheme.TITLE, false);
-		graphics.drawString(this.font, "soft orbit", panelX + 30, panelY + 42, SakuraTheme.MUTED, false);
+		graphics.drawString(this.font, brand, panelX + 30, panelY + 16, SakuraTheme.titleGlow(), false);
+		graphics.drawString(this.font, brand, panelX + 28, panelY + 14, SakuraTheme.title(), false);
+		graphics.drawString(this.font, "soft orbit", panelX + 30, panelY + 42, SakuraTheme.muted(), false);
 
 		for (TabHit th : tabHits) {
 			boolean on = tab == th.tab;
 			boolean hover = inside(mouseX, mouseY, th.x, th.y, th.w, th.h);
-			int color = on ? SakuraTheme.ACCENT_HOT : hover ? SakuraTheme.TEXT : SakuraTheme.MUTED;
+			int color = on ? SakuraTheme.accentHot() : hover ? SakuraTheme.text() : SakuraTheme.muted();
 			graphics.drawString(this.font, th.label, th.x, th.y, color, false);
 			if (on) {
-				graphics.fill(th.x, th.y + 12, th.x + this.font.width(th.label), th.y + 13, SakuraTheme.ACCENT);
+				graphics.fill(th.x, th.y + 12, th.x + this.font.width(th.label), th.y + 13, SakuraTheme.accent());
 			}
 		}
 
@@ -251,17 +383,24 @@ public class OrbitScreen extends Screen {
 			boolean hover = inside(mouseX, mouseY, hit.x, hit.y, hit.w, hit.h);
 			Identifier rowTex = hit.active ? TEX_ROW_ON : hover ? TEX_ROW_HOVER : TEX_ROW;
 			graphics.blit(RenderPipelines.GUI_TEXTURED, rowTex, hit.x, hit.y, 0f, 0f, hit.w, hit.h, 512, 64, -1);
-			graphics.drawString(this.font, hit.label, hit.x + 14, hit.y + (hit.h - 8) / 2, SakuraTheme.TEXT, false);
+			graphics.drawString(this.font, hit.label, hit.x + 14, hit.y + (hit.h - 8) / 2, SakuraTheme.text(), false);
+			// colour swatch on GUI preview row
+			if (tab == Tab.GUI && hit.label.startsWith("Accent preview")) {
+				graphics.fill(hit.x + hit.w - 36, hit.y + 6, hit.x + hit.w - 10, hit.y + hit.h - 6, SakuraTheme.accent());
+			}
 		}
 
 		String tip = switch (tab) {
-			case SKIES -> IceesConfig.skyStyle.description;
+			case SKIES -> IceesConfig.customSky ? IceesConfig.skyStyle.description : "Custom Sky OFF — vanilla sky restored.";
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
-			case KNIVES -> IceesConfig.knifeStyle.tricks;
-			case THEMES -> IceesConfig.fallTheme.description;
+			case KNIVES -> "Equip a sword. Form / size / material / colour — held in hand.";
+			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
+			case OVERLAY -> "Look at a block — outline colour / chrome / rainbow.";
+			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
+			case GUI -> "Paint the Orbit menu — Hue / Sat / Val or Rainbow.";
 			case KEYBIND -> listeningKey ? "Waiting for a key…" : "Click the row, then press a new key.";
 		};
-		graphics.drawString(this.font, tip, panelX + 28, panelY + panelH - 22, SakuraTheme.MUTED, false);
+		graphics.drawString(this.font, tip, panelX + 28, panelY + panelH - 22, SakuraTheme.muted(), false);
 	}
 
 	private static boolean inside(double mx, double my, int x, int y, int w, int h) {

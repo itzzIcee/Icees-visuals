@@ -38,6 +38,14 @@ public enum SkyStyle {
 		return ARGB.colorFromFloat(1.0f, r * 0.85f, g * 0.85f, b * 0.85f);
 	}
 
+	public int toCloudArgb() {
+		// Soft tinted clouds matching the sky (keep some white so they stay readable)
+		float cr = Math.min(1f, r * 0.55f + 0.45f);
+		float cg = Math.min(1f, g * 0.55f + 0.45f);
+		float cb = Math.min(1f, b * 0.55f + 0.45f);
+		return ARGB.colorFromFloat(0.92f, cr, cg, cb);
+	}
+
 	public SkyStyle next() {
 		SkyStyle[] all = values();
 		return all[(ordinal() + 1) % all.length];

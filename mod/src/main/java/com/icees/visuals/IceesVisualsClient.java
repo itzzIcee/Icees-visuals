@@ -3,12 +3,15 @@ package com.icees.visuals;
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.cosmetics.CosmeticRenderer;
 import com.icees.visuals.cosmetics.KnifeHudRenderer;
+import com.icees.visuals.cpvp.MotionBlurRenderer;
 import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
 import com.icees.visuals.keybind.IceesKeybinds;
+import com.icees.visuals.overlay.BlockOverlayRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -30,18 +33,28 @@ public final class IceesVisualsClient implements ClientModInitializer {
 				}
 			}
 			FallParticleRenderer.tick(client);
+			IceesConfig.applyFullbright(client);
 		});
 
 		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
+		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
 
-		// Reliable HUD path for 1.21.11 (deprecated HudRenderCallback often does not fire)
-		HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "fall_themes"), (graphics, tickCounter) -> {
-			FallParticleRenderer.render(graphics, tickCounter.getGameTimeDeltaPartialTick(false));
-		});
-		HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "knife_hud"), (graphics, tickCounter) -> {
-			KnifeHudRenderer.render(graphics);
-		});
+		HudElementRegistry.attachElementAfter(
+			VanillaHudElements.MISC_OVERLAYS,
+			Identifier.fromNamespaceAndPath(MOD_ID, "fall_themes"),
+			(graphics, tickCounter) -> FallParticleRenderer.render(graphics, tickCounter.getGameTimeDeltaPartialTick(false))
+		);
+		HudElementRegistry.attachElementAfter(
+			VanillaHudElements.MISC_OVERLAYS,
+			Identifier.fromNamespaceAndPath(MOD_ID, "knife_hud"),
+			(graphics, tickCounter) -> KnifeHudRenderer.render(graphics)
+		);
+		HudElementRegistry.attachElementAfter(
+			VanillaHudElements.MISC_OVERLAYS,
+			Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
+			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
+		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.3 — Right Shift opens Orbit");
+		LOGGER.info("Icee's Sakura Visuals 1.0.6 — Right Shift opens Orbit");
 	}
 }

@@ -4,7 +4,11 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "SkyRendererMixin",
-    "AtmosphericFogMixin"
+    "AtmosphericFogMixin",
+    "EnvironmentAttributeProbeMixin",
+    "ItemInHandRendererMixin",
+    "GameRendererMixin",
+    "ClientLevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -80,7 +80,7 @@ public final class CosmeticRenderer {
 			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, thick);
 			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, thick, camRelYaw, camPitch);
 			if (IceesConfig.jumpCircles && !player.onGround()) drawJumpCircles(matrices, consumers, time, bright, thick);
-			if (IceesConfig.knife) drawThirdPersonKnife(matrices, consumers, time, bright, thick, camRelYaw);
+			if (IceesConfig.knifeActive(player)) drawThirdPersonKnife(matrices, consumers, time, bright, thick, camRelYaw);
 
 			matrices.popPose();
 		} catch (Throwable t) {
@@ -453,17 +453,31 @@ public final class CosmeticRenderer {
 
 	private static void drawThirdPersonKnife(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw) {
 		KnifeStyle style = IceesConfig.knifeStyle;
-		float[] c = tint(1f, 0.9f, 0.95f); CR = c[0]; CG = c[1]; CB = c[2];
+		float[] c = IceesConfig.knifeBladeColor(time);
+		CR = c[0]; CG = c[1]; CB = c[2];
+		float ks = IceesConfig.knifeSizeFactor();
 		matrices.pushPose();
-		matrices.translate(0.42f, 0.85f, -0.05f);
+		// Right-hand side — held like a sword
+		matrices.translate(0.38f * ks, 0.75f, -0.12f);
 		matrices.mulPose(Axis.YP.rotationDegrees(knifeSpin(style, time)));
-		matrices.mulPose(Axis.ZP.rotationDegrees(20f + Mth.sin(time * 0.2f) * 10f));
-		float hs = 0.55f * thick;
+		matrices.mulPose(Axis.ZP.rotationDegrees(25f + Mth.sin(time * 0.15f) * 6f));
+		matrices.mulPose(Axis.XP.rotationDegrees(-15f));
+		float hs = 0.65f * ks;
+		float hw = 0.06f * ks;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_KNIFE));
-		sheet(matrices, vc, -0.08f * thick, -0.05f, 0, 0.08f * thick, hs, 0, CR, CG, CB, Math.min(1f, bright));
-		sheetYZ(matrices, vc, 0, -0.05f, -0.06f * thick, 0, hs, 0.06f * thick, CR, CG, CB, 0.85f * bright);
-		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-		sheet(matrices, glow, -0.18f * thick, -0.08f, -0.02f, 0.18f * thick, hs * 1.1f, -0.02f, CR, CG, CB, 0.5f * bright);
+		// blade + thickness so visible from all sides
+		sheet(matrices, vc, -hw, -0.04f, 0, hw, hs, 0, CR, CG, CB, Math.min(1f, bright));
+		sheetYZ(matrices, vc, 0, -0.04f, -hw, 0, hs, hw, CR * 0.7f, CG * 0.7f, CB * 0.75f, 0.9f * bright);
+		// tip taper
+		sheet(matrices, vc, -hw * 0.5f, hs - 0.02f, 0, hw * 0.5f, hs + 0.18f * ks, 0, CR, CG, CB, bright);
+		// handle
+		sheet(matrices, vc, -hw * 0.7f, -0.28f * ks, 0, hw * 0.7f, 0.02f, 0, 0.16f, 0.12f, 0.1f, 0.95f);
+		sheetYZ(matrices, vc, 0, -0.28f * ks, -hw * 0.5f, 0, 0.02f, hw * 0.5f, 0.12f, 0.1f, 0.08f, 0.9f);
+		// soft local shine (not a giant beam)
+		if (IceesConfig.knifeMaterial == KnifeMaterial.CHROME || IceesConfig.knifeMaterial == KnifeMaterial.RAINBOW) {
+			VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
+			sheet(matrices, glow, -hw * 0.3f, 0.05f, 0.01f, hw * 0.3f, hs * 0.9f, 0.01f, 1f, 1f, 1f, 0.35f * bright);
+		}
 		matrices.popPose();
 	}
 

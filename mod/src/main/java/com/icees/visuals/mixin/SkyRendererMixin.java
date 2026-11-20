@@ -21,8 +21,11 @@ public class SkyRendererMixin {
 		if (!IceesConfig.customSky) return;
 		state.skyColor = IceesConfig.skyStyle.toSkyArgb();
 		state.sunriseAndSunsetColor = IceesConfig.skyStyle.toSunriseArgb();
+		// Keep disc visible (don't let horizon dark-disc eat the colour)
+		state.shouldRenderDarkDisc = false;
 		switch (IceesConfig.skyStyle) {
 			case GALAXY, NOCTURNE, AMETHYST -> state.starBrightness = Math.max(state.starBrightness, 0.95f);
+			case SAKURA, FIRE, OPALINE -> state.starBrightness = Math.min(state.starBrightness, 0.15f);
 			default -> {}
 		}
 	}
