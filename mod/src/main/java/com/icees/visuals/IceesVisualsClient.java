@@ -8,8 +8,9 @@ import com.icees.visuals.gui.OrbitScreen;
 import com.icees.visuals.keybind.IceesKeybinds;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +34,14 @@ public final class IceesVisualsClient implements ClientModInitializer {
 
 		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
 
-		HudRenderCallback.EVENT.register((graphics, tickCounter) -> {
-			FallParticleRenderer.render(graphics, 0f);
+		// Reliable HUD path for 1.21.11 (deprecated HudRenderCallback often does not fire)
+		HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "fall_themes"), (graphics, tickCounter) -> {
+			FallParticleRenderer.render(graphics, tickCounter.getGameTimeDeltaPartialTick(false));
+		});
+		HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "knife_hud"), (graphics, tickCounter) -> {
 			KnifeHudRenderer.render(graphics);
 		});
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.2 for Minecraft 1.21.11 — Right Shift opens Orbit");
+		LOGGER.info("Icee's Sakura Visuals 1.0.3 — Right Shift opens Orbit");
 	}
 }

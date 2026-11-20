@@ -36,7 +36,7 @@ public class OrbitScreen extends Screen {
 	private Tab tab = Tab.SKIES;
 	private int panelX, panelY;
 	private final int panelW = 500;
-	private final int panelH = 330;
+	private final int panelH = 390;
 	private boolean listeningKey;
 	private final List<Hit> hits = new ArrayList<>();
 	private final List<TabHit> tabHits = new ArrayList<>();
@@ -106,22 +106,34 @@ public class OrbitScreen extends Screen {
 			case COSMETICS -> {
 				addHit(x, y, w, 24, "Wings  ·  " + onOff(IceesConfig.wings) + "  ·  " + IceesConfig.wingStyle.title, IceesConfig.wings,
 					() -> IceesConfig.wings = !IceesConfig.wings);
-				y += 28;
-				addHit(x, y, w, 24, "Next wing  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
-				y += 30;
+				y += 26;
+				addHit(x, y, w, 22, "Next wing  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
+				y += 26;
 				addHit(x, y, w, 24, "Halo  ·  " + onOff(IceesConfig.halo) + "  ·  " + IceesConfig.haloStyle.title, IceesConfig.halo,
 					() -> IceesConfig.halo = !IceesConfig.halo);
-				y += 28;
-				addHit(x, y, w, 24, "Next halo  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
-				y += 30;
+				y += 26;
+				addHit(x, y, w, 22, "Next halo  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
+				y += 26;
 				addHit(x, y, w, 24, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  " + IceesConfig.capeStyle.title, IceesConfig.cape,
 					() -> IceesConfig.cape = !IceesConfig.cape);
-				y += 28;
-				addHit(x, y, w, 24, "Next cape  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
-				y += 30;
-				addHit(x, y, w / 2 - 6, 24, "Aura  ·  " + onOff(IceesConfig.aura), IceesConfig.aura, () -> IceesConfig.aura = !IceesConfig.aura);
-				addHit(x + w / 2 + 6, y, w / 2 - 6, 24, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
+				y += 26;
+				addHit(x, y, w, 22, "Next cape  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
+				y += 26;
+				addHit(x, y, w, 22, "Aura  ·  " + onOff(IceesConfig.aura) + "  ·  " + IceesConfig.auraStyle.title, IceesConfig.aura,
+					() -> IceesConfig.aura = !IceesConfig.aura);
+				y += 24;
+				addHit(x, y, w, 22, "Next aura  →  " + IceesConfig.auraStyle.title, false,
+					() -> IceesConfig.auraStyle = IceesConfig.auraStyle.next());
+				y += 24;
+				addHit(x, y, w, 22, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
 					() -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles);
+				y += 28;
+				addHit(x, y, w / 2 - 6, 24, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
+					IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
+				});
+				addHit(x + w / 2 + 6, y, w / 2 - 6, 24, "Thickness  ·  " + IceesConfig.cosmeticThickness + " / 5", false, () -> {
+					IceesConfig.cosmeticThickness = IceesConfig.cosmeticThickness >= 5 ? 1 : IceesConfig.cosmeticThickness + 1;
+				});
 			}
 			case KNIVES -> {
 				addHit(x, y, w, 26, "Knife Animations  ·  " + onOff(IceesConfig.knife), IceesConfig.knife,
@@ -228,7 +240,7 @@ public class OrbitScreen extends Screen {
 
 		String tip = switch (tab) {
 			case SKIES -> IceesConfig.skyStyle.description;
-			case COSMETICS -> "Soft wings, halos & capes — client-side glow.";
+			case COSMETICS -> IceesConfig.aura ? IceesConfig.auraStyle.description : "Third person only. Brightness & thickness below.";
 			case KNIVES -> IceesConfig.knifeStyle.tricks;
 			case THEMES -> IceesConfig.fallTheme.description;
 			case KEYBIND -> listeningKey ? "Waiting for a key…" : "Click the row, then press a new key.";

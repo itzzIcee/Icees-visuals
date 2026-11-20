@@ -43,9 +43,9 @@ public final class FallParticleRenderer {
 		int h = client.getWindow().getGuiScaledHeight();
 		int density = Math.max(1, IceesConfig.fallIntensity);
 		int max = switch (theme) {
-			case SOFT_MIST -> 18 + density * 6;
-			case WHITE_SNOW -> 50 + density * 22;
-			default -> 36 + density * 18;
+			case SOFT_MIST -> 28 + density * 10;
+			case WHITE_SNOW -> 70 + density * 35;
+			default -> 55 + density * 30;
 		};
 
 		if (spawnCooldown > 0) {
@@ -135,11 +135,11 @@ public final class FallParticleRenderer {
 				p.kind = Kind.PETAL;
 				p.tex = RNG.nextBoolean() ? TEX_PETAL : TEX_PETAL_SOFT;
 				p.texSize = 256;
-				p.size = 16f + RNG.nextFloat() * 28f;
+				p.size = 22f + RNG.nextFloat() * 36f;
 				p.vx = -0.45f + RNG.nextFloat() * 0.9f;
 				p.vy = 0.28f + RNG.nextFloat() * 0.5f;
 				p.spin = -0.04f + RNG.nextFloat() * 0.08f;
-				p.a = 0.55f + RNG.nextFloat() * 0.35f;
+				p.a = 0.75f + RNG.nextFloat() * 0.25f;
 				// soft pink / rose (not hard magenta)
 				float tint = RNG.nextFloat();
 				p.r = 1.0f;
@@ -150,11 +150,11 @@ public final class FallParticleRenderer {
 				p.kind = Kind.SNOW;
 				p.tex = TEX_SNOW;
 				p.texSize = 256;
-				p.size = 10f + RNG.nextFloat() * 18f;
+				p.size = 14f + RNG.nextFloat() * 24f;
 				p.vx = -0.25f + RNG.nextFloat() * 0.5f;
 				p.vy = 0.22f + RNG.nextFloat() * 0.4f;
 				p.spin = -0.01f + RNG.nextFloat() * 0.02f;
-				p.a = 0.5f + RNG.nextFloat() * 0.4f;
+				p.a = 0.8f + RNG.nextFloat() * 0.2f;
 				p.r = 0.95f + RNG.nextFloat() * 0.05f;
 				p.g = 0.96f + RNG.nextFloat() * 0.04f;
 				p.b = 1.0f;
@@ -168,7 +168,7 @@ public final class FallParticleRenderer {
 				p.vx = -0.12f + RNG.nextFloat() * 0.24f;
 				p.vy = 0.04f + RNG.nextFloat() * 0.12f;
 				p.spin = 0f;
-				p.a = 0.12f + RNG.nextFloat() * 0.14f;
+				p.a = 0.22f + RNG.nextFloat() * 0.18f;
 				p.r = 0.96f;
 				p.g = 0.97f;
 				p.b = 1.0f;

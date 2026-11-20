@@ -1,0 +1,36 @@
+package com.icees.visuals.cosmetics;
+
+/** Selectable aura looks around the player. */
+public enum AuraStyle {
+	ORBIT("Orbit", "Soft orbs circling the body.", 1.00f, 0.70f, 0.85f, 4, 0.10f),
+	PULSE("Pulse", "Breathing glow that expands and fades.", 1.00f, 0.75f, 0.90f, 1, 0.0f),
+	FLAME("Flame", "Warm rising ember wisps.", 1.00f, 0.45f, 0.28f, 6, 0.14f),
+	FROST("Frost", "Cool drifting ice motes.", 0.70f, 0.88f, 1.00f, 5, 0.08f),
+	BLOOM("Bloom", "Sakura petal sparks around you.", 1.00f, 0.62f, 0.78f, 8, 0.12f),
+	RING("Ring", "Flat glowing ring at the feet.", 1.00f, 0.80f, 0.90f, 1, 0.0f),
+	SPARKS("Sparks", "Fast spinning spark trail.", 1.00f, 0.90f, 0.65f, 10, 0.22f),
+	TWIN("Twin", "Two large side auras.", 0.90f, 0.65f, 1.00f, 2, 0.0f),
+	SPIRAL("Spiral", "Rising spiral of light.", 0.85f, 0.70f, 1.00f, 7, 0.16f),
+	HEARTBEAT("Heartbeat", "Double-pulse soft flare.", 1.00f, 0.55f, 0.70f, 1, 0.0f);
+
+	public final String title;
+	public final String description;
+	public final float r, g, b;
+	public final int count;
+	public final float spin;
+
+	AuraStyle(String title, String description, float r, float g, float b, int count, float spin) {
+		this.title = title;
+		this.description = description;
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.count = count;
+		this.spin = spin;
+	}
+
+	public AuraStyle next() {
+		AuraStyle[] a = values();
+		return a[(ordinal() + 1) % a.length];
+	}
+}

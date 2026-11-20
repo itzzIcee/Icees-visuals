@@ -8,25 +8,29 @@ import net.minecraft.client.renderer.state.SkyRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Overrides extracted sky colour so every Icees sky style actually changes the sky disc.
+ * Forces Icees sky colours onto the sky disc + extracted render state.
  */
 @Mixin(SkyRenderer.class)
 public class SkyRendererMixin {
 	@Inject(method = "extractRenderState", at = @At("RETURN"))
 	private void icees$applySkyStyle(ClientLevel level, float partialTick, Camera camera, SkyRenderState state, CallbackInfo ci) {
-		if (!IceesConfig.customSky) {
-			return;
-		}
+		if (!IceesConfig.customSky) return;
 		state.skyColor = IceesConfig.skyStyle.toSkyArgb();
 		state.sunriseAndSunsetColor = IceesConfig.skyStyle.toSunriseArgb();
-		// Keep stars visible on dark skies
-		if (IceesConfig.skyStyle == com.icees.visuals.sky.SkyStyle.GALAXY
-			|| IceesConfig.skyStyle == com.icees.visuals.sky.SkyStyle.NOCTURNE
-			|| IceesConfig.skyStyle == com.icees.visuals.sky.SkyStyle.AMETHYST) {
-			state.starBrightness = Math.max(state.starBrightness, 0.85f);
+		switch (IceesConfig.skyStyle) {
+			case GALAXY, NOCTURNE, AMETHYST -> state.starBrightness = Math.max(state.starBrightness, 0.95f);
+			default -> {}
 		}
+	}
+
+	/** Belt-and-suspenders: override the colour argument right before the disc draws. */
+	@ModifyVariable(method = "renderSkyDisc", at = @At("HEAD"), argsOnly = true)
+	private int icees$forceSkyDiscColor(int color) {
+		if (!IceesConfig.customSky) return color;
+		return IceesConfig.skyStyle.toSkyArgb();
 	}
 }

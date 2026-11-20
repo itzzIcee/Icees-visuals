@@ -2,16 +2,16 @@ package com.icees.visuals.sky;
 
 import net.minecraft.util.ARGB;
 
-/** Soft cinematic skies — washed, not neon vanilla colors. */
+/** Punchy, clearly distinct skies (easy to see vs vanilla). */
 public enum SkyStyle {
-	SAKURA("Sakura", "Soft pink dusk with drifting blossom light.", 0.92f, 0.62f, 0.74f),
-	GALAXY("Galaxy", "Deep rose nebula with quiet stars.", 0.38f, 0.22f, 0.55f),
-	AETHER("Aether", "Pale silver haze over soft graphite.", 0.72f, 0.74f, 0.80f),
-	NOCTURNE("Nocturne", "Muted lilac night with soft edges.", 0.40f, 0.28f, 0.52f),
-	AMETHYST("Amethyst", "Dusty violet marble glow.", 0.42f, 0.24f, 0.52f),
-	OPALINE("Opaline", "Pearl lavender with cool cyan breath.", 0.62f, 0.78f, 0.86f),
-	RAIN("Rain", "Soft blue-grey rain veil.", 0.42f, 0.46f, 0.52f),
-	FIRE("Fire", "Warm ember clouds with sakura ash.", 0.88f, 0.48f, 0.32f);
+	SAKURA("Sakura", "Bright pink blossom sky.", 1.00f, 0.45f, 0.68f),
+	GALAXY("Galaxy", "Deep violet nebula sky.", 0.28f, 0.08f, 0.55f),
+	AETHER("Aether", "Silver-white overcast glow.", 0.78f, 0.82f, 0.90f),
+	NOCTURNE("Nocturne", "Dark lilac night sky.", 0.28f, 0.12f, 0.42f),
+	AMETHYST("Amethyst", "Rich purple crystal sky.", 0.32f, 0.05f, 0.48f),
+	OPALINE("Opaline", "Pearl cyan-lavender sky.", 0.45f, 0.82f, 0.95f),
+	RAIN("Rain", "Heavy steel-blue rain sky.", 0.28f, 0.34f, 0.42f),
+	FIRE("Fire", "Burning orange ember sky.", 0.98f, 0.32f, 0.12f);
 
 	public final String title;
 	public final String description;
@@ -20,7 +20,9 @@ public enum SkyStyle {
 	SkyStyle(String title, String description, float r, float g, float b) {
 		this.title = title;
 		this.description = description;
-		this.r = r; this.g = g; this.b = b;
+		this.r = r;
+		this.g = g;
+		this.b = b;
 	}
 
 	public int toSkyArgb() {
@@ -28,7 +30,12 @@ public enum SkyStyle {
 	}
 
 	public int toSunriseArgb() {
-		return ARGB.colorFromFloat(0.75f, Math.min(1f, r + 0.12f), Math.min(1f, g + 0.08f), Math.min(1f, b + 0.08f));
+		return ARGB.colorFromFloat(0.95f, Math.min(1f, r + 0.2f), Math.min(1f, g + 0.1f), Math.min(1f, b + 0.08f));
+	}
+
+	public int toFogArgb() {
+		// Slightly darker / hazier for fog so the disc still reads
+		return ARGB.colorFromFloat(1.0f, r * 0.85f, g * 0.85f, b * 0.85f);
 	}
 
 	public SkyStyle next() {
