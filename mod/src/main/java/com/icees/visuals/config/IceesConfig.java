@@ -6,6 +6,7 @@ import com.icees.visuals.IceesVisualsClient;
 import com.icees.visuals.cosmetics.AuraStyle;
 import com.icees.visuals.cosmetics.CapeStyle;
 import com.icees.visuals.cosmetics.HaloStyle;
+import com.icees.visuals.cosmetics.HatStyle;
 import com.icees.visuals.cosmetics.KnifeMaterial;
 import com.icees.visuals.cosmetics.KnifeStyle;
 import com.icees.visuals.cosmetics.WingStyle;
@@ -35,6 +36,8 @@ public final class IceesConfig {
 	public static WingStyle wingStyle = WingStyle.PETAL;
 	public static boolean halo = true;
 	public static HaloStyle haloStyle = HaloStyle.BLOSSOM;
+	public static boolean hat = true;
+	public static HatStyle hatStyle = HatStyle.STRAW;
 	public static boolean cape = true;
 	public static CapeStyle capeStyle = CapeStyle.SAKURA;
 	public static boolean knife = true;
@@ -220,6 +223,13 @@ public final class IceesConfig {
 			wingStyle = safeEnum(WingStyle.class, data.wingStyle, WingStyle.PETAL);
 			halo = data.halo;
 			haloStyle = safeEnum(HaloStyle.class, data.haloStyle, HaloStyle.BLOSSOM);
+			if (data.hatStyle != null) {
+				hat = data.hat;
+				hatStyle = safeEnum(HatStyle.class, data.hatStyle, HatStyle.STRAW);
+			} else {
+				hat = true;
+				hatStyle = HatStyle.STRAW;
+			}
 			cape = data.cape;
 			capeStyle = safeEnum(CapeStyle.class, data.capeStyle, CapeStyle.SAKURA);
 			knife = data.knife;
@@ -279,6 +289,7 @@ public final class IceesConfig {
 		data.customSky = customSky; data.skyStyle = skyStyle.name();
 		data.wings = wings; data.wingStyle = wingStyle.name();
 		data.halo = halo; data.haloStyle = haloStyle.name();
+		data.hat = hat; data.hatStyle = hatStyle.name();
 		data.cape = cape; data.capeStyle = capeStyle.name();
 		data.knife = knife; data.knifeStyle = knifeStyle.name();
 		data.knifeMaterial = knifeMaterial.name();
@@ -321,6 +332,7 @@ public final class IceesConfig {
 		boolean customSky = true; String skyStyle = "SAKURA";
 		boolean wings = true; String wingStyle = "PETAL";
 		boolean halo = true; String haloStyle = "BLOSSOM";
+		boolean hat = true; String hatStyle = "STRAW";
 		boolean cape = true; String capeStyle = "SAKURA";
 		boolean knife = true; String knifeStyle = "BUTTERFLY";
 		String knifeMaterial = "STEEL"; int knifeSize = 3;

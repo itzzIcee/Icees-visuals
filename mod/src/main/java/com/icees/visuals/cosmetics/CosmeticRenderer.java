@@ -78,6 +78,7 @@ public final class CosmeticRenderer {
 			if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, thick);
 			if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, thick);
 			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, thick);
+			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, thick);
 			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, thick, camRelYaw, camPitch);
 			if (IceesConfig.jumpCircles && !player.onGround()) drawJumpCircles(matrices, consumers, time, bright, thick);
 			if (IceesConfig.knifeActive(player)) drawThirdPersonKnife(matrices, consumers, time, bright, thick, camRelYaw);
@@ -205,6 +206,130 @@ public final class CosmeticRenderer {
 			sheet(m, soft, 0, 0, 0, s * span, tall, -0.1f, CR, Math.max(0.2f, CG * (0.7f + t * 0.3f)), CB * 0.5f, 0.55f * bright);
 			sheet(m, hard, 0, 0.05f, 0.03f, s * span * 0.75f, tall * 0.9f, -0.05f, CR, CG, CB, 0.95f * bright);
 			m.popPose();
+		}
+	}
+
+	/* ===================== HATS — straw (natural) + china cone ===================== */
+
+	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+		HatStyle style = IceesConfig.hatStyle;
+		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
+		matrices.pushPose();
+		// Sit on the head (player eye ~1.62, head top ~1.8)
+		matrices.translate(0, 1.72f + 0.04f * thick, 0);
+		float s = 0.85f + thick * 0.2f;
+
+		switch (style) {
+			case STRAW -> drawStrawHat(matrices, vc, s, bright);
+			case CHINA -> drawChinaHat(matrices, vc, s, bright);
+		}
+		matrices.popPose();
+	}
+
+	/** DualPrac-style straw hat — natural straw colours only, no HSV tint. */
+	private static void drawStrawHat(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float strawR = 0.90f, strawG = 0.74f, strawB = 0.42f;
+		float darkR = 0.72f, darkG = 0.55f, darkB = 0.28f;
+		float bandR = 0.35f, bandG = 0.28f, bandB = 0.18f;
+		float a = Math.min(1f, 0.95f * bright);
+
+		// Wide flat brim
+		float brim = 0.55f * s;
+		int segs = 16;
+		for (int i = 0; i < segs; i++) {
+			float a0 = i / (float) segs * ((float) Math.PI * 2f);
+			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+			float x0 = Mth.cos(a0) * brim, z0 = Mth.sin(a0) * brim;
+			float x1 = Mth.cos(a1) * brim, z1 = Mth.sin(a1) * brim;
+			float xi0 = Mth.cos(a0) * 0.22f * s, zi0 = Mth.sin(a0) * 0.22f * s;
+			float xi1 = Mth.cos(a1) * 0.22f * s, zi1 = Mth.sin(a1) * 0.22f * s;
+			// top of brim
+			sheet(m, vc, xi0, 0.02f, zi0, x0, 0.02f, z0, strawR, strawG, strawB, a);
+			sheet(m, vc, x0, 0.02f, z0, x1, 0.02f, z1, strawR, strawG, strawB, a);
+			sheet(m, vc, x1, 0.02f, z1, xi1, 0.02f, zi1, strawR, strawG, strawB, a);
+			sheet(m, vc, xi1, 0.02f, zi1, xi0, 0.02f, zi0, strawR, strawG, strawB, a);
+			// underside slightly darker
+			sheet(m, vc, xi0, -0.01f, zi0, xi1, -0.01f, zi1, darkR, darkG, darkB, a * 0.9f);
+			sheet(m, vc, xi1, -0.01f, zi1, x1, -0.01f, z1, darkR, darkG, darkB, a * 0.9f);
+			sheet(m, vc, x1, -0.01f, z1, x0, -0.01f, z0, darkR, darkG, darkB, a * 0.9f);
+			sheet(m, vc, x0, -0.01f, z0, xi0, -0.01f, zi0, darkR, darkG, darkB, a * 0.9f);
+			// brim rim
+			sheetYZ(m, vc, x0, -0.01f, z0 - 0.01f, x0, 0.02f, z0 + 0.01f, darkR, darkG, darkB, a);
+		}
+
+		// Crown (short cylinder)
+		float cr = 0.22f * s;
+		float ch = 0.22f * s;
+		for (int i = 0; i < segs; i++) {
+			float a0 = i / (float) segs * ((float) Math.PI * 2f);
+			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+			float x0 = Mth.cos(a0) * cr, z0 = Mth.sin(a0) * cr;
+			float x1 = Mth.cos(a1) * cr, z1 = Mth.sin(a1) * cr;
+			sheet(m, vc, x0, 0.02f, z0, x1, ch, z1, strawR, strawG, strawB, a);
+			sheetYZ(m, vc, x0, 0.02f, z0 - 0.01f, x0, ch, z0 + 0.01f, darkR, darkG, darkB, a * 0.85f);
+		}
+		// Crown top
+		for (int i = 0; i < segs; i++) {
+			float a0 = i / (float) segs * ((float) Math.PI * 2f);
+			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+			float x0 = Mth.cos(a0) * cr, z0 = Mth.sin(a0) * cr;
+			float x1 = Mth.cos(a1) * cr, z1 = Mth.sin(a1) * cr;
+			sheet(m, vc, 0, ch, 0, x0, ch, z0, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
+			sheet(m, vc, x0, ch, z0, x1, ch, z1, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
+			sheet(m, vc, x1, ch, z1, 0, ch, 0, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
+		}
+		// Dark band around crown base
+		for (int i = 0; i < segs; i++) {
+			float a0 = i / (float) segs * ((float) Math.PI * 2f);
+			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+			float x0 = Mth.cos(a0) * (cr + 0.01f), z0 = Mth.sin(a0) * (cr + 0.01f);
+			float x1 = Mth.cos(a1) * (cr + 0.01f), z1 = Mth.sin(a1) * (cr + 0.01f);
+			sheet(m, vc, x0, 0.04f * s, z0, x1, 0.1f * s, z1, bandR, bandG, bandB, a);
+		}
+	}
+
+	/** Conical China / rice hat. */
+	private static void drawChinaHat(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float r0 = 0.62f * s;
+		float h = 0.42f * s;
+		float bambooR = 0.78f, bambooG = 0.68f, bambooB = 0.42f;
+		float tipR = 0.55f, tipG = 0.45f, tipB = 0.28f;
+		float a = Math.min(1f, 0.95f * bright);
+		int rings = 6;
+		int segs = 16;
+
+		for (int ring = 0; ring < rings; ring++) {
+			float t0 = ring / (float) rings;
+			float t1 = (ring + 1) / (float) rings;
+			float y0 = t0 * h;
+			float y1 = t1 * h;
+			float rad0 = r0 * (1f - t0);
+			float rad1 = r0 * (1f - t1);
+			float shade = 1f - t0 * 0.25f;
+			for (int i = 0; i < segs; i++) {
+				float a0 = i / (float) segs * ((float) Math.PI * 2f);
+				float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+				float x00 = Mth.cos(a0) * rad0, z00 = Mth.sin(a0) * rad0;
+				float x01 = Mth.cos(a1) * rad0, z01 = Mth.sin(a1) * rad0;
+				float x10 = Mth.cos(a0) * rad1, z10 = Mth.sin(a0) * rad1;
+				float x11 = Mth.cos(a1) * rad1, z11 = Mth.sin(a1) * rad1;
+				sheet(m, vc, x00, y0, z00, x10, y1, z10, bambooR * shade, bambooG * shade, bambooB * shade, a);
+				sheet(m, vc, x10, y1, z10, x11, y1, z11, bambooR * shade, bambooG * shade, bambooB * shade, a);
+				sheet(m, vc, x11, y1, z11, x01, y0, z01, bambooR * shade, bambooG * shade, bambooB * shade, a);
+				sheet(m, vc, x01, y0, z01, x00, y0, z00, bambooR * shade, bambooG * shade, bambooB * shade, a);
+			}
+		}
+		// tip knob
+		billboardOrb(m, vc, 0, h + 0.02f, 0, 0.05f * s, tipR, tipG, tipB, a, 0f);
+		// underside dark
+		for (int i = 0; i < segs; i++) {
+			float a0 = i / (float) segs * ((float) Math.PI * 2f);
+			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
+			float x0 = Mth.cos(a0) * r0, z0 = Mth.sin(a0) * r0;
+			float x1 = Mth.cos(a1) * r0, z1 = Mth.sin(a1) * r0;
+			sheet(m, vc, 0, 0.01f, 0, x0, 0.01f, z0, tipR, tipG, tipB, a * 0.7f);
+			sheet(m, vc, x0, 0.01f, z0, x1, 0.01f, z1, tipR, tipG, tipB, a * 0.7f);
+			sheet(m, vc, x1, 0.01f, z1, 0, 0.01f, 0, tipR, tipG, tipB, a * 0.7f);
 		}
 	}
 

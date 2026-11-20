@@ -119,6 +119,12 @@ public class OrbitScreen extends Screen {
 				y += 20;
 				addHit(x, y, w, 16, "Halo form  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
 				y += 18;
+				addHit(x, y, w, 18, "Hat  ·  " + onOff(IceesConfig.hat) + "  ·  " + IceesConfig.hatStyle.title, IceesConfig.hat,
+					() -> IceesConfig.hat = !IceesConfig.hat);
+				y += 20;
+				addHit(x, y, w, 16, "Hat form  →  " + IceesConfig.hatStyle.title, false,
+					() -> IceesConfig.hatStyle = IceesConfig.hatStyle.next());
+				y += 18;
 				addHit(x, y, w, 18, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  " + IceesConfig.capeStyle.title, IceesConfig.cape,
 					() -> IceesConfig.cape = !IceesConfig.cape);
 				y += 20;

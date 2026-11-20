@@ -55,6 +55,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.6 — Right Shift opens Orbit");
+		LOGGER.info("Icee's Sakura Visuals 1.0.7 — Right Shift opens Orbit");
 	}
 }
