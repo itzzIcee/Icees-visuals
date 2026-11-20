@@ -27,7 +27,6 @@ public final class CosmeticRenderer {
 	private static final Identifier TEX_HALO = Identifier.fromNamespaceAndPath("icees-visuals", "textures/cosmetic/halo.png");
 	private static final Identifier TEX_CAPE = Identifier.fromNamespaceAndPath("icees-visuals", "textures/cosmetic/cape.png");
 	private static final Identifier TEX_AURA = Identifier.fromNamespaceAndPath("icees-visuals", "textures/cosmetic/aura.png");
-	private static final Identifier TEX_KNIFE = Identifier.fromNamespaceAndPath("icees-visuals", "textures/cosmetic/knife.png");
 
 	private static boolean disabledForSession;
 	private static float CR = 1f, CG = 1f, CB = 1f;
@@ -93,7 +92,6 @@ public final class CosmeticRenderer {
 			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, thick);
 			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, thick, camRelYaw, camPitch);
 			if (IceesConfig.jumpCircles && !player.onGround()) drawJumpCircles(matrices, consumers, time, bright, thick);
-			if (IceesConfig.knifeActive(player)) drawThirdPersonKnife(matrices, consumers, time, bright, thick, camRelYaw);
 
 			matrices.popPose();
 		} catch (Throwable t) {
@@ -336,9 +334,9 @@ public final class CosmeticRenderer {
 				boolean weave = ((ix + iz) & 1) == 0;
 				float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
 				// top
-				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT, x0, 0, z0, x1, u * 0.9f, z1, rr, gg, bb, a);
+				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x0, 0, z0, x1, u * 0.9f, z1, rr, gg, bb, a);
 				// underside
-				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT, x0, -u * 0.35f, z0, x1, 0, z1, s2r, s2g, s2b, a * 0.95f);
+				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x0, -u * 0.35f, z0, x1, 0, z1, s2r, s2g, s2b, a * 0.95f);
 			}
 		}
 
@@ -354,7 +352,7 @@ public final class CosmeticRenderer {
 				for (int iy = 0; iy < 4; iy++) {
 					boolean weave = ((ix + iy) & 1) == 0;
 					float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
-					KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT,
 						ix * u, y0 + iy * u, cw - u * 0.05f,
 						(ix + 1) * u, y0 + (iy + 1) * u, cw + u * 0.55f,
 						rr, gg, bb, a);
@@ -367,7 +365,7 @@ public final class CosmeticRenderer {
 			for (int iz = -3; iz < 3; iz++) {
 				boolean weave = ((ix + iz) & 1) == 0;
 				float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
-				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT,
 					ix * u, y0 + ch - u * 0.1f, iz * u,
 					(ix + 1) * u, y0 + ch + u * 0.5f, (iz + 1) * u,
 					rr, gg, bb, a);
@@ -381,7 +379,7 @@ public final class CosmeticRenderer {
 		for (int face = 0; face < 4; face++) {
 			m.pushPose();
 			m.mulPose(Axis.YP.rotationDegrees(face * 90f));
-			KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+			MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT,
 				-cw, bandY0, br - u * 0.2f,
 				cw, bandY1, br + u * 0.7f,
 				bandR, bandG, bandB, a);
@@ -507,7 +505,7 @@ public final class CosmeticRenderer {
 					float a = -0.6f + i / 9f * 3.6f;
 					float x = Mth.cos(a) * 0.4f * thick;
 					float z = Mth.sin(a) * 0.4f * thick;
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						x - 0.05f * thick, -0.04f, z - 0.05f * thick,
 						x + 0.05f * thick, 0.04f, z + 0.05f * thick,
 						CR, CG, CB, Math.min(1f, bright));
@@ -515,11 +513,11 @@ public final class CosmeticRenderer {
 			}
 			case HORNS -> {
 				for (int side : new int[]{-1, 1}) {
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						side * 0.22f * thick, 0.05f, -0.06f,
 						side * 0.38f * thick, 0.28f * thick, 0.06f,
 						CR, CG, CB, bright);
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						side * 0.32f * thick, 0.25f * thick, -0.05f,
 						side * 0.48f * thick, 0.48f * thick, 0.05f,
 						CR, CG, CB, bright);
@@ -700,7 +698,7 @@ public final class CosmeticRenderer {
 					float a = i * ((float) Math.PI * 2f / style.count) + time * style.spin;
 					float x = Mth.cos(a) * 0.55f * thick;
 					float z = Mth.sin(a) * 0.55f * thick;
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						x - 0.04f * thick, 0.1f, z - 0.04f * thick,
 						x + 0.04f * thick, 2.0f * thick, z + 0.04f * thick,
 						CR, CG, CB, aMul * 0.7f);
@@ -712,7 +710,7 @@ public final class CosmeticRenderer {
 					float a = i * ((float) Math.PI * 2f / n);
 					float x = Mth.cos(a) * 0.85f * thick;
 					float z = Mth.sin(a) * 0.85f * thick;
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						x - 0.08f * thick, 0.4f, z - 0.08f * thick,
 						x + 0.08f * thick, 1.6f, z + 0.08f * thick,
 						CR, CG, CB, aMul * 0.55f);
@@ -724,7 +722,7 @@ public final class CosmeticRenderer {
 					float a = t * Mth.TWO_PI * 2f + time * style.spin;
 					float radius = 0.35f * thick + t * 0.4f * thick;
 					float y = 0.3f + t * 1.5f;
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
 						Mth.cos(a) * radius - 0.06f, y, Mth.sin(a) * radius - 0.02f,
 						Mth.cos(a) * radius + 0.06f, y + 0.12f, Mth.sin(a) * radius + 0.02f,
 						CR, CG, CB, aMul * (1f - t * 0.4f));
@@ -737,7 +735,7 @@ public final class CosmeticRenderer {
 					float z = Mth.sin(a) * 0.8f * thick;
 					float y = 0.9f + Mth.sin(time * 0.2f + i) * 0.2f;
 					float hs = 0.1f * thick;
-					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT, x - hs, y - hs, z - hs, x + hs, y + hs, z + hs, CR, CG, CB, aMul);
+					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT, x - hs, y - hs, z - hs, x + hs, y + hs, z + hs, CR, CG, CB, aMul);
 				}
 			}
 			default -> {
@@ -766,32 +764,7 @@ public final class CosmeticRenderer {
 		}
 	}
 
-	private static void drawThirdPersonKnife(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw) {
-		KnifeStyle style = IceesConfig.knifeStyle;
-		float[] c = IceesConfig.knifeBladeColor(time);
-		float ks = IceesConfig.knifeSizeFactor();
-		matrices.pushPose();
-		matrices.translate(0.38f * ks, 0.72f, -0.1f);
-		matrices.mulPose(Axis.YP.rotationDegrees(knifeSpin(style, time)));
-		matrices.mulPose(Axis.ZP.rotationDegrees(22f + Mth.sin(time * 0.15f) * 5f));
-		matrices.mulPose(Axis.XP.rotationDegrees(-12f));
-		matrices.scale(ks * 1.15f, ks * 1.15f, ks * 1.15f);
-		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_KNIFE));
-		float r = Math.min(1f, c[0] * bright);
-		float g = Math.min(1f, c[1] * bright);
-		float b = Math.min(1f, c[2] * bright);
-		KnifeModels.draw(matrices, vc, LightTexture.FULL_BRIGHT, style, r, g, b, time);
-		matrices.popPose();
-	}
 
-	private static float knifeSpin(KnifeStyle style, float time) {
-		return switch (style) {
-			case BUTTERFLY, KARAMBIT, CURVED -> time * 9f;
-			case BAYONET, LONG_BLADE -> Mth.sin(time * 0.2f) * 28f;
-			case STILETTO, SHORT_BLADE -> Mth.sin(time * 0.4f) * 45f;
-			case URSUS -> time * 6f + Mth.sin(time * 0.5f) * 20f;
-		};
-	}
 
 	/* ===================== PRIMITIVES (always double-sided) ===================== */
 
@@ -833,7 +806,7 @@ public final class CosmeticRenderer {
 		tri(matrices, vc, 0,-h, 0,  0, 0,-s, -s, 0, 0, r, g, b, aa);
 		tri(matrices, vc, 0,-h, 0,  s, 0, 0,  0, 0,-s, er, eg, eb, aa);
 		// core glow box
-		KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT, -s * 0.28f, -s * 0.28f, -s * 0.28f, s * 0.28f, s * 0.28f, s * 0.28f, er, eg, eb, aa * 0.85f);
+		MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT, -s * 0.28f, -s * 0.28f, -s * 0.28f, s * 0.28f, s * 0.28f, s * 0.28f, er, eg, eb, aa * 0.85f);
 		matrices.popPose();
 	}
 

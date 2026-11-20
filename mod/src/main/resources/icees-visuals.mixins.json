@@ -7,7 +7,6 @@
     "CloudRendererMixin",
     "AtmosphericFogMixin",
     "EnvironmentAttributeProbeMixin",
-    "ItemInHandRendererMixin",
     "GameRendererMixin",
     "ClientLevelMixin"
   ],

@@ -7,17 +7,13 @@ import com.icees.visuals.cosmetics.AuraStyle;
 import com.icees.visuals.cosmetics.CapeStyle;
 import com.icees.visuals.cosmetics.HaloStyle;
 import com.icees.visuals.cosmetics.HatStyle;
-import com.icees.visuals.cosmetics.KnifeMaterial;
-import com.icees.visuals.cosmetics.KnifeStyle;
+import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.overlay.OverlayMaterial;
 import com.icees.visuals.sky.SkyStyle;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ARGB;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -40,23 +36,18 @@ public final class IceesConfig {
 	public static HatStyle hatStyle = HatStyle.STRAW_RED;
 	public static boolean cape = true;
 	public static CapeStyle capeStyle = CapeStyle.SAKURA;
-	public static boolean knife = true;
-	public static KnifeStyle knifeStyle = KnifeStyle.BAYONET;
-	public static KnifeMaterial knifeMaterial = KnifeMaterial.STEEL;
-	public static int knifeSize = 3;
-	public static boolean knifeCustomColor = false;
-	public static int knifeHue = 210;
-	public static int knifeSat = 15;
-	public static int knifeVal = 90;
 	public static boolean aura = true;
 	public static AuraStyle auraStyle = AuraStyle.ORBIT;
+	public static boolean shield = false;
+	public static ShieldStyle shieldStyle = ShieldStyle.SAKURA;
 	public static boolean trail = false;
 	public static boolean jumpCircles = true;
 	public static FallTheme fallTheme = FallTheme.SAKURA_FALL;
 	public static int fallIntensity = 3;
-	public static int cosmeticBrightness = 4;
-	public static int cosmeticSize = 3;
-	public static int cosmeticThickness = 3;
+	public static int fallSize = 3;
+	public static int cosmeticBrightness = 5;
+	public static int cosmeticSize = 4;
+	public static int cosmeticThickness = 4;
 	/** Kept for config migration — use per-cosmetic tints. */
 	@Deprecated
 	public static boolean customColor = true;
@@ -68,6 +59,7 @@ public final class IceesConfig {
 	public static CosmeticTint haloTint = new CosmeticTint(true, 320, 65, 100);
 	public static CosmeticTint capeTint = new CosmeticTint(true, 330, 70, 100);
 	public static CosmeticTint auraTint = new CosmeticTint(true, 310, 70, 100);
+	public static CosmeticTint shieldTint = new CosmeticTint(true, 330, 55, 100);
 
 	/* —— Block Overlay —— */
 	public static boolean blockOverlay = true;
@@ -85,6 +77,21 @@ public final class IceesConfig {
 	public static boolean fullbright = false;
 	public static boolean lowParticles = false;
 
+	/* —— Extra PvP Visuals —— */
+	public static boolean pvpHitMarkers = true;
+	public static boolean pvpCrosshair = false;
+	public static int pvpCrosshairSize = 2;
+	public static boolean pvpTargetCue = false;
+	public static boolean pvpHitColour = true;
+	public static int pvpHitHue = 330;
+	public static int pvpHitSat = 70;
+	public static int pvpHitVal = 100;
+	public static boolean pvpHitParticles = true;
+	public static boolean pvpMaceParticles = true;
+	public static boolean pvpSpearParticles = true;
+	public static int pvpParticleSize = 3;
+	public static CosmeticTint pvpTint = new CosmeticTint(true, 330, 70, 100);
+
 	/* —— Orbit GUI colours —— */
 	public static boolean guiCustomColor = false;
 	public static boolean guiRainbow = false;
@@ -97,30 +104,20 @@ public final class IceesConfig {
 	private IceesConfig() {}
 
 	public static float brightnessFactor() {
-		return 0.35f + cosmeticBrightness * 0.18f;
+		return 0.65f + cosmeticBrightness * 0.28f;
 	}
 
 	public static float thicknessFactor() {
 		int s = Math.max(cosmeticSize, cosmeticThickness);
-		return 0.55f + s * 0.22f;
+		return 0.85f + s * 0.30f;
 	}
 
 	public static float sizeFactor() {
 		return thicknessFactor();
 	}
 
-	public static float knifeSizeFactor() {
-		return 0.65f + knifeSize * 0.22f;
-	}
-
 	public static float overlayBrightnessFactor() {
 		return 0.55f + overlayBrightness * 0.18f;
-	}
-
-	public static boolean knifeActive(Player player) {
-		if (!knife || player == null) return false;
-		ItemStack main = player.getMainHandItem();
-		return !main.isEmpty() && main.is(ItemTags.SWORDS);
 	}
 
 	/** Legacy global tint — prefer {@link #color(CosmeticTint, float, float, float)}. */
@@ -131,32 +128,6 @@ public final class IceesConfig {
 	public static float[] color(CosmeticTint tint, float baseR, float baseG, float baseB) {
 		if (tint == null) return new float[]{baseR, baseG, baseB};
 		return tint.apply(baseR, baseG, baseB);
-	}
-
-	public static float[] knifeBladeColor(float time) {
-		return switch (knifeMaterial) {
-			case RAINBOW -> {
-				float h = (time * 8f + (knifeCustomColor ? knifeHue : 0)) % 360f;
-				if (h < 0) h += 360f;
-				yield hsvToRgb(h, 0.85f, 1f);
-			}
-			case CHROME -> {
-				float shimmer = 0.82f + 0.18f * (0.5f + 0.5f * (float) Math.sin(time * 0.35f));
-				if (knifeCustomColor) {
-					float[] c = hsvToRgb(knifeHue, Math.min(0.35f, knifeSat / 100f), knifeVal / 100f);
-					yield new float[]{
-						Math.min(1f, c[0] * 0.45f + shimmer * 0.7f),
-						Math.min(1f, c[1] * 0.45f + shimmer * 0.72f),
-						Math.min(1f, c[2] * 0.45f + shimmer * 0.78f)
-					};
-				}
-				yield new float[]{shimmer, shimmer * 1.02f, Math.min(1f, shimmer * 1.08f)};
-			}
-			case GOLD -> knifeCustomColor ? hsvToRgb(knifeHue, knifeSat / 100f, knifeVal / 100f) : new float[]{0.95f, 0.78f, 0.28f};
-			case SAKURA -> knifeCustomColor ? hsvToRgb(knifeHue, knifeSat / 100f, knifeVal / 100f) : new float[]{1.00f, 0.62f, 0.78f};
-			case OBSIDIAN -> knifeCustomColor ? hsvToRgb(knifeHue, knifeSat / 100f, knifeVal / 100f) : new float[]{0.22f, 0.18f, 0.28f};
-			case STEEL -> knifeCustomColor ? hsvToRgb(knifeHue, knifeSat / 100f, knifeVal / 100f) : new float[]{0.72f, 0.76f, 0.82f};
-		};
 	}
 
 	public static float[] overlayColor(float time) {
@@ -244,21 +215,16 @@ public final class IceesConfig {
 			}
 			cape = data.cape;
 			capeStyle = safeEnum(CapeStyle.class, data.capeStyle, CapeStyle.SAKURA);
-			knife = data.knife;
-			knifeStyle = safeEnum(KnifeStyle.class, data.knifeStyle, KnifeStyle.BUTTERFLY);
-			knifeMaterial = safeEnum(KnifeMaterial.class, data.knifeMaterial, KnifeMaterial.STEEL);
-			if (data.knifeSize >= 1 && data.knifeSize <= 5) knifeSize = data.knifeSize;
-			knifeCustomColor = data.knifeCustomColor;
-			knifeHue = Math.floorMod(data.knifeHue, 360);
-			if (data.knifeSat >= 0 && data.knifeSat <= 100) knifeSat = data.knifeSat;
-			if (data.knifeVal >= 0 && data.knifeVal <= 100) knifeVal = data.knifeVal;
 			aura = data.aura;
 			auraStyle = safeEnum(AuraStyle.class, data.auraStyle, AuraStyle.ORBIT);
+			shield = data.shield;
+			shieldStyle = safeEnum(ShieldStyle.class, data.shieldStyle, ShieldStyle.SAKURA);
 			trail = data.trail;
 			jumpCircles = data.jumpCircles;
 			if (data.fallTheme != null) fallTheme = safeEnum(FallTheme.class, data.fallTheme, FallTheme.SAKURA_FALL);
 			else fallTheme = data.petals ? FallTheme.SAKURA_FALL : FallTheme.OFF;
 			if (data.fallIntensity >= 1 && data.fallIntensity <= 5) fallIntensity = data.fallIntensity;
+			if (data.fallSize >= 1 && data.fallSize <= 5) fallSize = data.fallSize;
 			if (data.cosmeticBrightness >= 1 && data.cosmeticBrightness <= 5) cosmeticBrightness = data.cosmeticBrightness;
 			if (data.cosmeticSize >= 1 && data.cosmeticSize <= 5) cosmeticSize = data.cosmeticSize;
 			if (data.cosmeticThickness >= 1 && data.cosmeticThickness <= 5) cosmeticThickness = data.cosmeticThickness;
@@ -273,6 +239,7 @@ public final class IceesConfig {
 			haloTint.loadFrom(data.haloTint, legacy);
 			capeTint.loadFrom(data.capeTint, legacy);
 			auraTint.loadFrom(data.auraTint, legacy);
+			shieldTint.loadFrom(data.shieldTint, legacy);
 
 			blockOverlay = data.blockOverlay;
 			overlayMaterial = safeEnum(OverlayMaterial.class, data.overlayMaterial, OverlayMaterial.SAKURA);
@@ -287,6 +254,20 @@ public final class IceesConfig {
 			noHurtCam = data.noHurtCam;
 			fullbright = data.fullbright;
 			lowParticles = data.lowParticles;
+
+			pvpHitMarkers = data.pvpHitMarkers;
+			pvpCrosshair = data.pvpCrosshair;
+			if (data.pvpCrosshairSize >= 1 && data.pvpCrosshairSize <= 5) pvpCrosshairSize = data.pvpCrosshairSize;
+			pvpTargetCue = data.pvpTargetCue;
+			pvpHitColour = data.pvpHitColour;
+			pvpHitHue = Math.floorMod(data.pvpHitHue, 360);
+			if (data.pvpHitSat >= 0 && data.pvpHitSat <= 100) pvpHitSat = data.pvpHitSat;
+			if (data.pvpHitVal >= 0 && data.pvpHitVal <= 100) pvpHitVal = data.pvpHitVal;
+			pvpHitParticles = data.pvpHitParticles;
+			pvpMaceParticles = data.pvpMaceParticles;
+			pvpSpearParticles = data.pvpSpearParticles;
+			if (data.pvpParticleSize >= 1 && data.pvpParticleSize <= 5) pvpParticleSize = data.pvpParticleSize;
+			pvpTint.loadFrom(data.pvpTint, new CosmeticTint(true, 330, 70, 100));
 
 			guiCustomColor = data.guiCustomColor;
 			guiRainbow = data.guiRainbow;
@@ -308,15 +289,11 @@ public final class IceesConfig {
 		data.halo = halo; data.haloStyle = haloStyle.name();
 		data.hat = hat; data.hatStyle = hatStyle.name();
 		data.cape = cape; data.capeStyle = capeStyle.name();
-		data.knife = knife; data.knifeStyle = knifeStyle.name();
-		data.knifeMaterial = knifeMaterial.name();
-		data.knifeSize = knifeSize;
-		data.knifeCustomColor = knifeCustomColor;
-		data.knifeHue = knifeHue; data.knifeSat = knifeSat; data.knifeVal = knifeVal;
 		data.aura = aura; data.auraStyle = auraStyle.name();
+		data.shield = shield; data.shieldStyle = shieldStyle.name();
 		data.trail = trail; data.jumpCircles = jumpCircles;
 		data.petals = fallTheme == FallTheme.SAKURA_FALL;
-		data.fallTheme = fallTheme.name(); data.fallIntensity = fallIntensity;
+		data.fallTheme = fallTheme.name(); data.fallIntensity = fallIntensity; data.fallSize = fallSize;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
 		data.customColor = wingTint.enabled;
@@ -325,6 +302,7 @@ public final class IceesConfig {
 		data.haloTint = haloTint.copy();
 		data.capeTint = capeTint.copy();
 		data.auraTint = auraTint.copy();
+		data.shieldTint = shieldTint.copy();
 		data.blockOverlay = blockOverlay;
 		data.overlayMaterial = overlayMaterial.name();
 		data.overlayBrightness = overlayBrightness;
@@ -332,6 +310,13 @@ public final class IceesConfig {
 		data.overlayHue = overlayHue; data.overlaySat = overlaySat; data.overlayVal = overlayVal;
 		data.motionBlur = motionBlur; data.motionBlurStrength = motionBlurStrength;
 		data.noHurtCam = noHurtCam; data.fullbright = fullbright; data.lowParticles = lowParticles;
+		data.pvpHitMarkers = pvpHitMarkers; data.pvpCrosshair = pvpCrosshair;
+		data.pvpCrosshairSize = pvpCrosshairSize; data.pvpTargetCue = pvpTargetCue;
+		data.pvpHitColour = pvpHitColour;
+		data.pvpHitHue = pvpHitHue; data.pvpHitSat = pvpHitSat; data.pvpHitVal = pvpHitVal;
+		data.pvpHitParticles = pvpHitParticles; data.pvpMaceParticles = pvpMaceParticles;
+		data.pvpSpearParticles = pvpSpearParticles; data.pvpParticleSize = pvpParticleSize;
+		data.pvpTint = pvpTint.copy();
 		data.guiCustomColor = guiCustomColor; data.guiRainbow = guiRainbow;
 		data.guiHue = guiHue; data.guiSat = guiSat; data.guiVal = guiVal;
 		data.orbitKeyCode = orbitKeyCode;
@@ -362,19 +347,22 @@ public final class IceesConfig {
 		boolean halo = true; String haloStyle = "BLOSSOM";
 		boolean hat = true; String hatStyle = "STRAW_RED";
 		boolean cape = true; String capeStyle = "SAKURA";
-		boolean knife = true; String knifeStyle = "BAYONET";
-		String knifeMaterial = "STEEL"; int knifeSize = 3;
-		boolean knifeCustomColor = false; int knifeHue = 210; int knifeSat = 15; int knifeVal = 90;
 		boolean aura = true; String auraStyle = "ORBIT";
+		boolean shield = false; String shieldStyle = "SAKURA";
 		boolean trail = false; boolean jumpCircles = true;
-		boolean petals = true; String fallTheme = "SAKURA_FALL"; int fallIntensity = 3;
-		int cosmeticBrightness = 4; int cosmeticSize = 3; int cosmeticThickness = 3;
+		boolean petals = true; String fallTheme = "SAKURA_FALL"; int fallIntensity = 3; int fallSize = 3;
+		int cosmeticBrightness = 5; int cosmeticSize = 4; int cosmeticThickness = 4;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
-		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint;
+		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
 		boolean blockOverlay = true; String overlayMaterial = "SAKURA"; int overlayBrightness = 3;
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;
 		boolean noHurtCam = true; boolean fullbright = false; boolean lowParticles = false;
+		boolean pvpHitMarkers = true; boolean pvpCrosshair = false; int pvpCrosshairSize = 2;
+		boolean pvpTargetCue = false; boolean pvpHitColour = true;
+		int pvpHitHue = 330; int pvpHitSat = 70; int pvpHitVal = 100;
+		boolean pvpHitParticles = true; boolean pvpMaceParticles = true; boolean pvpSpearParticles = true;
+		int pvpParticleSize = 3; CosmeticTint pvpTint;
 		boolean guiCustomColor = false; boolean guiRainbow = false;
 		int guiHue = 330; int guiSat = 55; int guiVal = 100;
 		int orbitKeyCode = 344;

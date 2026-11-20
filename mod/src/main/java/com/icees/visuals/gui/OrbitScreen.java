@@ -2,8 +2,6 @@ package com.icees.visuals.gui;
 
 import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
-import com.icees.visuals.cosmetics.KnifeMaterial;
-import com.icees.visuals.cosmetics.KnifeStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
@@ -35,7 +33,7 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { SKIES, COSMETICS, KNIVES, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { SKIES, COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
 
 	private Tab tab = Tab.SKIES;
 	private int panelX, panelY;
@@ -80,7 +78,6 @@ public class OrbitScreen extends Screen {
 		int ty = panelY + 64;
 		addTab(tx, ty, "Skies", Tab.SKIES); tx += 48;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
-		addTab(tx, ty, "Knives", Tab.KNIVES); tx += 52;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
@@ -151,50 +148,6 @@ public class OrbitScreen extends Screen {
 					IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
 				});
 			}
-			case KNIVES -> {
-				addHit(x, y, w, 18, "Knives  ·  " + onOff(IceesConfig.knife) + "  (only with sword)", IceesConfig.knife,
-					() -> IceesConfig.knife = !IceesConfig.knife);
-				y += 20;
-				addHit(x, y, w, 16, "Form  →  " + IceesConfig.knifeStyle.title, false, () -> {
-					IceesConfig.knifeStyle = IceesConfig.knifeStyle.next();
-					IceesConfig.knife = true;
-				});
-				y += 18;
-				addHit(x, y, w, 16, "Material  →  " + IceesConfig.knifeMaterial.title, false,
-					() -> IceesConfig.knifeMaterial = IceesConfig.knifeMaterial.next());
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Size  ·  " + IceesConfig.knifeSize + " / 5", false, () -> {
-					IceesConfig.knifeSize = IceesConfig.knifeSize >= 5 ? 1 : IceesConfig.knifeSize + 1;
-				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Custom Color  ·  " + onOff(IceesConfig.knifeCustomColor), IceesConfig.knifeCustomColor,
-					() -> IceesConfig.knifeCustomColor = !IceesConfig.knifeCustomColor);
-				y += 18;
-				addHit(x, y, w / 3 - 4, 16, "Hue  ·  " + IceesConfig.knifeHue, false, () -> {
-					IceesConfig.knifeHue = (IceesConfig.knifeHue + 15) % 360;
-					IceesConfig.knifeCustomColor = true;
-				});
-				addHit(x + w / 3 + 2, y, w / 3 - 4, 16, "Sat  ·  " + IceesConfig.knifeSat, false, () -> {
-					IceesConfig.knifeSat = IceesConfig.knifeSat >= 100 ? 0 : IceesConfig.knifeSat + 10;
-					IceesConfig.knifeCustomColor = true;
-				});
-				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 16, "Val  ·  " + IceesConfig.knifeVal, false, () -> {
-					IceesConfig.knifeVal = IceesConfig.knifeVal >= 100 ? 20 : IceesConfig.knifeVal + 10;
-					IceesConfig.knifeCustomColor = true;
-				});
-				y += 22;
-				int col = 0;
-				for (KnifeStyle style : KnifeStyle.values()) {
-					int bx = x + (col % 2) * (w / 2 + 6);
-					int by = y + (col / 2) * 18;
-					boolean on = IceesConfig.knifeStyle == style;
-					KnifeStyle selected = style;
-					addHit(bx, by, w / 2 - 6, 16, (on ? "●  " : "○  ") + style.title, on, () -> {
-						IceesConfig.knifeStyle = selected;
-						IceesConfig.knife = true;
-					});
-					col++;
-				}
-			}
 			case THEMES -> {
 				for (FallTheme theme : FallTheme.values()) {
 					boolean on = IceesConfig.fallTheme == theme;
@@ -203,8 +156,11 @@ public class OrbitScreen extends Screen {
 					y += 24;
 				}
 				y += 8;
-				addHit(x, y, w, 22, "Fall Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
+				addHit(x, y, w / 2 - 4, 22, "Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
 					IceesConfig.fallIntensity = IceesConfig.fallIntensity >= 5 ? 1 : IceesConfig.fallIntensity + 1;
+				});
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 22, "Size  ·  " + IceesConfig.fallSize + " / 5", false, () -> {
+					IceesConfig.fallSize = IceesConfig.fallSize >= 5 ? 1 : IceesConfig.fallSize + 1;
 				});
 				y += 26;
 				addHit(x, y, w, 22, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
@@ -398,8 +354,7 @@ public class OrbitScreen extends Screen {
 		String tip = switch (tab) {
 			case SKIES -> IceesConfig.customSky ? IceesConfig.skyStyle.description : "Custom Sky OFF — vanilla sky restored.";
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
-			case KNIVES -> "Equip a sword. Form / size / material / colour — held in hand.";
-			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
+			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
 			case OVERLAY -> "Look at a block — outline colour / chrome / rainbow.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
 			case GUI -> "Paint the Orbit menu — Hue / Sat / Val or Rainbow.";

@@ -1,11 +1,11 @@
 package com.icees.visuals.effects;
 
-/** Atmospheric fall / weather themes drawn client-side. */
+/** Atmospheric fall / weather themes — world-space particles in the air. */
 public enum FallTheme {
 	OFF("Off", "No falling atmosphere."),
-	SAKURA_FALL("Sakura Fall", "Soft AI-bloom cherry petals drifting down."),
-	WHITE_SNOW("White Snow", "Soft blurred snow drifting quietly."),
-	SOFT_MIST("Soft Mist", "Ground haze only — never covers the sky.");
+	SAKURA_FALL("Sakura Fall", "Cherry petals drifting in the air around you."),
+	WHITE_SNOW("White Snow", "Soft snow falling through the world."),
+	SOFT_MIST("Soft Mist", "Low ground haze in the air — not on your screen.");
 
 	public final String title;
 	public final String description;

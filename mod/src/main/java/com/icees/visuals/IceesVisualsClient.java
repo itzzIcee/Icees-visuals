@@ -36,19 +36,15 @@ public final class IceesVisualsClient implements ClientModInitializer {
 		});
 
 		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
+		WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
 
-		HudElementRegistry.attachElementAfter(
-			VanillaHudElements.MISC_OVERLAYS,
-			Identifier.fromNamespaceAndPath(MOD_ID, "fall_themes"),
-			(graphics, tickCounter) -> FallParticleRenderer.render(graphics, tickCounter.getGameTimeDeltaPartialTick(false))
-		);
 		HudElementRegistry.attachElementAfter(
 			VanillaHudElements.MISC_OVERLAYS,
 			Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.11 — Right Shift opens Orbit");
+		LOGGER.info("Icee's Sakura Visuals 1.0.12 — themes float in the air");
 	}
 }
