@@ -1,11 +1,14 @@
-Icee's Sakura Visuals 1.0.3 — Fabric 1.21.11
+Icee's Sakura Visuals — Fabric 1.21.11
 
-- Soft Orbit UI (Right Shift)
-- Skies + matching fog tint
-- Themes: Sakura Fall / White Snow / Soft Mist
-- Cosmetics (3rd person): wings, halo, cape on back, auras
-- Aura styles: Orbit, Pulse, Flame, Frost, Bloom, Ring, Sparks, Twin, Spiral, Heartbeat
-- Brightness + Thickness in Cosmetics
-- Knives: first-person HUD + third-person glow
+Drop "Icee's Sakura Visuals.jar" into your Minecraft mods folder
+(with Fabric Loader + Fabric API for 1.21.11).
 
-Install: Fabric Loader + Fabric API for 1.21.11 → mods folder
+Open Orbit: Right Shift (configurable in Orbit → Keybind)
+
+v1.0.4
+- Cosmetics: Size, Brightness, Custom Color (Hue / Sat / Val)
+- Distinct forms for wings / halo / cape / aura
+- Knives: real silhouettes in first person (not a spin beam)
+- Skies + fall themes unchanged
+
+Latest: icees-visuals-1.0.4.jar

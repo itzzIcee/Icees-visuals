@@ -41,18 +41,53 @@ public final class IceesConfig {
 	public static int fallIntensity = 3;
 	/** 1 = dim … 5 = max glow */
 	public static int cosmeticBrightness = 4;
-	/** 1 = thin … 5 = thick / large */
+	/** 1 = small … 5 = large (form scale) */
+	public static int cosmeticSize = 3;
+	/** Legacy alias used by older code paths */
 	public static int cosmeticThickness = 3;
+	/** When true, cosmeticHue/Sat/Val override style default colours */
+	public static boolean customColor = true;
+	/** 0–360 */
+	public static int cosmeticHue = 330;
+	/** 0–100 */
+	public static int cosmeticSat = 70;
+	/** 0–100 */
+	public static int cosmeticVal = 100;
 	public static int orbitKeyCode = GLFW.GLFW_KEY_RIGHT_SHIFT;
 
 	private IceesConfig() {}
 
 	public static float brightnessFactor() {
-		return 0.35f + IceesConfig.cosmeticBrightness * 0.18f; // ~0.53 .. 1.25
+		return 0.35f + cosmeticBrightness * 0.18f;
 	}
 
 	public static float thicknessFactor() {
-		return 0.55f + IceesConfig.cosmeticThickness * 0.22f; // ~0.77 .. 1.65
+		int s = Math.max(cosmeticSize, cosmeticThickness);
+		return 0.55f + s * 0.22f;
+	}
+
+	public static float sizeFactor() {
+		return thicknessFactor();
+	}
+
+	/** Resolve RGB for a cosmetic, optionally tinted by custom HSV. */
+	public static float[] color(float baseR, float baseG, float baseB) {
+		if (!customColor) return new float[]{baseR, baseG, baseB};
+		return hsvToRgb(cosmeticHue, cosmeticSat / 100f, cosmeticVal / 100f);
+	}
+
+	public static float[] hsvToRgb(float h, float s, float v) {
+		float c = v * s;
+		float x = c * (1f - Math.abs((h / 60f) % 2f - 1f));
+		float m = v - c;
+		float r = 0, g = 0, b = 0;
+		if (h < 60) { r = c; g = x; }
+		else if (h < 120) { r = x; g = c; }
+		else if (h < 180) { g = c; b = x; }
+		else if (h < 240) { g = x; b = c; }
+		else if (h < 300) { r = x; b = c; }
+		else { r = c; b = x; }
+		return new float[]{r + m, g + m, b + m};
 	}
 
 	public static void load() {
@@ -78,7 +113,14 @@ public final class IceesConfig {
 			else fallTheme = data.petals ? FallTheme.SAKURA_FALL : FallTheme.OFF;
 			if (data.fallIntensity >= 1 && data.fallIntensity <= 5) fallIntensity = data.fallIntensity;
 			if (data.cosmeticBrightness >= 1 && data.cosmeticBrightness <= 5) cosmeticBrightness = data.cosmeticBrightness;
+			if (data.cosmeticSize >= 1 && data.cosmeticSize <= 5) cosmeticSize = data.cosmeticSize;
 			if (data.cosmeticThickness >= 1 && data.cosmeticThickness <= 5) cosmeticThickness = data.cosmeticThickness;
+			cosmeticSize = Math.max(cosmeticSize, cosmeticThickness);
+			cosmeticThickness = cosmeticSize;
+			customColor = data.customColor;
+			cosmeticHue = Math.floorMod(data.cosmeticHue, 360);
+			if (data.cosmeticSat >= 0 && data.cosmeticSat <= 100) cosmeticSat = data.cosmeticSat;
+			if (data.cosmeticVal >= 0 && data.cosmeticVal <= 100) cosmeticVal = data.cosmeticVal;
 			if (data.orbitKeyCode != 0) orbitKeyCode = data.orbitKeyCode;
 		} catch (Exception e) {
 			IceesVisualsClient.LOGGER.warn("Failed to load config", e);
@@ -86,16 +128,21 @@ public final class IceesConfig {
 	}
 
 	public static void save() {
+		cosmeticThickness = cosmeticSize;
 		Data data = new Data();
 		data.customSky = customSky; data.skyStyle = skyStyle.name();
 		data.wings = wings; data.wingStyle = wingStyle.name();
 		data.halo = halo; data.haloStyle = haloStyle.name();
 		data.cape = cape; data.capeStyle = capeStyle.name();
 		data.knife = knife; data.knifeStyle = knifeStyle.name();
-		data.aura = aura; data.auraStyle = auraStyle.name(); data.trail = trail; data.jumpCircles = jumpCircles;
+		data.aura = aura; data.auraStyle = auraStyle.name();
+		data.trail = trail; data.jumpCircles = jumpCircles;
 		data.petals = fallTheme == FallTheme.SAKURA_FALL;
 		data.fallTheme = fallTheme.name(); data.fallIntensity = fallIntensity;
-		data.cosmeticBrightness = cosmeticBrightness; data.cosmeticThickness = cosmeticThickness;
+		data.cosmeticBrightness = cosmeticBrightness;
+		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
+		data.customColor = customColor;
+		data.cosmeticHue = cosmeticHue; data.cosmeticSat = cosmeticSat; data.cosmeticVal = cosmeticVal;
 		data.orbitKeyCode = orbitKeyCode;
 		try {
 			Files.createDirectories(PATH.getParent());
@@ -117,9 +164,11 @@ public final class IceesConfig {
 		boolean halo = true; String haloStyle = "BLOSSOM";
 		boolean cape = true; String capeStyle = "SAKURA";
 		boolean knife = true; String knifeStyle = "BUTTERFLY";
-		boolean aura = true; String auraStyle = "ORBIT"; boolean trail = false; boolean jumpCircles = true;
+		boolean aura = true; String auraStyle = "ORBIT";
+		boolean trail = false; boolean jumpCircles = true;
 		boolean petals = true; String fallTheme = "SAKURA_FALL"; int fallIntensity = 3;
-		int cosmeticBrightness = 4; int cosmeticThickness = 3;
+		int cosmeticBrightness = 4; int cosmeticSize = 3; int cosmeticThickness = 3;
+		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		int orbitKeyCode = 344;
 	}
 }
