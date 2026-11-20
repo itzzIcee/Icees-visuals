@@ -5,6 +5,7 @@ import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
+import com.icees.visuals.pvp.HitAnimStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,12 +33,12 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, PVP, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
 
 	private Tab tab = Tab.COSMETICS;
 	private int panelX, panelY;
 	private final int panelW = 520;
-	private final int panelH = 520;
+	private final int panelH = 560;
 	private boolean listeningKey;
 	private final List<Hit> hits = new ArrayList<>();
 	private final List<TabHit> tabHits = new ArrayList<>();
@@ -76,6 +77,7 @@ public class OrbitScreen extends Screen {
 		int tx = panelX + 20;
 		int ty = panelY + 64;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
+		addTab(tx, ty, "PvP", Tab.PVP); tx += 36;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
@@ -146,6 +148,90 @@ public class OrbitScreen extends Screen {
 				y += 26;
 				addHit(x, y, w, 22, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
 					() -> IceesConfig.trail = !IceesConfig.trail);
+			}
+			case PVP -> {
+				addHit(x, y, w, 16, "Hit Particles  ·  " + onOff(IceesConfig.pvpHitParticles), IceesConfig.pvpHitParticles,
+					() -> IceesConfig.pvpHitParticles = !IceesConfig.pvpHitParticles);
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Particle Size  ·  " + IceesConfig.pvpParticleSize + " / 5", false, () -> {
+					IceesConfig.pvpParticleSize = IceesConfig.pvpParticleSize >= 5 ? 1 : IceesConfig.pvpParticleSize + 1;
+					IceesConfig.pvpHitParticles = true;
+				});
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Hit Markers  ·  " + onOff(IceesConfig.pvpHitMarkers), IceesConfig.pvpHitMarkers,
+					() -> IceesConfig.pvpHitMarkers = !IceesConfig.pvpHitMarkers);
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Hit Anim  →  " + IceesConfig.pvpHitAnim.title, false, () -> {
+					IceesConfig.pvpHitAnim = IceesConfig.pvpHitAnim.next();
+					IceesConfig.pvpHitMarkers = true;
+				});
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Anim Size  ·  " + IceesConfig.pvpHitAnimSize + " / 5", false, () -> {
+					IceesConfig.pvpHitAnimSize = IceesConfig.pvpHitAnimSize >= 5 ? 1 : IceesConfig.pvpHitAnimSize + 1;
+				});
+				y += 18;
+				int col = 0;
+				for (HitAnimStyle style : HitAnimStyle.values()) {
+					int bx = x + (col % 5) * (w / 5 + 2);
+					boolean on = IceesConfig.pvpHitAnim == style;
+					HitAnimStyle selected = style;
+					addHit(bx, y, w / 5 - 2, 14, (on ? "●" : "○") + style.title.substring(0, Math.min(4, style.title.length())), on, () -> {
+						IceesConfig.pvpHitAnim = selected;
+						IceesConfig.pvpHitMarkers = true;
+					});
+					col++;
+				}
+				y += 18;
+				addHit(x, y, w / 3 - 4, 16, "Hue  ·  " + IceesConfig.pvpHitHue, false, () -> {
+					IceesConfig.pvpHitHue = (IceesConfig.pvpHitHue + 15) % 360;
+					IceesConfig.pvpHitColour = true;
+				});
+				addHit(x + w / 3 + 2, y, w / 3 - 4, 16, "Sat  ·  " + IceesConfig.pvpHitSat, false, () -> {
+					IceesConfig.pvpHitSat = IceesConfig.pvpHitSat >= 100 ? 0 : IceesConfig.pvpHitSat + 10;
+					IceesConfig.pvpHitColour = true;
+				});
+				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 16, "Val  ·  " + IceesConfig.pvpHitVal, false, () -> {
+					IceesConfig.pvpHitVal = IceesConfig.pvpHitVal >= 100 ? 20 : IceesConfig.pvpHitVal + 10;
+					IceesConfig.pvpHitColour = true;
+				});
+				y += 20;
+				addHit(x, y, w / 2 - 4, 16, "Mace Shockwave  ·  " + onOff(IceesConfig.pvpMace), IceesConfig.pvpMace,
+					() -> IceesConfig.pvpMace = !IceesConfig.pvpMace);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Mace Size  ·  " + IceesConfig.pvpMaceSize + " / 5", false, () -> {
+					IceesConfig.pvpMaceSize = IceesConfig.pvpMaceSize >= 5 ? 1 : IceesConfig.pvpMaceSize + 1;
+					IceesConfig.pvpMace = true;
+				});
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Stunslam  ·  " + onOff(IceesConfig.pvpStunslam), IceesConfig.pvpStunslam,
+					() -> IceesConfig.pvpStunslam = !IceesConfig.pvpStunslam);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Slam Size  ·  " + IceesConfig.pvpStunslamSize + " / 5", false, () -> {
+					IceesConfig.pvpStunslamSize = IceesConfig.pvpStunslamSize >= 5 ? 1 : IceesConfig.pvpStunslamSize + 1;
+					IceesConfig.pvpStunslam = true;
+				});
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Sword Slash  ·  " + onOff(IceesConfig.pvpSword), IceesConfig.pvpSword,
+					() -> IceesConfig.pvpSword = !IceesConfig.pvpSword);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Sword Size  ·  " + IceesConfig.pvpSwordSize + " / 5", false, () -> {
+					IceesConfig.pvpSwordSize = IceesConfig.pvpSwordSize >= 5 ? 1 : IceesConfig.pvpSwordSize + 1;
+					IceesConfig.pvpSword = true;
+				});
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Axe Cleave  ·  " + onOff(IceesConfig.pvpAxe), IceesConfig.pvpAxe,
+					() -> IceesConfig.pvpAxe = !IceesConfig.pvpAxe);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Axe Size  ·  " + IceesConfig.pvpAxeSize + " / 5", false, () -> {
+					IceesConfig.pvpAxeSize = IceesConfig.pvpAxeSize >= 5 ? 1 : IceesConfig.pvpAxeSize + 1;
+					IceesConfig.pvpAxe = true;
+				});
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Spear Thrust  ·  " + onOff(IceesConfig.pvpSpear), IceesConfig.pvpSpear,
+					() -> IceesConfig.pvpSpear = !IceesConfig.pvpSpear);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Spear Size  ·  " + IceesConfig.pvpSpearSize + " / 5", false, () -> {
+					IceesConfig.pvpSpearSize = IceesConfig.pvpSpearSize >= 5 ? 1 : IceesConfig.pvpSpearSize + 1;
+					IceesConfig.pvpSpear = true;
+				});
+				y += 18;
+				addHit(x, y, w / 2 - 4, 16, "Crosshair  ·  " + onOff(IceesConfig.pvpCrosshair), IceesConfig.pvpCrosshair,
+					() -> IceesConfig.pvpCrosshair = !IceesConfig.pvpCrosshair);
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Target Cue  ·  " + onOff(IceesConfig.pvpTargetCue), IceesConfig.pvpTargetCue,
+					() -> IceesConfig.pvpTargetCue = !IceesConfig.pvpTargetCue);
 			}
 			case OVERLAY -> {
 				addHit(x, y, w, 22, "Block Overlay  ·  " + onOff(IceesConfig.blockOverlay), IceesConfig.blockOverlay,
@@ -331,6 +417,7 @@ public class OrbitScreen extends Screen {
 
 		String tip = switch (tab) {
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
+			case PVP -> "Hit particles, mace shockwave, weapon FX + choose your hit animation.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";

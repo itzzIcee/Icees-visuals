@@ -11,6 +11,7 @@ import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.overlay.OverlayMaterial;
+import com.icees.visuals.pvp.HitAnimStyle;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.ARGB;
 import org.lwjgl.glfw.GLFW;
@@ -74,8 +75,10 @@ public final class IceesConfig {
 	public static boolean fullbright = false;
 	public static boolean lowParticles = false;
 
-	/* —— Extra PvP Visuals —— */
+	/* —— PvP Cosmetics —— */
 	public static boolean pvpHitMarkers = true;
+	public static HitAnimStyle pvpHitAnim = HitAnimStyle.CROSS;
+	public static int pvpHitAnimSize = 3;
 	public static boolean pvpCrosshair = false;
 	public static int pvpCrosshairSize = 2;
 	public static boolean pvpTargetCue = false;
@@ -248,6 +251,8 @@ public final class IceesConfig {
 			lowParticles = data.lowParticles;
 
 			pvpHitMarkers = data.pvpHitMarkers;
+			pvpHitAnim = safeEnum(HitAnimStyle.class, data.pvpHitAnim, HitAnimStyle.CROSS);
+			if (data.pvpHitAnimSize >= 1 && data.pvpHitAnimSize <= 5) pvpHitAnimSize = data.pvpHitAnimSize;
 			pvpCrosshair = data.pvpCrosshair;
 			if (data.pvpCrosshairSize >= 1 && data.pvpCrosshairSize <= 5) pvpCrosshairSize = data.pvpCrosshairSize;
 			pvpTargetCue = data.pvpTargetCue;
@@ -311,7 +316,9 @@ public final class IceesConfig {
 		data.overlayHue = overlayHue; data.overlaySat = overlaySat; data.overlayVal = overlayVal;
 		data.motionBlur = motionBlur; data.motionBlurStrength = motionBlurStrength;
 		data.noHurtCam = noHurtCam; data.fullbright = fullbright; data.lowParticles = lowParticles;
-		data.pvpHitMarkers = pvpHitMarkers; data.pvpCrosshair = pvpCrosshair;
+		data.pvpHitMarkers = pvpHitMarkers;
+		data.pvpHitAnim = pvpHitAnim.name(); data.pvpHitAnimSize = pvpHitAnimSize;
+		data.pvpCrosshair = pvpCrosshair;
 		data.pvpCrosshairSize = pvpCrosshairSize; data.pvpTargetCue = pvpTargetCue;
 		data.pvpHitColour = pvpHitColour;
 		data.pvpHitHue = pvpHitHue; data.pvpHitSat = pvpHitSat; data.pvpHitVal = pvpHitVal;
@@ -363,7 +370,8 @@ public final class IceesConfig {
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;
 		boolean noHurtCam = true; boolean fullbright = false; boolean lowParticles = false;
-		boolean pvpHitMarkers = true; boolean pvpCrosshair = false; int pvpCrosshairSize = 2;
+		boolean pvpHitMarkers = true; String pvpHitAnim = "CROSS"; int pvpHitAnimSize = 3;
+		boolean pvpCrosshair = false; int pvpCrosshairSize = 2;
 		boolean pvpTargetCue = false; boolean pvpHitColour = true;
 		int pvpHitHue = 330; int pvpHitSat = 70; int pvpHitVal = 100;
 		boolean pvpHitParticles = true; boolean pvpMaceParticles = true; boolean pvpSpearParticles = true;

@@ -126,28 +126,29 @@ public final class PvpVisualsRenderer {
 				if (!IceesConfig.pvpStunslam) return;
 				int size = IceesConfig.pvpStunslamSize;
 				slamPulse = 1f;
-				spawnHudBurst(cx, cy, kind, 10 + size * 4);
-				WORLD.add(WorldFx.ring(hitPos.x, target.getY(), hitPos.z, size, 22 + size * 4));
-				WORLD.add(WorldFx.ring(hitPos.x, target.getY() + 0.05, hitPos.z, size, 16 + size * 3));
+				if (IceesConfig.pvpHitParticles) spawnHudBurst(cx, cy, kind, 12 + size * 5);
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY(), hitPos.z, size + 1, 24 + size * 4));
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY() + 0.05, hitPos.z, size, 18 + size * 3));
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY() + 0.12, hitPos.z, Math.max(1, size - 1), 12 + size * 2));
 			}
 			case MACE -> {
 				if (!IceesConfig.pvpMace) return;
 				int size = IceesConfig.pvpMaceSize;
-				spawnHudBurst(cx, cy, kind, 14 + size * 4);
-				double topY = hitPos.y + 6.0 + size * 1.4;
-				WORLD.add(WorldFx.bolt(hitPos.x, topY, hitPos.z, hitPos.x, hitPos.y, hitPos.z, size, 14 + size * 2));
-				for (int i = 0; i < 2 + size / 2; i++) {
-					double ox = (RNG.nextDouble() - 0.5) * (0.8 + size * 0.25);
-					double oz = (RNG.nextDouble() - 0.5) * (0.8 + size * 0.25);
-					WORLD.add(WorldFx.bolt(
-						hitPos.x + ox, hitPos.y + 3.5 + size * 0.6, hitPos.z + oz,
-						hitPos.x, hitPos.y, hitPos.z, Math.max(1, size - 1), 10 + size));
+				slamPulse = 1f;
+				if (IceesConfig.pvpHitParticles || IceesConfig.pvpMaceParticles) {
+					spawnHudBurst(cx, cy, kind, 14 + size * 4);
 				}
+				// Schlag / Schockwelle am Boden
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY(), hitPos.z, size, 20 + size * 4));
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY() + 0.08, hitPos.z, Math.max(1, size - 1), 14 + size * 3));
+				WORLD.add(WorldFx.ring(hitPos.x, target.getY() + 0.16, hitPos.z, Math.max(1, size - 2), 10 + size * 2));
 			}
 			case SPEAR -> {
 				if (!IceesConfig.pvpSpear) return;
 				spearLife = 1f;
-				spawnHudBurst(cx, cy, kind, 12 + IceesConfig.pvpSpearSize * 3);
+				if (IceesConfig.pvpHitParticles || IceesConfig.pvpSpearParticles) {
+					spawnHudBurst(cx, cy, kind, 12 + IceesConfig.pvpSpearSize * 3);
+				}
 				Vec3 from = client.player.getEyePosition(1f);
 				WORLD.add(WorldFx.streak(from.x, from.y, from.z, hitPos.x, hitPos.y, hitPos.z, IceesConfig.pvpSpearSize, 10));
 			}
@@ -155,20 +156,27 @@ public final class PvpVisualsRenderer {
 				if (!IceesConfig.pvpSword) return;
 				slashLife = 1f;
 				slashAngle = (RNG.nextFloat() - 0.5f) * 50f;
-				spawnHudBurst(cx, cy, kind, 10 + IceesConfig.pvpSwordSize * 3);
+				if (IceesConfig.pvpHitParticles) {
+					spawnHudBurst(cx, cy, kind, 10 + IceesConfig.pvpSwordSize * 3);
+				}
 				WORLD.add(WorldFx.slash(hitPos.x, hitPos.y, hitPos.z, IceesConfig.pvpSwordSize, 12));
 			}
 			case AXE -> {
 				if (!IceesConfig.pvpAxe) return;
 				axeLife = 1f;
-				spawnHudBurst(cx, cy, kind, 12 + IceesConfig.pvpAxeSize * 3);
+				if (IceesConfig.pvpHitParticles) {
+					spawnHudBurst(cx, cy, kind, 12 + IceesConfig.pvpAxeSize * 3);
+				}
 				WORLD.add(WorldFx.cleave(hitPos.x, hitPos.y, hitPos.z, IceesConfig.pvpAxeSize, 14));
 			}
 		}
 	}
 
 	private static void spawnHudBurst(int cx, int cy, WeaponKind kind, int count) {
+		if (!IceesConfig.pvpHitParticles && kind != WeaponKind.MACE && kind != WeaponKind.STUNSLAM) return;
 		float[] rgb = hitRgb();
+		float sizeMul = 0.55f + IceesConfig.pvpParticleSize * 0.28f;
+		count = Math.max(4, Math.round(count * sizeMul));
 		for (int i = 0; i < count; i++) {
 			HudBurst b = new HudBurst();
 			b.kind = kind;
@@ -186,7 +194,7 @@ public final class PvpVisualsRenderer {
 			b.vy = Mth.sin(ang) * spd - (kind == WeaponKind.STUNSLAM || kind == WeaponKind.MACE ? 1.1f : 0.2f);
 			b.gravity = kind == WeaponKind.STUNSLAM || kind == WeaponKind.MACE ? 0.2f : 0.05f;
 			b.life = b.maxLife = 12 + RNG.nextInt(12);
-			b.size = 3f + RNG.nextFloat() * 5f + sizeOf(kind) * 0.7f;
+			b.size = (3f + RNG.nextFloat() * 5f + sizeOf(kind) * 0.7f) * sizeMul;
 			float shade = 0.75f + RNG.nextFloat() * 0.35f;
 			if (kind == WeaponKind.MACE) {
 				b.r = Math.min(1f, 0.55f * shade + rgb[0] * 0.5f);
@@ -229,19 +237,63 @@ public final class PvpVisualsRenderer {
 		int cy = h / 2;
 
 		if (IceesConfig.pvpCrosshair) drawCrosshair(g, cx, cy);
-		if (IceesConfig.pvpHitMarkers && hitFlash > 0.02f) drawHitMarker(g, cx, cy, hitFlash);
+		if (IceesConfig.pvpHitMarkers && hitFlash > 0.02f) drawHitAnim(g, cx, cy, hitFlash);
 		if (IceesConfig.pvpTargetCue) drawTargetCue(g, client, cx, cy);
-		if (slamPulse > 0.02f && IceesConfig.pvpStunslam) drawSlamHud(g, cx, cy, slamPulse);
+		if (slamPulse > 0.02f && (IceesConfig.pvpStunslam || IceesConfig.pvpMace)) drawSlamHud(g, cx, cy, slamPulse);
 		if (slashLife > 0.02f && IceesConfig.pvpSword) drawSlashHud(g, cx, cy, slashLife);
 		if (axeLife > 0.02f && IceesConfig.pvpAxe) drawAxeHud(g, cx, cy, axeLife);
 		if (spearLife > 0.02f && IceesConfig.pvpSpear) drawSpearHud(g, cx, cy, spearLife);
 		drawHudBursts(g);
 	}
 
+	private static void drawHitAnim(GuiGraphics g, int cx, int cy, float flash) {
+		float[] rgb = hitRgb();
+		float a = Mth.clamp(flash, 0f, 1f);
+		int scale = IceesConfig.pvpHitAnimSize;
+		int col = ARGB.colorFromFloat(a, 1f, 1f, 1f);
+		int tint = ARGB.colorFromFloat(a * 0.9f, rgb[0], rgb[1], rgb[2]);
+		int soft = ARGB.colorFromFloat(a * 0.4f, rgb[0], rgb[1], rgb[2]);
+		int s = 8 + scale * 4 + (int) ((1f - a) * 6);
+
+		switch (IceesConfig.pvpHitAnim) {
+			case CROSS -> {
+				drawLine(g, cx - s, cy - s, cx + s, cy + s, 2, col);
+				drawLine(g, cx + s, cy - s, cx - s, cy + s, 2, col);
+				drawLine(g, cx - s + 1, cy - s, cx + s + 1, cy + s, 1, tint);
+				drawLine(g, cx + s - 1, cy - s, cx - s - 1, cy + s, 1, tint);
+			}
+			case RING -> {
+				ring2d(g, cx, cy, s, 2 + scale / 2, tint);
+				ring2d(g, cx, cy, (int) (s * 0.55f), 2, soft);
+			}
+			case SLASH -> {
+				drawLine(g, cx - s, cy - s / 3, cx + s, cy + s / 3, 2 + scale / 2, tint);
+				drawLine(g, cx - s, cy - s / 3 - 2, cx + s, cy + s / 3 - 2, 1, soft);
+				drawLine(g, cx + s / 2, cy - s, cx - s / 3, cy + s, 2, col);
+			}
+			case FLASH -> {
+				int w = 6 + scale * 3;
+				g.fill(cx - w, cy - 1, cx + w, cy + 2, tint);
+				g.fill(cx - 1, cy - w, cx + 2, cy + w, tint);
+				g.fill(cx - w - 2, cy - 2, cx + w + 2, cy + 3, soft);
+				g.fill(cx - 2, cy - w - 2, cx + 3, cy + w + 2, soft);
+			}
+			case SPARKS -> {
+				for (int i = 0; i < 6 + scale; i++) {
+					float ang = i / (float) (6 + scale) * Mth.TWO_PI + (1f - a) * 0.8f;
+					int len = s / 2 + (i % 3) * 3;
+					int x2 = cx + Math.round(Mth.cos(ang) * len);
+					int y2 = cy + Math.round(Mth.sin(ang) * len);
+					drawLine(g, cx, cy, x2, y2, 1 + (i % 2), i % 2 == 0 ? tint : col);
+				}
+			}
+		}
+	}
+
 	private static void drawSlamHud(GuiGraphics g, int cx, int cy, float pulse) {
 		float[] rgb = hitRgb();
 		float a = pulse * 0.7f;
-		int size = 18 + IceesConfig.pvpStunslamSize * 10;
+		int size = 18 + Math.max(IceesConfig.pvpStunslamSize, IceesConfig.pvpMaceSize) * 10;
 		int r = (int) (size * (1.15f - pulse * 0.35f));
 		int col = ARGB.colorFromFloat(a, rgb[0], rgb[1] * 0.7f, rgb[2] * 0.45f);
 		int soft = ARGB.colorFromFloat(a * 0.35f, rgb[0], rgb[1], rgb[2]);
@@ -509,18 +561,6 @@ public final class PvpVisualsRenderer {
 		g.fill(cx + gap, cy - thick, cx + gap + len, cy + thick, col);
 		g.fill(cx - thick, cy - gap - len, cx + thick, cy - gap, col);
 		g.fill(cx - thick, cy + gap, cx + thick, cy + gap + len, col);
-	}
-
-	private static void drawHitMarker(GuiGraphics g, int cx, int cy, float flash) {
-		float[] rgb = hitRgb();
-		float a = Mth.clamp(flash, 0f, 1f);
-		int col = ARGB.colorFromFloat(a, 1f, 1f, 1f);
-		int tint = ARGB.colorFromFloat(a * 0.9f, rgb[0], rgb[1], rgb[2]);
-		int s = (int) (10 + (1f - a) * 6);
-		drawLine(g, cx - s, cy - s, cx + s, cy + s, 2, col);
-		drawLine(g, cx + s, cy - s, cx - s, cy + s, 2, col);
-		drawLine(g, cx - s + 1, cy - s, cx + s + 1, cy + s, 1, tint);
-		drawLine(g, cx + s - 1, cy - s, cx - s - 1, cy + s, 1, tint);
 	}
 
 	private static void drawTargetCue(GuiGraphics g, Minecraft client, int cx, int cy) {
