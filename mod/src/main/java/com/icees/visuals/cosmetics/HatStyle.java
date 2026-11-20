@@ -1,10 +1,9 @@
 package com.icees.visuals.cosmetics;
 
-/** Headwear — straw hats use fixed natural colours (no HSV tint). */
+/** Straw hats only — always original natural colours (no HSV). */
 public enum HatStyle {
-	STRAW_RED("Straw Hat · Red"),
-	STRAW_BROWN("Straw Hat · Brown"),
-	CHINA("China Hat");
+	STRAW_RED("Straw Hat · Red Band"),
+	STRAW_BROWN("Straw Hat · Brown Band");
 
 	public final String title;
 

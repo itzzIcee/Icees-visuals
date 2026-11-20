@@ -5,7 +5,10 @@ public enum WingStyle {
 	ANGEL("Angel", 0.95f, 0.92f, 0.98f),
 	DRAGON("Dragon", 0.95f, 0.35f, 0.45f),
 	CRYSTAL("Crystal", 0.75f, 0.85f, 1.00f),
-	PHOENIX("Phoenix", 1.00f, 0.55f, 0.30f);
+	PHOENIX("Phoenix", 1.00f, 0.55f, 0.30f),
+	DRAGONFLY("Dragonfly", 0.25f, 0.85f, 0.88f),
+	FAIRY("Fairy", 0.85f, 0.70f, 1.00f),
+	BAT("Bat", 0.35f, 0.22f, 0.40f);
 
 	public final String title;
 	public final float r, g, b;

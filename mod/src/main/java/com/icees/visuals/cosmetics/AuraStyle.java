@@ -2,7 +2,7 @@ package com.icees.visuals.cosmetics;
 
 /** Selectable aura looks around the player. */
 public enum AuraStyle {
-	ORBIT("Orbit", "Soft orbs circling the body.", 1.00f, 0.70f, 0.85f, 4, 0.10f),
+	ORBIT("Orbit", "Soft crystals circling the body.", 1.00f, 0.70f, 0.85f, 4, 0.10f),
 	PULSE("Pulse", "Breathing glow that expands and fades.", 1.00f, 0.75f, 0.90f, 1, 0.0f),
 	FLAME("Flame", "Warm rising ember wisps.", 1.00f, 0.45f, 0.28f, 6, 0.14f),
 	FROST("Frost", "Cool drifting ice motes.", 0.70f, 0.88f, 1.00f, 5, 0.08f),
@@ -11,7 +11,12 @@ public enum AuraStyle {
 	SPARKS("Sparks", "Fast spinning spark trail.", 1.00f, 0.90f, 0.65f, 10, 0.22f),
 	TWIN("Twin", "Two large side auras.", 0.90f, 0.65f, 1.00f, 2, 0.0f),
 	SPIRAL("Spiral", "Rising spiral of light.", 0.85f, 0.70f, 1.00f, 7, 0.16f),
-	HEARTBEAT("Heartbeat", "Double-pulse soft flare.", 1.00f, 0.55f, 0.70f, 1, 0.0f);
+	HEARTBEAT("Heartbeat", "Double-pulse soft flare.", 1.00f, 0.55f, 0.70f, 1, 0.0f),
+	DRAGONFLY("Dragonfly", "Teal wing-shard orbit.", 0.25f, 0.85f, 0.88f, 6, 0.14f),
+	BEACON("Beacon", "Tall rising light columns.", 0.70f, 0.95f, 1.00f, 4, 0.06f),
+	SHIELD("Shield", "Hex shell around the body.", 0.55f, 0.80f, 1.00f, 8, 0.0f),
+	RIBBON("Ribbon", "Twisting light ribbons.", 1.00f, 0.55f, 0.75f, 5, 0.18f),
+	CUBE("Cube Orbit", "Voxel cubes orbiting you.", 0.55f, 0.90f, 1.00f, 6, 0.12f);
 
 	public final String title;
 	public final String description;

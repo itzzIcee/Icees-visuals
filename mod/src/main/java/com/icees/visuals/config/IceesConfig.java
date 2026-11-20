@@ -41,7 +41,7 @@ public final class IceesConfig {
 	public static boolean cape = true;
 	public static CapeStyle capeStyle = CapeStyle.SAKURA;
 	public static boolean knife = true;
-	public static KnifeStyle knifeStyle = KnifeStyle.BUTTERFLY;
+	public static KnifeStyle knifeStyle = KnifeStyle.BAYONET;
 	public static KnifeMaterial knifeMaterial = KnifeMaterial.STEEL;
 	public static int knifeSize = 3;
 	public static boolean knifeCustomColor = false;
@@ -57,10 +57,17 @@ public final class IceesConfig {
 	public static int cosmeticBrightness = 4;
 	public static int cosmeticSize = 3;
 	public static int cosmeticThickness = 3;
+	/** Kept for config migration — use per-cosmetic tints. */
+	@Deprecated
 	public static boolean customColor = true;
 	public static int cosmeticHue = 330;
 	public static int cosmeticSat = 70;
 	public static int cosmeticVal = 100;
+	/** Per-cosmetic colours (hats stay natural — no tint). */
+	public static CosmeticTint wingTint = new CosmeticTint(true, 330, 70, 100);
+	public static CosmeticTint haloTint = new CosmeticTint(true, 320, 65, 100);
+	public static CosmeticTint capeTint = new CosmeticTint(true, 330, 70, 100);
+	public static CosmeticTint auraTint = new CosmeticTint(true, 310, 70, 100);
 
 	/* —— Block Overlay —— */
 	public static boolean blockOverlay = true;
@@ -116,9 +123,14 @@ public final class IceesConfig {
 		return !main.isEmpty() && main.is(ItemTags.SWORDS);
 	}
 
+	/** Legacy global tint — prefer {@link #color(CosmeticTint, float, float, float)}. */
 	public static float[] color(float baseR, float baseG, float baseB) {
-		if (!customColor) return new float[]{baseR, baseG, baseB};
-		return hsvToRgb(cosmeticHue, cosmeticSat / 100f, cosmeticVal / 100f);
+		return color(wingTint, baseR, baseG, baseB);
+	}
+
+	public static float[] color(CosmeticTint tint, float baseR, float baseG, float baseB) {
+		if (tint == null) return new float[]{baseR, baseG, baseB};
+		return tint.apply(baseR, baseG, baseB);
 	}
 
 	public static float[] knifeBladeColor(float time) {
@@ -256,6 +268,11 @@ public final class IceesConfig {
 			cosmeticHue = Math.floorMod(data.cosmeticHue, 360);
 			if (data.cosmeticSat >= 0 && data.cosmeticSat <= 100) cosmeticSat = data.cosmeticSat;
 			if (data.cosmeticVal >= 0 && data.cosmeticVal <= 100) cosmeticVal = data.cosmeticVal;
+			CosmeticTint legacy = new CosmeticTint(customColor, cosmeticHue, cosmeticSat, cosmeticVal);
+			wingTint.loadFrom(data.wingTint, legacy);
+			haloTint.loadFrom(data.haloTint, legacy);
+			capeTint.loadFrom(data.capeTint, legacy);
+			auraTint.loadFrom(data.auraTint, legacy);
 
 			blockOverlay = data.blockOverlay;
 			overlayMaterial = safeEnum(OverlayMaterial.class, data.overlayMaterial, OverlayMaterial.SAKURA);
@@ -302,8 +319,12 @@ public final class IceesConfig {
 		data.fallTheme = fallTheme.name(); data.fallIntensity = fallIntensity;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
-		data.customColor = customColor;
-		data.cosmeticHue = cosmeticHue; data.cosmeticSat = cosmeticSat; data.cosmeticVal = cosmeticVal;
+		data.customColor = wingTint.enabled;
+		data.cosmeticHue = wingTint.hue; data.cosmeticSat = wingTint.sat; data.cosmeticVal = wingTint.val;
+		data.wingTint = wingTint.copy();
+		data.haloTint = haloTint.copy();
+		data.capeTint = capeTint.copy();
+		data.auraTint = auraTint.copy();
 		data.blockOverlay = blockOverlay;
 		data.overlayMaterial = overlayMaterial.name();
 		data.overlayBrightness = overlayBrightness;
@@ -322,10 +343,11 @@ public final class IceesConfig {
 		}
 	}
 
-	/** Old single STRAW style maps to the red-band voxel hat. */
+	/** Only the two straw hats remain — anything else maps to red-band straw. */
 	private static HatStyle migrateHat(String name) {
-		if (name == null || "STRAW".equals(name)) return HatStyle.STRAW_RED;
-		return safeEnum(HatStyle.class, name, HatStyle.STRAW_RED);
+		if (name == null || "STRAW".equals(name) || "STRAW_RED".equals(name)) return HatStyle.STRAW_RED;
+		if ("STRAW_BROWN".equals(name)) return HatStyle.STRAW_BROWN;
+		return HatStyle.STRAW_RED;
 	}
 
 	private static <T extends Enum<T>> T safeEnum(Class<T> type, String name, T fallback) {
@@ -340,7 +362,7 @@ public final class IceesConfig {
 		boolean halo = true; String haloStyle = "BLOSSOM";
 		boolean hat = true; String hatStyle = "STRAW_RED";
 		boolean cape = true; String capeStyle = "SAKURA";
-		boolean knife = true; String knifeStyle = "BUTTERFLY";
+		boolean knife = true; String knifeStyle = "BAYONET";
 		String knifeMaterial = "STEEL"; int knifeSize = 3;
 		boolean knifeCustomColor = false; int knifeHue = 210; int knifeSat = 15; int knifeVal = 90;
 		boolean aura = true; String auraStyle = "ORBIT";
@@ -348,6 +370,7 @@ public final class IceesConfig {
 		boolean petals = true; String fallTheme = "SAKURA_FALL"; int fallIntensity = 3;
 		int cosmeticBrightness = 4; int cosmeticSize = 3; int cosmeticThickness = 3;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
+		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint;
 		boolean blockOverlay = true; String overlayMaterial = "SAKURA"; int overlayBrightness = 3;
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;

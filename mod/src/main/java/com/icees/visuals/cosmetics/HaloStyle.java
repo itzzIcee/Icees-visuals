@@ -6,7 +6,11 @@ public enum HaloStyle {
 	ORBIT("Orbit", 0.85f, 0.70f, 1.00f),
 	CROWN("Crown", 1.00f, 0.85f, 0.55f),
 	PULSE("Pulse", 1.00f, 0.65f, 0.80f),
-	NOVA("Nova", 1.00f, 0.95f, 0.85f);
+	NOVA("Nova", 1.00f, 0.95f, 0.85f),
+	DOUBLE("Double Ring", 0.70f, 0.90f, 1.00f),
+	CRESCENT("Crescent", 1.00f, 0.92f, 0.55f),
+	HORNS("Horns", 0.95f, 0.95f, 0.98f),
+	DIAMOND("Diamond", 0.55f, 0.95f, 1.00f);
 
 	public final String title;
 	public final float r, g, b;

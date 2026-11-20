@@ -35,8 +35,20 @@ public final class CosmeticRenderer {
 
 	private CosmeticRenderer() {}
 
-	private static float[] tint(float r, float g, float b) {
-		return IceesConfig.color(r, g, b);
+	private static float[] tintWings(float r, float g, float b) {
+		return IceesConfig.color(IceesConfig.wingTint, r, g, b);
+	}
+
+	private static float[] tintHalo(float r, float g, float b) {
+		return IceesConfig.color(IceesConfig.haloTint, r, g, b);
+	}
+
+	private static float[] tintCape(float r, float g, float b) {
+		return IceesConfig.color(IceesConfig.capeTint, r, g, b);
+	}
+
+	private static float[] tintAura(float r, float g, float b) {
+		return IceesConfig.color(IceesConfig.auraTint, r, g, b);
 	}
 
 
@@ -94,7 +106,7 @@ public final class CosmeticRenderer {
 
 	private static void drawWings(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		WingStyle style = IceesConfig.wingStyle;
-		float[] col = tint(style.r, style.g, style.b);
+		float[] col = tintWings(style.r, style.g, style.b);
 		CR = col[0]; CG = col[1]; CB = col[2];
 		float beat = Mth.sin(time * 0.22f) * 0.35f;
 		VertexConsumer soft = buffers.getBuffer(RenderTypes.eyes(TEX_WING_SOFT));
@@ -112,6 +124,9 @@ public final class CosmeticRenderer {
 				case DRAGON -> wingDragon(matrices, soft, hard, side, bright, thick, time);
 				case CRYSTAL -> wingCrystal(matrices, soft, hard, side, bright, thick, time);
 				case PHOENIX -> wingPhoenix(matrices, soft, hard, side, bright, thick, time);
+				case DRAGONFLY -> wingDragonfly(matrices, soft, hard, side, bright, thick, time);
+				case FAIRY -> wingFairy(matrices, soft, hard, side, bright, thick, time);
+				case BAT -> wingBat(matrices, soft, hard, side, bright, thick, time);
 			}
 			matrices.popPose();
 		}
@@ -192,6 +207,65 @@ public final class CosmeticRenderer {
 		}
 	}
 
+	/** Teal translucent insect / dragonfly panes with vein ridges (ref style). */
+	private static void wingDragonfly(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
+		float s = side;
+		float flutter = Mth.sin(time * 0.55f + side) * 8f;
+		m.mulPose(Axis.ZP.rotationDegrees(s * flutter * 0.35f));
+		// Four long panes per side (upper + lower pairs)
+		float[][] panes = {
+			{0.05f, 0.35f, 1.55f, 0.95f, -0.05f},
+			{0.15f, 0.05f, 1.65f, 0.55f, -0.12f},
+			{0.08f, -0.15f, 1.35f, 0.25f, -0.08f},
+			{0.20f, -0.35f, 1.25f, -0.05f, -0.15f}
+		};
+		for (float[] p : panes) {
+			float x0 = s * p[0] * thick, y0 = p[1] * thick, x1 = s * p[2] * thick, y1 = p[3] * thick, z = p[4];
+			sheet(m, soft, x0, y0, z, x1, y1, z - 0.04f, CR, CG, CB, 0.42f * bright);
+			sheet(m, hard, x0, y0, z + 0.01f, x1, y1, z - 0.02f, CR * 0.85f, CG * 0.95f, CB, 0.75f * bright);
+			// dark vein edges
+			sheet(m, hard, x0, y0, z, x0 + s * 0.04f * thick, y1, z - 0.03f, 0.05f, 0.12f, 0.14f, 0.85f * bright);
+			sheet(m, hard, x0, (y0 + y1) * 0.5f - 0.02f, z, x1, (y0 + y1) * 0.5f + 0.02f, z - 0.03f, 0.08f, 0.18f, 0.2f, 0.55f * bright);
+			sheetYZ(m, hard, x1, y0, z - 0.02f, x1, y1, z + 0.02f, 0.05f, 0.1f, 0.12f, 0.5f * bright);
+		}
+	}
+
+	/** Soft layered fairy wings — smaller, more rounded. */
+	private static void wingFairy(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
+		float s = side;
+		float flutter = Mth.sin(time * 0.7f) * 10f;
+		m.mulPose(Axis.ZP.rotationDegrees(s * flutter * 0.4f));
+		for (int i = 0; i < 3; i++) {
+			float t = i / 2f;
+			m.pushPose();
+			m.translate(0, 0.12f * i, -0.03f * i);
+			m.mulPose(Axis.YP.rotationDegrees(s * (12f + i * 8f)));
+			float span = (0.85f + t * 0.35f) * thick;
+			float tall = (0.7f - t * 0.15f) * thick;
+			sheet(m, soft, 0, 0.1f, 0, s * span, tall, -0.1f, CR, CG, CB, 0.5f * bright);
+			sheet(m, hard, 0, 0.05f, 0.02f, s * span * 0.85f, tall * 0.85f, -0.05f, CR, CG, CB, 0.85f * bright);
+			sheet(m, hard, s * span * 0.3f, 0.15f, -0.02f, s * span * 0.35f, tall * 0.7f, -0.08f, 0.4f, 0.25f, 0.55f, 0.45f * bright);
+			m.popPose();
+		}
+	}
+
+	/** Leathery bat / demon wings. */
+	private static void wingBat(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
+		float s = side;
+		float flap = Mth.sin(time * 0.28f) * 0.2f;
+		sheet(m, hard, 0, 0.85f * thick + flap, 0, s * 1.5f * thick, 0.95f * thick + flap, -0.08f, CR * 0.7f, CG * 0.7f, CB * 0.75f, bright);
+		for (int i = 0; i < 4; i++) {
+			float a = i / 3f;
+			float x0 = s * a * 1.4f * thick;
+			float x1 = s * (a + 0.32f) * 1.4f * thick;
+			float yTop = 0.9f * thick + flap - a * 0.1f;
+			float yBot = -0.15f - a * 0.45f * thick + flap * 0.5f;
+			sheet(m, soft, x0, yBot, -0.04f, x1, yTop, -0.2f - a * 0.06f, CR, CG, CB, 0.75f * bright);
+			sheet(m, hard, x0, yBot + 0.05f, 0, x1, yTop - 0.05f, -0.12f, CR * 0.85f, CG * 0.85f, CB * 0.9f, 0.9f * bright);
+		}
+		sheet(m, hard, s * 1.35f * thick, 0.7f * thick, 0, s * 1.6f * thick, 0.95f * thick, -0.12f, CR, CG, CB, bright);
+	}
+
 	/** Rising phoenix flame feathers */
 	private static void wingPhoenix(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
@@ -218,10 +292,10 @@ public final class CosmeticRenderer {
 		matrices.translate(0, 1.72f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
+		// Original straw colours only — never HSV
 		switch (style) {
 			case STRAW_RED -> drawVoxelStrawHat(matrices, vc, s, bright, 0.86f, 0.12f, 0.12f);
 			case STRAW_BROWN -> drawVoxelStrawHat(matrices, vc, s, bright, 0.42f, 0.26f, 0.14f);
-			case CHINA -> drawChinaHat(matrices, vc, s, bright);
 		}
 		matrices.popPose();
 	}
@@ -364,7 +438,7 @@ public final class CosmeticRenderer {
 
 	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		HaloStyle style = IceesConfig.haloStyle;
-		float[] c = tint(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
+		float[] c = tintHalo(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
@@ -424,6 +498,37 @@ public final class CosmeticRenderer {
 				}
 				billboardOrb(matrices, vc, 0, 0, 0, 0.15f * thick, CR, CG, CB, bright, time);
 			}
+			case DOUBLE -> {
+				ring3D(matrices, vc, 0.42f * thick, 0.05f * thick, CR, CG, CB, bright);
+				ring3D(matrices, glow, 0.28f * thick, 0.04f * thick, CR, CG, CB, bright * 0.7f);
+			}
+			case CRESCENT -> {
+				for (int i = 0; i < 10; i++) {
+					float a = -0.6f + i / 9f * 3.6f;
+					float x = Mth.cos(a) * 0.4f * thick;
+					float z = Mth.sin(a) * 0.4f * thick;
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						x - 0.05f * thick, -0.04f, z - 0.05f * thick,
+						x + 0.05f * thick, 0.04f, z + 0.05f * thick,
+						CR, CG, CB, Math.min(1f, bright));
+				}
+			}
+			case HORNS -> {
+				for (int side : new int[]{-1, 1}) {
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						side * 0.22f * thick, 0.05f, -0.06f,
+						side * 0.38f * thick, 0.28f * thick, 0.06f,
+						CR, CG, CB, bright);
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						side * 0.32f * thick, 0.25f * thick, -0.05f,
+						side * 0.48f * thick, 0.48f * thick, 0.05f,
+						CR, CG, CB, bright);
+				}
+			}
+			case DIAMOND -> {
+				billboardOrb(matrices, vc, 0, 0.08f, 0, 0.28f * thick, CR, CG, CB, bright, time);
+				ring3D(matrices, glow, 0.38f * thick, 0.03f, CR, CG, CB, bright * 0.55f);
+			}
 		}
 		matrices.popPose();
 	}
@@ -447,8 +552,8 @@ public final class CosmeticRenderer {
 
 	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		CapeStyle style = IceesConfig.capeStyle;
-		float[] c1 = tint(style.r1, style.g1, style.b1); CR = c1[0]; CG = c1[1]; CB = c1[2];
-		float[] c2 = tint(style.r2, style.g2, style.b2); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
+		float[] c1 = tintCape(style.r1, style.g1, style.b1); CR = c1[0]; CG = c1[1]; CB = c1[2];
+		float[] c2 = tintCape(style.r2, style.g2, style.b2); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
 		float sway = Mth.sin(time * 0.16f) * 0.2f;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
@@ -535,7 +640,7 @@ public final class CosmeticRenderer {
 
 	private static void drawAura(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw, float camPitch) {
 		AuraStyle style = IceesConfig.auraStyle;
-		float[] c = tint(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
+		float[] c = tintAura(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		float aMul = Math.min(1f, 0.9f * bright);
 
@@ -577,6 +682,64 @@ public final class CosmeticRenderer {
 						0.26f * thick * (1f - t * 0.4f), CR, CG, CB, aMul * (1f - t * 0.5f), time);
 				}
 			}
+			case DRAGONFLY -> {
+				for (int i = 0; i < style.count; i++) {
+					float a = time * style.spin + i * ((float) Math.PI * 2f / style.count);
+					float x = Mth.cos(a) * 0.7f * thick;
+					float z = Mth.sin(a) * 0.7f * thick;
+					matrices.pushPose();
+					matrices.translate(x, 1.0f + Mth.sin(time * 0.2f + i) * 0.1f, z);
+					matrices.mulPose(Axis.YP.rotationDegrees(a * Mth.RAD_TO_DEG));
+					sheet(matrices, vc, -0.25f * thick, -0.02f, 0, 0.25f * thick, 0.02f, -0.35f * thick, CR, CG, CB, aMul);
+					sheet(matrices, vc, -0.02f, -0.15f * thick, 0, 0.02f, 0.15f * thick, -0.3f * thick, CR * 0.7f, CG * 0.8f, CB, aMul * 0.8f);
+					matrices.popPose();
+				}
+			}
+			case BEACON -> {
+				for (int i = 0; i < style.count; i++) {
+					float a = i * ((float) Math.PI * 2f / style.count) + time * style.spin;
+					float x = Mth.cos(a) * 0.55f * thick;
+					float z = Mth.sin(a) * 0.55f * thick;
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						x - 0.04f * thick, 0.1f, z - 0.04f * thick,
+						x + 0.04f * thick, 2.0f * thick, z + 0.04f * thick,
+						CR, CG, CB, aMul * 0.7f);
+				}
+			}
+			case SHIELD -> {
+				int n = Math.max(6, style.count);
+				for (int i = 0; i < n; i++) {
+					float a = i * ((float) Math.PI * 2f / n);
+					float x = Mth.cos(a) * 0.85f * thick;
+					float z = Mth.sin(a) * 0.85f * thick;
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						x - 0.08f * thick, 0.4f, z - 0.08f * thick,
+						x + 0.08f * thick, 1.6f, z + 0.08f * thick,
+						CR, CG, CB, aMul * 0.55f);
+				}
+			}
+			case RIBBON -> {
+				for (int i = 0; i < style.count; i++) {
+					float t = (time * 0.1f + i / (float) style.count) % 1f;
+					float a = t * Mth.TWO_PI * 2f + time * style.spin;
+					float radius = 0.35f * thick + t * 0.4f * thick;
+					float y = 0.3f + t * 1.5f;
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT,
+						Mth.cos(a) * radius - 0.06f, y, Mth.sin(a) * radius - 0.02f,
+						Mth.cos(a) * radius + 0.06f, y + 0.12f, Mth.sin(a) * radius + 0.02f,
+						CR, CG, CB, aMul * (1f - t * 0.4f));
+				}
+			}
+			case CUBE -> {
+				for (int i = 0; i < style.count; i++) {
+					float a = time * style.spin + i * ((float) Math.PI * 2f / style.count);
+					float x = Mth.cos(a) * 0.8f * thick;
+					float z = Mth.sin(a) * 0.8f * thick;
+					float y = 0.9f + Mth.sin(time * 0.2f + i) * 0.2f;
+					float hs = 0.1f * thick;
+					KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT, x - hs, y - hs, z - hs, x + hs, y + hs, z + hs, CR, CG, CB, aMul);
+				}
+			}
 			default -> {
 				int n = Math.max(2, style.count);
 				for (int i = 0; i < n; i++) {
@@ -592,7 +755,7 @@ public final class CosmeticRenderer {
 
 	private static void drawJumpCircles(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
-		float[] c = tint(1f, 0.75f, 0.88f);
+		float[] c = tintAura(1f, 0.75f, 0.88f);
 		float phase = (time % 28f) / 28f;
 		for (int ring = 0; ring < 2; ring++) {
 			float p = (phase + ring * 0.5f) % 1f;

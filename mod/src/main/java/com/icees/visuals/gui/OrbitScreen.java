@@ -1,5 +1,6 @@
 package com.icees.visuals.gui;
 
+import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.cosmetics.KnifeMaterial;
 import com.icees.visuals.cosmetics.KnifeStyle;
@@ -39,7 +40,7 @@ public class OrbitScreen extends Screen {
 	private Tab tab = Tab.SKIES;
 	private int panelX, panelY;
 	private final int panelW = 520;
-	private final int panelH = 460;
+	private final int panelH = 520;
 	private boolean listeningKey;
 	private final List<Hit> hits = new ArrayList<>();
 	private final List<TabHit> tabHits = new ArrayList<>();
@@ -114,15 +115,17 @@ public class OrbitScreen extends Screen {
 				y += 20;
 				addHit(x, y, w, 16, "Wing form  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
 				y += 18;
+				y = addTintRow(x, y, w, "Wing colour", IceesConfig.wingTint);
 				addHit(x, y, w, 18, "Halo  ·  " + onOff(IceesConfig.halo) + "  ·  " + IceesConfig.haloStyle.title, IceesConfig.halo,
 					() -> IceesConfig.halo = !IceesConfig.halo);
 				y += 20;
 				addHit(x, y, w, 16, "Halo form  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
 				y += 18;
+				y = addTintRow(x, y, w, "Halo colour", IceesConfig.haloTint);
 				addHit(x, y, w, 18, "Hat  ·  " + onOff(IceesConfig.hat) + "  ·  " + IceesConfig.hatStyle.title, IceesConfig.hat,
 					() -> IceesConfig.hat = !IceesConfig.hat);
 				y += 20;
-				addHit(x, y, w, 16, "Hat form  →  " + IceesConfig.hatStyle.title, false,
+				addHit(x, y, w, 16, "Hat form  →  " + IceesConfig.hatStyle.title + "  (original colour)", false,
 					() -> IceesConfig.hatStyle = IceesConfig.hatStyle.next());
 				y += 18;
 				addHit(x, y, w, 18, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  " + IceesConfig.capeStyle.title, IceesConfig.cape,
@@ -130,11 +133,13 @@ public class OrbitScreen extends Screen {
 				y += 20;
 				addHit(x, y, w, 16, "Cape form  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
 				y += 18;
+				y = addTintRow(x, y, w, "Cape colour", IceesConfig.capeTint);
 				addHit(x, y, w, 18, "Aura  ·  " + onOff(IceesConfig.aura) + "  ·  " + IceesConfig.auraStyle.title, IceesConfig.aura,
 					() -> IceesConfig.aura = !IceesConfig.aura);
 				y += 20;
 				addHit(x, y, w, 16, "Aura form  →", false, () -> IceesConfig.auraStyle = IceesConfig.auraStyle.next());
 				y += 18;
+				y = addTintRow(x, y, w, "Aura colour", IceesConfig.auraTint);
 				addHit(x, y, w, 16, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
 					() -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles);
 				y += 20;
@@ -144,22 +149,6 @@ public class OrbitScreen extends Screen {
 				});
 				addHit(x + w / 2 + 4, y, w / 2 - 4, 18, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
 					IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
-				});
-				y += 20;
-				addHit(x, y, w, 18, "Custom Color  ·  " + onOff(IceesConfig.customColor), IceesConfig.customColor,
-					() -> IceesConfig.customColor = !IceesConfig.customColor);
-				y += 20;
-				addHit(x, y, w / 3 - 4, 18, "Hue  ·  " + IceesConfig.cosmeticHue, false, () -> {
-					IceesConfig.cosmeticHue = (IceesConfig.cosmeticHue + 15) % 360;
-					IceesConfig.customColor = true;
-				});
-				addHit(x + w / 3 + 2, y, w / 3 - 4, 18, "Sat  ·  " + IceesConfig.cosmeticSat, false, () -> {
-					IceesConfig.cosmeticSat = IceesConfig.cosmeticSat >= 100 ? 0 : IceesConfig.cosmeticSat + 10;
-					IceesConfig.customColor = true;
-				});
-				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 18, "Val  ·  " + IceesConfig.cosmeticVal, false, () -> {
-					IceesConfig.cosmeticVal = IceesConfig.cosmeticVal >= 100 ? 20 : IceesConfig.cosmeticVal + 10;
-					IceesConfig.customColor = true;
 				});
 			}
 			case KNIVES -> {
@@ -331,6 +320,16 @@ public class OrbitScreen extends Screen {
 
 	private void addTab(int x, int y, String label, Tab value) {
 		tabHits.add(new TabHit(x, y, this.font.width(label) + 10, 16, value, label));
+	}
+
+	/** Colour row for one cosmetic — returns next Y. Hats never use this. */
+	private int addTintRow(int x, int y, int w, String label, CosmeticTint tint) {
+		addHit(x, y, w, 16, label + "  ·  " + onOff(tint.enabled), tint.enabled, tint::toggle);
+		y += 18;
+		addHit(x, y, w / 3 - 4, 16, "Hue  ·  " + tint.hue, false, tint::cycleHue);
+		addHit(x + w / 3 + 2, y, w / 3 - 4, 16, "Sat  ·  " + tint.sat, false, tint::cycleSat);
+		addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 16, "Val  ·  " + tint.val, false, tint::cycleVal);
+		return y + 18;
 	}
 
 	private void addHit(int x, int y, int w, int h, String label, boolean active, Runnable action) {

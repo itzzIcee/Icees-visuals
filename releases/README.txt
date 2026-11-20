@@ -1,11 +1,10 @@
 Icee's Sakura Visuals — Fabric 1.21.11
 ======================================
-Drop "Icee's Sakura Visuals.jar" into your mods folder (with Fabric Loader + Fabric API).
+Latest: 1.0.11
 
-Latest: 1.0.10
-- Knives: realistic 3D models (bevel, fuller, guard, grip wrap, pommel) — FP + third person
-- Straw hats: voxel Luffy-style Red / Brown bands (old procedural hat removed)
-- Aura orbs: solid octahedron crystals instead of flat diamonds
-- Sky: stronger cloud tint + rain no longer greys out the disc
+- Per-cosmetic colour: Wings / Halo / Cape / Aura each have own Hue·Sat·Val
+- Straw hats stay original natural colour (no tint) — Red Band / Brown Band
+- Knives: realistic M9 bayonet mesh (serrations, tip hole, ring guard) — default Bayonet
+- New wings: Dragonfly / Fairy / Bat · new halos & auras
 
-Right Shift opens Orbit. F5 for hats/cosmetics.
+Right Shift → Orbit. F5 for hats.
