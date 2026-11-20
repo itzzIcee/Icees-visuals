@@ -1,15 +1,9 @@
-Icee's Sakura Visuals — Fabric 1.21.11
+Icee's Sakura Visuals 1.0.2 — Fabric 1.21.11
 
-Install:
-1. Fabric Loader 0.20.1+ for Minecraft 1.21.11
-2. Fabric API
-3. Drop "Icee's Sakura Visuals.jar" into your mods folder
+Soft glass Orbit UI (no vanilla dirt/buttons), glow cosmetics,
+knife HUD, fall themes (Sakura Fall / White Snow / Soft Mist).
 
-Open Orbit: Right Shift (rebindable under Key)
-
-Themes tab (English):
-- Off
-- Sakura Fall — cherry blossoms falling
-- White Snow — soft snowflakes
-- Soft Mist — pale white mist
-- Fall Intensity 1–5
+Install: Fabric Loader + Fabric API for 1.21.11 → mods folder
+Open: Right Shift (rebindable under Key)
+Cosmetics: switch to third person to see wings/halo/cape
+Knives: visible in first person (HUD) and third person

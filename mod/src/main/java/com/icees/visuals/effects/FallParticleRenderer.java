@@ -3,6 +3,10 @@ package com.icees.visuals.effects;
 import com.icees.visuals.config.IceesConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
+import org.joml.Matrix3x2fStack;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,10 +14,14 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Screen-space falling atmosphere: sakura petals, snow, or soft mist.
- * Drawn over the world HUD so it works reliably on 1.21.11.
+ * Soft, smooth fall atmosphere — textured petals / snow / mist (not pixel blocks).
  */
 public final class FallParticleRenderer {
+	private static final Identifier TEX_PETAL = Identifier.fromNamespaceAndPath("icees-visuals", "textures/particle/petal.png");
+	private static final Identifier TEX_PETAL_SOFT = Identifier.fromNamespaceAndPath("icees-visuals", "textures/particle/petal_soft.png");
+	private static final Identifier TEX_SNOW = Identifier.fromNamespaceAndPath("icees-visuals", "textures/particle/snow.png");
+	private static final Identifier TEX_MIST = Identifier.fromNamespaceAndPath("icees-visuals", "textures/particle/mist.png");
+
 	private static final List<Particle> PARTICLES = new ArrayList<>();
 	private static final Random RNG = new Random();
 	private static int spawnCooldown;
@@ -33,16 +41,21 @@ public final class FallParticleRenderer {
 
 		int w = client.getWindow().getGuiScaledWidth();
 		int h = client.getWindow().getGuiScaledHeight();
-		int density = Math.max(1, IceesConfig.fallIntensity); // 1..5
-		int max = 40 + density * 28;
+		int density = Math.max(1, IceesConfig.fallIntensity);
+		int max = switch (theme) {
+			case SOFT_MIST -> 18 + density * 6;
+			case WHITE_SNOW -> 50 + density * 22;
+			default -> 36 + density * 18;
+		};
 
-		if (spawnCooldown > 0) spawnCooldown--;
-		else {
-			int spawn = 1 + density / 2;
+		if (spawnCooldown > 0) {
+			spawnCooldown--;
+		} else {
+			int spawn = theme == FallTheme.SOFT_MIST ? 1 : 1 + density / 2;
 			for (int i = 0; i < spawn && PARTICLES.size() < max; i++) {
 				PARTICLES.add(spawnOne(theme, w, h));
 			}
-			spawnCooldown = Math.max(0, 3 - density / 2);
+			spawnCooldown = theme == FallTheme.SOFT_MIST ? Math.max(2, 6 - density) : Math.max(0, 2 - density / 3);
 		}
 
 		Iterator<Particle> it = PARTICLES.iterator();
@@ -52,7 +65,9 @@ public final class FallParticleRenderer {
 			p.y += p.vy;
 			p.rot += p.spin;
 			p.life--;
-			if (p.life <= 0 || p.y > h + 20 || p.x < -40 || p.x > w + 40) {
+			// gentle sway
+			p.x += Math.sin((p.life + p.phase) * 0.045) * p.sway;
+			if (p.life <= 0 || p.y > h + 40 || p.x < -60 || p.x > w + 60) {
 				it.remove();
 			}
 		}
@@ -63,98 +78,123 @@ public final class FallParticleRenderer {
 		Minecraft client = Minecraft.getInstance();
 		if (client.level == null) return;
 
+		Matrix3x2fStack pose = graphics.pose();
 		for (Particle p : PARTICLES) {
 			float px = p.x + p.vx * tickDelta;
 			float py = p.y + p.vy * tickDelta;
-			int alpha = Math.min(255, Math.max(30, (int) (p.a * 255)));
-			int argb = (alpha << 24) | (p.rgb & 0xFFFFFF);
-			int s = Math.max(1, (int) p.size);
+			float fade = Math.min(1f, p.life / 40f);
+			float alpha = p.a * fade;
+			int color = ARGB.colorFromFloat(alpha, p.r, p.g, p.b);
+			int size = Math.max(4, (int) p.size);
 
-			switch (p.kind) {
-				case PETAL -> drawPetal(graphics, (int) px, (int) py, s, argb, p.rot);
-				case SNOW -> drawSnowflake(graphics, (int) px, (int) py, s, argb);
-				case MIST -> drawMist(graphics, (int) px, (int) py, s, argb);
+			pose.pushMatrix();
+			pose.translate(px, py);
+			pose.rotate(p.rot);
+			pose.translate(-size / 2f, -size / 2f);
+
+			graphics.blit(
+				RenderPipelines.GUI_TEXTURED,
+				p.tex,
+				0, 0,
+				0f, 0f,
+				size, size,
+				p.texSize, p.texSize,
+				color
+			);
+
+			// Soft outer bloom pass for sakura / snow
+			if (p.kind != Kind.MIST && alpha > 0.2f) {
+				int bloom = Math.max(size + 4, (int) (size * 1.35f));
+				int bloomColor = ARGB.colorFromFloat(alpha * 0.28f, p.r, p.g, p.b);
+				pose.translate(-(bloom - size) / 2f, -(bloom - size) / 2f);
+				graphics.blit(
+					RenderPipelines.GUI_TEXTURED,
+					p.tex,
+					0, 0,
+					0f, 0f,
+					bloom, bloom,
+					p.texSize, p.texSize,
+					bloomColor
+				);
 			}
+
+			pose.popMatrix();
 		}
 	}
 
 	private static Particle spawnOne(FallTheme theme, int w, int h) {
 		Particle p = new Particle();
 		p.x = RNG.nextFloat() * w;
-		p.y = -10f - RNG.nextFloat() * 40f;
-		p.life = 120 + RNG.nextInt(160);
+		p.y = -20f - RNG.nextFloat() * 50f;
+		p.life = 140 + RNG.nextInt(180);
+		p.phase = RNG.nextFloat() * 100f;
+		p.sway = 0.15f + RNG.nextFloat() * 0.35f;
 
 		switch (theme) {
 			case SAKURA_FALL -> {
 				p.kind = Kind.PETAL;
-				p.size = 2.5f + RNG.nextFloat() * 3.5f;
-				p.vx = -0.35f + RNG.nextFloat() * 0.7f;
-				p.vy = 0.35f + RNG.nextFloat() * 0.55f;
-				p.spin = -0.08f + RNG.nextFloat() * 0.16f;
+				p.tex = RNG.nextBoolean() ? TEX_PETAL : TEX_PETAL_SOFT;
+				p.texSize = 256;
+				p.size = 16f + RNG.nextFloat() * 28f;
+				p.vx = -0.45f + RNG.nextFloat() * 0.9f;
+				p.vy = 0.28f + RNG.nextFloat() * 0.5f;
+				p.spin = -0.04f + RNG.nextFloat() * 0.08f;
 				p.a = 0.55f + RNG.nextFloat() * 0.35f;
-				// pink / rose petal tones
-				int[] petals = {0xFF8FB8, 0xFFB7C5, 0xFFC0D0, 0xE85A8C, 0xFFD6E0};
-				p.rgb = petals[RNG.nextInt(petals.length)];
+				// soft pink / rose (not hard magenta)
+				float tint = RNG.nextFloat();
+				p.r = 1.0f;
+				p.g = 0.72f + tint * 0.18f;
+				p.b = 0.82f + tint * 0.12f;
 			}
 			case WHITE_SNOW -> {
 				p.kind = Kind.SNOW;
-				p.size = 1.5f + RNG.nextFloat() * 2.8f;
-				p.vx = -0.2f + RNG.nextFloat() * 0.4f;
-				p.vy = 0.25f + RNG.nextFloat() * 0.45f;
-				p.spin = 0f;
-				p.a = 0.65f + RNG.nextFloat() * 0.3f;
-				p.rgb = RNG.nextBoolean() ? 0xFFFFFF : 0xE8F0FF;
+				p.tex = TEX_SNOW;
+				p.texSize = 256;
+				p.size = 10f + RNG.nextFloat() * 18f;
+				p.vx = -0.25f + RNG.nextFloat() * 0.5f;
+				p.vy = 0.22f + RNG.nextFloat() * 0.4f;
+				p.spin = -0.01f + RNG.nextFloat() * 0.02f;
+				p.a = 0.5f + RNG.nextFloat() * 0.4f;
+				p.r = 0.95f + RNG.nextFloat() * 0.05f;
+				p.g = 0.96f + RNG.nextFloat() * 0.04f;
+				p.b = 1.0f;
+				p.sway = 0.08f + RNG.nextFloat() * 0.2f;
 			}
 			case SOFT_MIST -> {
 				p.kind = Kind.MIST;
-				p.size = 18f + RNG.nextFloat() * 36f;
-				p.vx = -0.15f + RNG.nextFloat() * 0.3f;
-				p.vy = 0.08f + RNG.nextFloat() * 0.18f;
+				p.tex = TEX_MIST;
+				p.texSize = 256;
+				p.size = 120f + RNG.nextFloat() * 180f;
+				p.vx = -0.12f + RNG.nextFloat() * 0.24f;
+				p.vy = 0.04f + RNG.nextFloat() * 0.12f;
 				p.spin = 0f;
-				p.a = 0.08f + RNG.nextFloat() * 0.12f;
-				p.rgb = RNG.nextBoolean() ? 0xF5F7FA : 0xE8EEF5;
-				p.life = 180 + RNG.nextInt(120);
-				p.y = RNG.nextFloat() * h * 0.7f;
+				p.a = 0.12f + RNG.nextFloat() * 0.14f;
+				p.r = 0.96f;
+				p.g = 0.97f;
+				p.b = 1.0f;
+				p.life = 220 + RNG.nextInt(160);
+				p.y = RNG.nextFloat() * h * 0.75f;
+				p.sway = 0.05f;
 			}
 			default -> {
 				p.kind = Kind.SNOW;
-				p.rgb = 0xFFFFFF;
-				p.a = 0.5f;
-				p.size = 2f;
-				p.vy = 0.4f;
+				p.tex = TEX_SNOW;
+				p.texSize = 256;
+				p.size = 8f;
+				p.a = 0.4f;
+				p.r = p.g = p.b = 1f;
+				p.vy = 0.3f;
 			}
 		}
 		return p;
 	}
 
-	private static void drawPetal(GuiGraphics g, int x, int y, int s, int argb, float rot) {
-		// Simple diamond / petal cross — reads as blossom at small scale
-		g.fill(x, y, x + s, y + Math.max(1, s / 2), argb);
-		g.fill(x + Math.max(1, s / 3), y - Math.max(1, s / 3), x + Math.max(1, s / 3) + Math.max(1, s / 2), y + s, argb);
-		int soft = (argb & 0x00FFFFFF) | (((argb >>> 24) / 2) << 24);
-		g.fill(x - 1, y + 1, x + s + 1, y + 2, soft);
-	}
-
-	private static void drawSnowflake(GuiGraphics g, int x, int y, int s, int argb) {
-		g.fill(x, y, x + s, y + s, argb);
-		if (s >= 3) {
-			g.fill(x - 1, y + s / 2, x + s + 1, y + s / 2 + 1, argb);
-			g.fill(x + s / 2, y - 1, x + s / 2 + 1, y + s + 1, argb);
-		}
-	}
-
-	private static void drawMist(GuiGraphics g, int x, int y, int s, int argb) {
-		int soft = argb;
-		g.fill(x, y, x + s, y + s / 2, soft);
-		int softer = (argb & 0x00FFFFFF) | (Math.max(10, (argb >>> 24) / 2) << 24);
-		g.fill(x + s / 4, y + s / 4, x + s + s / 3, y + s / 2 + 4, softer);
-	}
-
 	private enum Kind { PETAL, SNOW, MIST }
 
 	private static final class Particle {
-		float x, y, vx, vy, size, spin, rot, a;
-		int life, rgb;
+		float x, y, vx, vy, size, spin, rot, a, r, g, b, sway, phase;
+		int life, texSize = 64;
+		Identifier tex = TEX_SNOW;
 		Kind kind = Kind.SNOW;
 	}
 }
