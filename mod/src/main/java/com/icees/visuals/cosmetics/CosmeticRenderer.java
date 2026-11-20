@@ -215,76 +215,103 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Sit on the head (player eye ~1.62, head top ~1.8)
 		matrices.translate(0, 1.72f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
-			case STRAW -> drawStrawHat(matrices, vc, s, bright);
+			case STRAW_RED -> drawVoxelStrawHat(matrices, vc, s, bright, 0.86f, 0.12f, 0.12f);
+			case STRAW_BROWN -> drawVoxelStrawHat(matrices, vc, s, bright, 0.42f, 0.26f, 0.14f);
 			case CHINA -> drawChinaHat(matrices, vc, s, bright);
 		}
 		matrices.popPose();
 	}
 
-	/** DualPrac-style straw hat — natural straw colours only, no HSV tint. */
-	private static void drawStrawHat(PoseStack m, VertexConsumer vc, float s, float bright) {
-		float strawR = 0.90f, strawG = 0.74f, strawB = 0.42f;
-		float darkR = 0.72f, darkG = 0.55f, darkB = 0.28f;
-		float bandR = 0.35f, bandG = 0.28f, bandB = 0.18f;
-		float a = Math.min(1f, 0.95f * bright);
+	/**
+	 * Blockbench / DualPrac-style voxel straw hat — stepped brim, box crown, band.
+	 * Natural straw colours only (no HSV).
+	 */
+	private static void drawVoxelStrawHat(PoseStack m, VertexConsumer vc, float s, float bright,
+		float bandR, float bandG, float bandB) {
+		float u = 0.0625f * s; // 1px in player-model space
+		float a = Math.min(1f, 0.98f * bright);
+		float s0r = 0.93f, s0g = 0.80f, s0b = 0.48f; // light straw
+		float s1r = 0.82f, s1g = 0.66f, s1b = 0.34f; // mid
+		float s2r = 0.70f, s2g = 0.54f, s2b = 0.26f; // dark
 
-		// Wide flat brim
-		float brim = 0.55f * s;
-		int segs = 16;
-		for (int i = 0; i < segs; i++) {
-			float a0 = i / (float) segs * ((float) Math.PI * 2f);
-			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
-			float x0 = Mth.cos(a0) * brim, z0 = Mth.sin(a0) * brim;
-			float x1 = Mth.cos(a1) * brim, z1 = Mth.sin(a1) * brim;
-			float xi0 = Mth.cos(a0) * 0.22f * s, zi0 = Mth.sin(a0) * 0.22f * s;
-			float xi1 = Mth.cos(a1) * 0.22f * s, zi1 = Mth.sin(a1) * 0.22f * s;
-			// top of brim
-			sheet(m, vc, xi0, 0.02f, zi0, x0, 0.02f, z0, strawR, strawG, strawB, a);
-			sheet(m, vc, x0, 0.02f, z0, x1, 0.02f, z1, strawR, strawG, strawB, a);
-			sheet(m, vc, x1, 0.02f, z1, xi1, 0.02f, zi1, strawR, strawG, strawB, a);
-			sheet(m, vc, xi1, 0.02f, zi1, xi0, 0.02f, zi0, strawR, strawG, strawB, a);
-			// underside slightly darker
-			sheet(m, vc, xi0, -0.01f, zi0, xi1, -0.01f, zi1, darkR, darkG, darkB, a * 0.9f);
-			sheet(m, vc, xi1, -0.01f, zi1, x1, -0.01f, z1, darkR, darkG, darkB, a * 0.9f);
-			sheet(m, vc, x1, -0.01f, z1, x0, -0.01f, z0, darkR, darkG, darkB, a * 0.9f);
-			sheet(m, vc, x0, -0.01f, z0, xi0, -0.01f, zi0, darkR, darkG, darkB, a * 0.9f);
-			// brim rim
-			sheetYZ(m, vc, x0, -0.01f, z0 - 0.01f, x0, 0.02f, z0 + 0.01f, darkR, darkG, darkB, a);
+		// Stepped circular brim (voxel ring masks)
+		int[][] brim = {
+			// dx,dz half-extent in px — each ring from outside in
+			{8, 8}, {9, 7}, {9, 6}, {8, 5}, {7, 4}
+		};
+		// Filled stepped disk: for each cell in [-9..9]^2 keep if approx circle
+		for (int ix = -9; ix <= 9; ix++) {
+			for (int iz = -9; iz <= 9; iz++) {
+				int ax = Math.abs(ix), az = Math.abs(iz);
+				boolean on = (ax <= 8 && az <= 8) || (ax <= 9 && az <= 6) || (ax <= 7 && az <= 9) || (ax <= 6 && az <= 9);
+				// punch jagged outer rim like the references
+				if (ax + az >= 16) on = false;
+				if (ax == 9 && az == 5) on = true;
+				if (ax == 5 && az == 9) on = true;
+				if (ax == 8 && az == 7) on = true;
+				if (ax == 7 && az == 8) on = true;
+				// hole under crown
+				if (ax <= 3 && az <= 3) on = false;
+				if (!on) continue;
+				float x0 = ix * u, z0 = iz * u;
+				float x1 = x0 + u, z1 = z0 + u;
+				boolean weave = ((ix + iz) & 1) == 0;
+				float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
+				// top
+				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT, x0, 0, z0, x1, u * 0.9f, z1, rr, gg, bb, a);
+				// underside
+				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT, x0, -u * 0.35f, z0, x1, 0, z1, s2r, s2g, s2b, a * 0.95f);
+			}
 		}
 
-		// Crown (short cylinder)
-		float cr = 0.22f * s;
-		float ch = 0.22f * s;
-		for (int i = 0; i < segs; i++) {
-			float a0 = i / (float) segs * ((float) Math.PI * 2f);
-			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
-			float x0 = Mth.cos(a0) * cr, z0 = Mth.sin(a0) * cr;
-			float x1 = Mth.cos(a1) * cr, z1 = Mth.sin(a1) * cr;
-			sheet(m, vc, x0, 0.02f, z0, x1, ch, z1, strawR, strawG, strawB, a);
-			sheetYZ(m, vc, x0, 0.02f, z0 - 0.01f, x0, ch, z0 + 0.01f, darkR, darkG, darkB, a * 0.85f);
+		// Crown box (6x6 x 4px tall)
+		float cw = 3.2f * u;
+		float ch = 4.2f * u;
+		float y0 = u * 0.85f;
+		// sides with weave checker
+		for (int face = 0; face < 4; face++) {
+			m.pushPose();
+			m.mulPose(Axis.YP.rotationDegrees(face * 90f));
+			for (int ix = -3; ix < 3; ix++) {
+				for (int iy = 0; iy < 4; iy++) {
+					boolean weave = ((ix + iy) & 1) == 0;
+					float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
+					KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+						ix * u, y0 + iy * u, cw - u * 0.05f,
+						(ix + 1) * u, y0 + (iy + 1) * u, cw + u * 0.55f,
+						rr, gg, bb, a);
+				}
+			}
+			m.popPose();
 		}
-		// Crown top
-		for (int i = 0; i < segs; i++) {
-			float a0 = i / (float) segs * ((float) Math.PI * 2f);
-			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
-			float x0 = Mth.cos(a0) * cr, z0 = Mth.sin(a0) * cr;
-			float x1 = Mth.cos(a1) * cr, z1 = Mth.sin(a1) * cr;
-			sheet(m, vc, 0, ch, 0, x0, ch, z0, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
-			sheet(m, vc, x0, ch, z0, x1, ch, z1, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
-			sheet(m, vc, x1, ch, z1, 0, ch, 0, strawR * 0.95f, strawG * 0.95f, strawB * 0.9f, a);
+		// crown top checker
+		for (int ix = -3; ix < 3; ix++) {
+			for (int iz = -3; iz < 3; iz++) {
+				boolean weave = ((ix + iz) & 1) == 0;
+				float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
+				KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+					ix * u, y0 + ch - u * 0.1f, iz * u,
+					(ix + 1) * u, y0 + ch + u * 0.5f, (iz + 1) * u,
+					rr, gg, bb, a);
+			}
 		}
-		// Dark band around crown base
-		for (int i = 0; i < segs; i++) {
-			float a0 = i / (float) segs * ((float) Math.PI * 2f);
-			float a1 = (i + 1) / (float) segs * ((float) Math.PI * 2f);
-			float x0 = Mth.cos(a0) * (cr + 0.01f), z0 = Mth.sin(a0) * (cr + 0.01f);
-			float x1 = Mth.cos(a1) * (cr + 0.01f), z1 = Mth.sin(a1) * (cr + 0.01f);
-			sheet(m, vc, x0, 0.04f * s, z0, x1, 0.1f * s, z1, bandR, bandG, bandB, a);
+
+		// Band around crown base (1px tall)
+		float bandY0 = y0;
+		float bandY1 = y0 + u * 1.15f;
+		float br = cw + u * 0.15f;
+		for (int face = 0; face < 4; face++) {
+			m.pushPose();
+			m.mulPose(Axis.YP.rotationDegrees(face * 90f));
+			KnifeModels.box(m, vc, LightTexture.FULL_BRIGHT,
+				-cw, bandY0, br - u * 0.2f,
+				cw, bandY1, br + u * 0.7f,
+				bandR, bandG, bandB, a);
+			m.popPose();
 		}
 	}
 
@@ -579,30 +606,18 @@ public final class CosmeticRenderer {
 	private static void drawThirdPersonKnife(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw) {
 		KnifeStyle style = IceesConfig.knifeStyle;
 		float[] c = IceesConfig.knifeBladeColor(time);
-		CR = c[0]; CG = c[1]; CB = c[2];
 		float ks = IceesConfig.knifeSizeFactor();
 		matrices.pushPose();
-		// Right-hand side — held like a sword
-		matrices.translate(0.38f * ks, 0.75f, -0.12f);
+		matrices.translate(0.38f * ks, 0.72f, -0.1f);
 		matrices.mulPose(Axis.YP.rotationDegrees(knifeSpin(style, time)));
-		matrices.mulPose(Axis.ZP.rotationDegrees(25f + Mth.sin(time * 0.15f) * 6f));
-		matrices.mulPose(Axis.XP.rotationDegrees(-15f));
-		float hs = 0.65f * ks;
-		float hw = 0.06f * ks;
+		matrices.mulPose(Axis.ZP.rotationDegrees(22f + Mth.sin(time * 0.15f) * 5f));
+		matrices.mulPose(Axis.XP.rotationDegrees(-12f));
+		matrices.scale(ks * 1.15f, ks * 1.15f, ks * 1.15f);
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_KNIFE));
-		// blade + thickness so visible from all sides
-		sheet(matrices, vc, -hw, -0.04f, 0, hw, hs, 0, CR, CG, CB, Math.min(1f, bright));
-		sheetYZ(matrices, vc, 0, -0.04f, -hw, 0, hs, hw, CR * 0.7f, CG * 0.7f, CB * 0.75f, 0.9f * bright);
-		// tip taper
-		sheet(matrices, vc, -hw * 0.5f, hs - 0.02f, 0, hw * 0.5f, hs + 0.18f * ks, 0, CR, CG, CB, bright);
-		// handle
-		sheet(matrices, vc, -hw * 0.7f, -0.28f * ks, 0, hw * 0.7f, 0.02f, 0, 0.16f, 0.12f, 0.1f, 0.95f);
-		sheetYZ(matrices, vc, 0, -0.28f * ks, -hw * 0.5f, 0, 0.02f, hw * 0.5f, 0.12f, 0.1f, 0.08f, 0.9f);
-		// soft local shine (not a giant beam)
-		if (IceesConfig.knifeMaterial == KnifeMaterial.CHROME || IceesConfig.knifeMaterial == KnifeMaterial.RAINBOW) {
-			VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-			sheet(matrices, glow, -hw * 0.3f, 0.05f, 0.01f, hw * 0.3f, hs * 0.9f, 0.01f, 1f, 1f, 1f, 0.35f * bright);
-		}
+		float r = Math.min(1f, c[0] * bright);
+		float g = Math.min(1f, c[1] * bright);
+		float b = Math.min(1f, c[2] * bright);
+		KnifeModels.draw(matrices, vc, LightTexture.FULL_BRIGHT, style, r, g, b, time);
 		matrices.popPose();
 	}
 
@@ -633,18 +648,44 @@ public final class CosmeticRenderer {
 		quadOnce(matrices, vc, x1, y1, z0, x1, y1, z1, x0, y0, z1, x0, y0, z0, r, g, b, a);
 	}
 
-	/** Camera-facing orb made of 3 crossed double-sided planes */
+	/** Solid octahedron crystal — real 3D volume, not a flat diamond billboard. */
 	private static void billboardOrb(PoseStack matrices, VertexConsumer vc,
 		float x, float y, float z, float size, float r, float g, float b, float a, float time) {
 		matrices.pushPose();
 		matrices.translate(x, y, z);
+		if (time != 0f) matrices.mulPose(Axis.YP.rotationDegrees(time * 18f));
 		float s = size;
-		sheet(matrices, vc, -s, -s, 0, s, s, 0, r, g, b, a);
-		sheetYZ(matrices, vc, 0, -s, -s, 0, s, s, r, g, b, a);
-		// diagonal cross for fullness
-		matrices.mulPose(Axis.YP.rotationDegrees(45));
-		sheet(matrices, vc, -s * 0.85f, -s * 0.85f, 0, s * 0.85f, s * 0.85f, 0, r, g, b, a * 0.7f);
+		float h = s * 1.15f;
+		float aa = Mth.clamp(a, 0f, 1f);
+		float er = Math.min(1f, r + 0.15f), eg = Math.min(1f, g + 0.15f), eb = Math.min(1f, b + 0.12f);
+		float sr = r * 0.65f, sg = g * 0.65f, sb = b * 0.7f;
+		// top pyramid (4 faces)
+		tri(matrices, vc, 0, h, 0,  s, 0, 0,  0, 0, s, er, eg, eb, aa);
+		tri(matrices, vc, 0, h, 0,  0, 0, s, -s, 0, 0, r, g, b, aa);
+		tri(matrices, vc, 0, h, 0, -s, 0, 0,  0, 0,-s, sr, sg, sb, aa);
+		tri(matrices, vc, 0, h, 0,  0, 0,-s,  s, 0, 0, r, g, b, aa);
+		// bottom pyramid
+		tri(matrices, vc, 0,-h, 0,  0, 0, s,  s, 0, 0, r, g, b, aa);
+		tri(matrices, vc, 0,-h, 0, -s, 0, 0,  0, 0, s, sr, sg, sb, aa);
+		tri(matrices, vc, 0,-h, 0,  0, 0,-s, -s, 0, 0, r, g, b, aa);
+		tri(matrices, vc, 0,-h, 0,  s, 0, 0,  0, 0,-s, er, eg, eb, aa);
+		// core glow box
+		KnifeModels.box(matrices, vc, LightTexture.FULL_BRIGHT, -s * 0.28f, -s * 0.28f, -s * 0.28f, s * 0.28f, s * 0.28f, s * 0.28f, er, eg, eb, aa * 0.85f);
 		matrices.popPose();
+	}
+
+	private static void tri(PoseStack matrices, VertexConsumer vc,
+		float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2, float z2,
+		float r, float g, float b, float a) {
+		PoseStack.Pose pose = matrices.last();
+		Matrix4f m = pose.pose();
+		int light = LightTexture.FULL_BRIGHT;
+		int overlay = OverlayTexture.NO_OVERLAY;
+		vc.addVertex(m, x0, y0, z0).setColor(r, g, b, a).setUv(0.5f, 0f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 1, 0);
+		vc.addVertex(m, x1, y1, z1).setColor(r, g, b, a).setUv(0f, 1f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 1, 0);
+		vc.addVertex(m, x2, y2, z2).setColor(r, g, b, a).setUv(1f, 1f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 1, 0);
+		// degenerate 4th for quad consumer pipelines
+		vc.addVertex(m, x0, y0, z0).setColor(r, g, b, a).setUv(0.5f, 0f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 1, 0);
 	}
 
 	private static void quadOnce(PoseStack matrices, VertexConsumer vc,

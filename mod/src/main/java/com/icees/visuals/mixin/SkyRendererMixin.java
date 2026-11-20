@@ -24,6 +24,8 @@ public class SkyRendererMixin {
 		state.skyColor = IceesConfig.skyStyle.toSkyDiscArgb();
 		state.sunriseAndSunsetColor = IceesConfig.skyStyle.toSunriseArgb();
 		state.shouldRenderDarkDisc = false;
+		// Keep the disc readable in rain/thunder (vanilla rainBrightness darkens the sky pass)
+		state.rainBrightness = Math.max(state.rainBrightness, 0.92f);
 		switch (IceesConfig.skyStyle) {
 			case GALAXY, NOCTURNE, AMETHYST -> state.starBrightness = Math.max(state.starBrightness, 0.95f);
 			case SAKURA, FIRE, OPALINE, AETHER -> state.starBrightness = Math.min(state.starBrightness, 0.12f);

@@ -1,8 +1,9 @@
 package com.icees.visuals.cosmetics;
 
-/** Headwear cosmetics — straw stays natural (no colour tint). */
+/** Headwear — straw hats use fixed natural colours (no HSV tint). */
 public enum HatStyle {
-	STRAW("Straw Hat"),
+	STRAW_RED("Straw Hat · Red"),
+	STRAW_BROWN("Straw Hat · Brown"),
 	CHINA("China Hat");
 
 	public final String title;

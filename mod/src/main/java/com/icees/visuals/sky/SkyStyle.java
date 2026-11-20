@@ -41,12 +41,12 @@ public enum SkyStyle {
 		return rgb(r * 0.88f, g * 0.88f, b * 0.88f);
 	}
 
-	/** Soft tinted clouds — readable white core + sky hue (ARGB for CLOUD_COLOR). */
+	/** Strong sky-tinted clouds (ARGB) — beats rain/thunder greyscale wash. */
 	public int toCloudArgb() {
-		float cr = Math.min(1f, r * 0.4f + 0.6f);
-		float cg = Math.min(1f, g * 0.4f + 0.6f);
-		float cb = Math.min(1f, b * 0.4f + 0.6f);
-		return ARGB.colorFromFloat(0.95f, cr, cg, cb);
+		float cr = Math.min(1f, r * 0.72f + 0.28f);
+		float cg = Math.min(1f, g * 0.72f + 0.28f);
+		float cb = Math.min(1f, b * 0.72f + 0.28f);
+		return ARGB.colorFromFloat(1.0f, cr, cg, cb);
 	}
 
 	/** Opaque disc colour for renderSkyDisc (shader reads alpha). */

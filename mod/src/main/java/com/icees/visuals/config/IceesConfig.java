@@ -37,7 +37,7 @@ public final class IceesConfig {
 	public static boolean halo = true;
 	public static HaloStyle haloStyle = HaloStyle.BLOSSOM;
 	public static boolean hat = true;
-	public static HatStyle hatStyle = HatStyle.STRAW;
+	public static HatStyle hatStyle = HatStyle.STRAW_RED;
 	public static boolean cape = true;
 	public static CapeStyle capeStyle = CapeStyle.SAKURA;
 	public static boolean knife = true;
@@ -225,10 +225,10 @@ public final class IceesConfig {
 			haloStyle = safeEnum(HaloStyle.class, data.haloStyle, HaloStyle.BLOSSOM);
 			if (data.hatStyle != null) {
 				hat = data.hat;
-				hatStyle = safeEnum(HatStyle.class, data.hatStyle, HatStyle.STRAW);
+				hatStyle = migrateHat(data.hatStyle);
 			} else {
 				hat = true;
-				hatStyle = HatStyle.STRAW;
+				hatStyle = HatStyle.STRAW_RED;
 			}
 			cape = data.cape;
 			capeStyle = safeEnum(CapeStyle.class, data.capeStyle, CapeStyle.SAKURA);
@@ -322,6 +322,12 @@ public final class IceesConfig {
 		}
 	}
 
+	/** Old single STRAW style maps to the red-band voxel hat. */
+	private static HatStyle migrateHat(String name) {
+		if (name == null || "STRAW".equals(name)) return HatStyle.STRAW_RED;
+		return safeEnum(HatStyle.class, name, HatStyle.STRAW_RED);
+	}
+
 	private static <T extends Enum<T>> T safeEnum(Class<T> type, String name, T fallback) {
 		if (name == null) return fallback;
 		try { return Enum.valueOf(type, name); } catch (IllegalArgumentException e) { return fallback; }
@@ -332,7 +338,7 @@ public final class IceesConfig {
 		boolean customSky = true; String skyStyle = "SAKURA";
 		boolean wings = true; String wingStyle = "PETAL";
 		boolean halo = true; String haloStyle = "BLOSSOM";
-		boolean hat = true; String hatStyle = "STRAW";
+		boolean hat = true; String hatStyle = "STRAW_RED";
 		boolean cape = true; String capeStyle = "SAKURA";
 		boolean knife = true; String knifeStyle = "BUTTERFLY";
 		String knifeMaterial = "STEEL"; int knifeSize = 3;
