@@ -1,22 +1,33 @@
 package com.icees.visuals.keybind;
 
+import com.icees.visuals.config.IceesConfig;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
 public final class IceesKeybinds {
-	public static KeyBinding OPEN_ORBIT;
+	public static KeyMapping OPEN_ORBIT;
 
-	private IceesKeybinds() {
-	}
+	private IceesKeybinds() {}
 
 	public static void register() {
-		OPEN_ORBIT = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+		OPEN_ORBIT = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.icees-visuals.orbit",
-			InputUtil.Type.KEYSYM,
-			GLFW.GLFW_KEY_RIGHT_SHIFT,
-			"key.categories.icees-visuals"
+			InputConstants.Type.KEYSYM,
+			IceesConfig.orbitKeyCode,
+			KeyMapping.Category.MISC
 		));
+	}
+
+	public static void rebind(int glfwKeyCode) {
+		IceesConfig.orbitKeyCode = glfwKeyCode;
+		OPEN_ORBIT.setKey(InputConstants.Type.KEYSYM.getOrCreate(glfwKeyCode));
+		KeyMapping.resetMapping();
+		IceesConfig.save();
+	}
+
+	public static void resetDefault() {
+		rebind(GLFW.GLFW_KEY_RIGHT_SHIFT);
 	}
 }

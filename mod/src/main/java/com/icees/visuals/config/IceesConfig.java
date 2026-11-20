@@ -7,8 +7,10 @@ import com.icees.visuals.cosmetics.CapeStyle;
 import com.icees.visuals.cosmetics.HaloStyle;
 import com.icees.visuals.cosmetics.KnifeStyle;
 import com.icees.visuals.cosmetics.WingStyle;
+import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.sky.SkyStyle;
 import net.fabricmc.loader.api.FabricLoader;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -33,11 +35,14 @@ public final class IceesConfig {
 	public static boolean aura = true;
 	public static boolean trail = false;
 	public static boolean jumpCircles = true;
-	public static boolean petals = true;
-	public static float accentHue = 0.92f;
+	/** Falling atmosphere theme (Sakura Fall / White Snow / Soft Mist). */
+	public static FallTheme fallTheme = FallTheme.SAKURA_FALL;
+	/** 1 = light … 5 = heavy */
+	public static int fallIntensity = 3;
+	/** GLFW key code for Orbit menu (default Right Shift). */
+	public static int orbitKeyCode = GLFW.GLFW_KEY_RIGHT_SHIFT;
 
-	private IceesConfig() {
-	}
+	private IceesConfig() {}
 
 	public static void load() {
 		if (!Files.isRegularFile(PATH)) {
@@ -46,9 +51,7 @@ public final class IceesConfig {
 		}
 		try (Reader reader = Files.newBufferedReader(PATH)) {
 			Data data = GSON.fromJson(reader, Data.class);
-			if (data == null) {
-				return;
-			}
+			if (data == null) return;
 			customSky = data.customSky;
 			skyStyle = safeEnum(SkyStyle.class, data.skyStyle, SkyStyle.SAKURA);
 			wings = data.wings;
@@ -62,10 +65,19 @@ public final class IceesConfig {
 			aura = data.aura;
 			trail = data.trail;
 			jumpCircles = data.jumpCircles;
-			petals = data.petals;
-			accentHue = data.accentHue;
+			if (data.fallTheme != null) {
+				fallTheme = safeEnum(FallTheme.class, data.fallTheme, FallTheme.SAKURA_FALL);
+			} else if (data.petals) {
+				fallTheme = FallTheme.SAKURA_FALL;
+			} else {
+				fallTheme = FallTheme.OFF;
+			}
+			if (data.fallIntensity >= 1 && data.fallIntensity <= 5) {
+				fallIntensity = data.fallIntensity;
+			}
+			if (data.orbitKeyCode != 0) orbitKeyCode = data.orbitKeyCode;
 		} catch (Exception e) {
-			IceesVisualsClient.LOGGER.warn("Failed to load config, using defaults", e);
+			IceesVisualsClient.LOGGER.warn("Failed to load config", e);
 		}
 	}
 
@@ -84,8 +96,10 @@ public final class IceesConfig {
 		data.aura = aura;
 		data.trail = trail;
 		data.jumpCircles = jumpCircles;
-		data.petals = petals;
-		data.accentHue = accentHue;
+		data.petals = fallTheme == FallTheme.SAKURA_FALL;
+		data.fallTheme = fallTheme.name();
+		data.fallIntensity = fallIntensity;
+		data.orbitKeyCode = orbitKeyCode;
 		try {
 			Files.createDirectories(PATH.getParent());
 			try (Writer writer = Files.newBufferedWriter(PATH)) {
@@ -97,9 +111,7 @@ public final class IceesConfig {
 	}
 
 	private static <T extends Enum<T>> T safeEnum(Class<T> type, String name, T fallback) {
-		if (name == null) {
-			return fallback;
-		}
+		if (name == null) return fallback;
 		try {
 			return Enum.valueOf(type, name);
 		} catch (IllegalArgumentException e) {
@@ -123,6 +135,8 @@ public final class IceesConfig {
 		boolean trail = false;
 		boolean jumpCircles = true;
 		boolean petals = true;
-		float accentHue = 0.92f;
+		String fallTheme = "SAKURA_FALL";
+		int fallIntensity = 3;
+		int orbitKeyCode = 344;
 	}
 }

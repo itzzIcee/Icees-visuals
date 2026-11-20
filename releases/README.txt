@@ -1,15 +1,15 @@
-Icee's Sakura Visuals — Fabric mod
+Icee's Sakura Visuals — Fabric 1.21.11
 
-REQUIRED:
-- Minecraft 1.21.1 (exactly)
-- Fabric Loader
-- Fabric API for 1.21.1
+Install:
+1. Fabric Loader 0.20.1+ for Minecraft 1.21.11
+2. Fabric API
+3. Drop "Icee's Sakura Visuals.jar" into your mods folder
 
-Install: put the .jar into .minecraft/mods
-In-game: Right Shift opens Orbit
+Open Orbit: Right Shift (rebindable under Key)
 
-If Minecraft crashes:
-1. Confirm version is 1.21.1 (not 1.21.3/1.21.4)
-2. Confirm Fabric API is installed
-3. Remove other conflicting visual clients
-4. Check logs/latest.log and search for icees-visuals
+Themes tab (English):
+- Off
+- Sakura Fall — cherry blossoms falling
+- White Snow — soft snowflakes
+- Soft Mist — pale white mist
+- Fall Intensity 1–5

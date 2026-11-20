@@ -3,7 +3,7 @@
   "package": "com.icees.visuals.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "WorldRendererMixin"
+    "SkyRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
