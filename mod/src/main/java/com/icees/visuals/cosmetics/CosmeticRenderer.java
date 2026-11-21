@@ -346,10 +346,10 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Move with the head: full yaw + full pitch (same as HumanoidModel.head).
+		// Move with the head: full yaw + full pitch (inverted vs getXRot).
 		matrices.translate(0, 1.5f - headDrop, 0);
 		float yawRad = headYawRel * Mth.DEG_TO_RAD;
-		float pitchRad = headPitch * Mth.DEG_TO_RAD;
+		float pitchRad = (-headPitch) * Mth.DEG_TO_RAD;
 		matrices.mulPose(new Quaternionf().rotationZYX(0f, yawRad, pitchRad));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
