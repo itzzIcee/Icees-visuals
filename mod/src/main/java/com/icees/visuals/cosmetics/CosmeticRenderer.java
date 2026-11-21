@@ -18,6 +18,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 /**
  * Third-person cosmetics with distinct 3D models per style, double-sided so visible from every angle.
  */
@@ -129,7 +130,7 @@ public final class CosmeticRenderer {
 		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), bodyDrop);
 		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize), bodyDrop);
 		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headDrop);
-		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, headDrop);
+		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, crouch);
 		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
 		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
 			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
@@ -339,18 +340,31 @@ public final class CosmeticRenderer {
 		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB, hatGradT);
 	}
 
+	/**
+	 * Hat must use the same space as {@code LivingEntityRenderer} + {@code HumanoidModel.head},
+	 * otherwise look left/right leaves the hat on the body.
+	 * Caller is already in setupRotations frame: YP(180 - bodyYaw).
+	 */
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
-		float headYawRel, float headPitch, float headDrop) {
+		float headYawRel, float headPitch, boolean crouch) {
 		hatGradT = gradPhase(time);
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Same as HumanoidModel.head: sit on the neck, turn wherever the head looks.
-		// +yRot = look left/right with the head; -xRot = look up/down (our pitch convention).
-		matrices.translate(0, 1.5f - headDrop, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
-		matrices.translate(0, 0.22f + 0.04f * thick, 0);
+		// LivingEntityRenderer after setupRotations:
+		matrices.scale(-1f, -1f, 1f);
+		matrices.translate(0f, -1.501f, 0f);
+		// HumanoidModel crouch: head.y += 4.2
+		if (crouch) matrices.translate(0f, 4.2f / 16f, 0f);
+		// HumanoidModel.head: yRot / xRot (same signs as the real head bone)
+		matrices.mulPose(new Quaternionf().rotationZYX(
+			0f,
+			headYawRel * Mth.DEG_TO_RAD,
+			headPitch * Mth.DEG_TO_RAD));
+		// Skull top is y=-8 model units; flip local Y so our meshes grow out of the head
+		matrices.translate(0f, -8f / 16f, 0f);
+		matrices.scale(1f, -1f, 1f);
+		matrices.translate(0f, 0.02f + 0.04f * thick, 0f);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
