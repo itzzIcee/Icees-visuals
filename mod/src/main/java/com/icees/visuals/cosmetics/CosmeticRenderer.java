@@ -346,11 +346,11 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Full head follow — same pitch sign as HumanoidModel.head.xRot so look-up tips
-		// the hat back and look-down tips it forward (not onto the chest).
+		// Head only (not body): full left/right yaw, soft up/down lean (leichte Schräge)
+		// so it doesn't tip crooked. Pitch sign matches look-up → hat back.
 		matrices.translate(0, 1.5f - headDrop, 0);
 		float yawRad = headYawRel * Mth.DEG_TO_RAD;
-		float pitchRad = headPitch * Mth.DEG_TO_RAD;
+		float pitchRad = (headPitch * 0.38f) * Mth.DEG_TO_RAD;
 		matrices.mulPose(new Quaternionf().rotationZYX(0f, yawRad, pitchRad));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
