@@ -186,48 +186,43 @@ public final class CosmeticRenderer {
 		sheet(m, hard, s * 1.25f * thick, 0.85f * thick, 0, s * 1.55f * thick, 1.05f * thick, -0.15f, CR, CG, CB, bright);
 	}
 
-	/** Angular crystal shards */
+	/** Angular crystal shards — dense fan, overlapping so no gaps */
 	private static void wingCrystal(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
-		float[][] shards = {
-			{0.15f, 0.2f, 1.0f, 1.1f},
-			{0.4f, 0.0f, 1.25f, 0.85f},
-			{0.7f, 0.25f, 1.45f, 1.0f},
-			{0.35f, 0.55f, 0.95f, 1.35f},
-			{0.9f, 0.4f, 1.35f, 0.7f}
-		};
-		for (float[] sh : shards) {
+		int blades = 9;
+		for (int i = 0; i < blades; i++) {
+			float t = i / (float) (blades - 1);
 			m.pushPose();
-			m.mulPose(Axis.YP.rotationDegrees(s * (8f + sh[0] * 20f)));
-			m.mulPose(Axis.ZP.rotationDegrees(s * (-5f + sh[1] * 15f)));
-			sheet(m, hard, s * sh[0] * thick, sh[1] * thick, 0, s * sh[2] * thick, sh[3] * thick, -0.12f, CR, CG, CB, 0.95f * bright);
-			sheet(m, soft, s * sh[0] * thick, sh[1] * thick, 0.04f, s * sh[2] * thick, sh[3] * thick, 0.04f, CR, CG, CB, 0.4f * bright);
-			// edge visible from side
-			sheetYZ(m, hard, s * sh[2] * thick, sh[1] * thick, -0.06f, s * sh[2] * thick, sh[3] * thick, 0.06f, CR, CG, CB, 0.5f * bright);
+			// Tight fan — small angles so blades sit on top of each other
+			m.mulPose(Axis.YP.rotationDegrees(s * (2f + t * 5f)));
+			m.mulPose(Axis.ZP.rotationDegrees(s * (-10f + t * 20f)));
+			float x0 = s * 0.03f * thick;
+			float x1 = s * (1.0f + t * 0.4f) * thick;
+			float y0 = (-0.1f + t * 0.4f) * thick;
+			float y1 = (0.65f + t * 0.35f) * thick;
+			sheet(m, soft, x0, y0 - 0.18f * thick, 0.04f, x1, y1 + 0.18f * thick, -0.12f, CR, CG, CB, 0.5f * bright);
+			sheet(m, hard, x0, y0, 0, x1 * 0.95f, y1, -0.06f, CR, CG, CB, 0.95f * bright);
+			sheetYZ(m, hard, x1 * 0.9f, y0, -0.05f, x1 * 0.9f, y1, 0.05f, CR, CG, CB, 0.45f * bright);
 			m.popPose();
 		}
 	}
 
-	/** Teal translucent insect / dragonfly panes with vein ridges (ref style). */
+	/** Teal dragonfly panes — packed together, rounded soft fill */
 	private static void wingDragonfly(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
-		float flutter = Mth.sin(time * 0.55f + side) * 8f;
-		m.mulPose(Axis.ZP.rotationDegrees(s * flutter * 0.35f));
-		// Four long panes per side (upper + lower pairs)
-		float[][] panes = {
-			{0.05f, 0.35f, 1.55f, 0.95f, -0.05f},
-			{0.15f, 0.05f, 1.65f, 0.55f, -0.12f},
-			{0.08f, -0.15f, 1.35f, 0.25f, -0.08f},
-			{0.20f, -0.35f, 1.25f, -0.05f, -0.15f}
-		};
-		for (float[] p : panes) {
-			float x0 = s * p[0] * thick, y0 = p[1] * thick, x1 = s * p[2] * thick, y1 = p[3] * thick, z = p[4];
-			sheet(m, soft, x0, y0, z, x1, y1, z - 0.04f, CR, CG, CB, 0.42f * bright);
-			sheet(m, hard, x0, y0, z + 0.01f, x1, y1, z - 0.02f, CR * 0.85f, CG * 0.95f, CB, 0.75f * bright);
-			// dark vein edges
-			sheet(m, hard, x0, y0, z, x0 + s * 0.04f * thick, y1, z - 0.03f, 0.05f, 0.12f, 0.14f, 0.85f * bright);
-			sheet(m, hard, x0, (y0 + y1) * 0.5f - 0.02f, z, x1, (y0 + y1) * 0.5f + 0.02f, z - 0.03f, 0.08f, 0.18f, 0.2f, 0.55f * bright);
-			sheetYZ(m, hard, x1, y0, z - 0.02f, x1, y1, z + 0.02f, 0.05f, 0.1f, 0.12f, 0.5f * bright);
+		float flutter = Mth.sin(time * 0.55f + side) * 6f;
+		m.mulPose(Axis.ZP.rotationDegrees(s * flutter * 0.25f));
+		int panes = 8;
+		for (int i = 0; i < panes; i++) {
+			float t = i / (float) (panes - 1);
+			float y0 = (-0.2f + t * 0.7f) * thick;
+			float y1 = y0 + 0.7f * thick; // heavy overlap
+			float x0 = s * 0.03f * thick;
+			float x1 = s * (1.3f + t * 0.2f) * thick;
+			float z = -0.03f - t * 0.02f;
+			sheet(m, soft, x0, y0 - 0.12f * thick, z + 0.04f, x1, y1 + 0.12f * thick, z - 0.06f, CR, CG, CB, 0.55f * bright);
+			sheet(m, hard, x0, y0, z, x1, y1, z - 0.02f, CR * 0.85f, CG * 0.95f, CB, 0.85f * bright);
+			sheetYZ(m, hard, x1, y0, z - 0.02f, x1, y1, z + 0.02f, 0.05f, 0.1f, 0.12f, 0.45f * bright);
 		}
 	}
 
@@ -823,26 +818,23 @@ public final class CosmeticRenderer {
 				}
 			}
 			case BEACON -> {
-				for (int i = 0; i < style.count; i++) {
-					float a = i * ((float) Math.PI * 2f / style.count) + time * style.spin;
-					float x = Mth.cos(a) * 0.55f * thick;
-					float z = Mth.sin(a) * 0.55f * thick;
-					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
-						x - 0.04f * thick, 0.1f, z - 0.04f * thick,
-						x + 0.04f * thick, 2.0f * thick, z + 0.04f * thick,
-						CR, CG, CB, aMul * 0.7f);
+				int n = Math.max(14, style.count + 10);
+				for (int i = 0; i < n; i++) {
+					float a = i * ((float) Math.PI * 2f / n) + time * style.spin;
+					float x = Mth.cos(a) * 0.42f * thick;
+					float z = Mth.sin(a) * 0.42f * thick;
+					MeshPrims.cylinder(matrices, vc, LightTexture.FULL_BRIGHT,
+						x, 0.1f, z, 0.2f * thick, 1.85f * thick, 12, CR, CG, CB, aMul * 0.5f);
 				}
 			}
 			case SHIELD -> {
-				int n = Math.max(6, style.count);
+				int n = Math.max(18, style.count + 10);
 				for (int i = 0; i < n; i++) {
 					float a = i * ((float) Math.PI * 2f / n);
-					float x = Mth.cos(a) * 0.85f * thick;
-					float z = Mth.sin(a) * 0.85f * thick;
-					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT,
-						x - 0.08f * thick, 0.4f, z - 0.08f * thick,
-						x + 0.08f * thick, 1.6f, z + 0.08f * thick,
-						CR, CG, CB, aMul * 0.55f);
+					float x = Mth.cos(a) * 0.7f * thick;
+					float z = Mth.sin(a) * 0.7f * thick;
+					MeshPrims.cylinder(matrices, vc, LightTexture.FULL_BRIGHT,
+						x, 0.35f, z, 0.22f * thick, 1.3f * thick, 12, CR, CG, CB, aMul * 0.48f);
 				}
 			}
 			case RIBBON -> {

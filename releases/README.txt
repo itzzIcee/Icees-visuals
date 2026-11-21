@@ -1,10 +1,9 @@
 icee's Visuals V1 — Fabric 1.21.11
-==================================
-File: icee's Visuals V1.jar  (build 1.0.20)
 
-- Rounder cosmetics, fewer gaps between layers
-- Per-cosmetic Size (Wings / Halo / Hat / Cape / Aura / Shield / Jump)
-- Themes Range in chunks, Jump Circle styles, skin preview
+File: icee's Visuals V1.jar  (build 1.0.21)
 
-Right Shift → Orbit → Cosmetics → pick item → Size
+Changes in 1.0.21:
+- Cosmetics: tighter wing / beacon / shield segments (less gaps)
+- Movement Trail moved to Cosmetics tab (and actually renders now)
+
 Install: drop "icee's Visuals V1.jar" into mods/ (Fabric Loader + Fabric API 1.21.11)

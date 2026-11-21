@@ -35,7 +35,7 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
 	private enum Tab { COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
-	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, SHIELD, JUMP }
+	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, SHIELD, JUMP, TRAIL }
 
 	private Tab tab = Tab.COSMETICS;
 	private CosmeticPick pick = CosmeticPick.WINGS;
@@ -120,9 +120,7 @@ public class OrbitScreen extends Screen {
 		rowY = addStepper(x, rowY, w, "Speed", IceesConfig.fallSpeed, 10, v -> IceesConfig.fallSpeed = v);
 		rowY = addStepper(x, rowY, w, "Spread", IceesConfig.fallSpread, 10, v -> IceesConfig.fallSpread = v);
 		rowY = addChunkRangeStepper(x, rowY, w);
-		rowY = addStepper(x, rowY, w, "Opacity", IceesConfig.fallOpacity, 10, v -> IceesConfig.fallOpacity = v);
-		addHit(x, rowY, w, 18, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
-			() -> IceesConfig.trail = !IceesConfig.trail);
+		addStepper(x, rowY, w, "Opacity", IceesConfig.fallOpacity, 10, v -> IceesConfig.fallOpacity = v);
 	}
 
 	private void buildOverlay(int x, int y, int w) {
@@ -249,6 +247,10 @@ public class OrbitScreen extends Screen {
 			y = addStepper(cx, y, cw, "Rings", IceesConfig.jumpCircleCount, 10, v -> IceesConfig.jumpCircleCount = v);
 			y = addStepper(cx, y, cw, "Size", IceesConfig.jumpCircleSize, 10, v -> IceesConfig.jumpCircleSize = v);
 			y = addStepper(cx, y, cw, "Speed", IceesConfig.jumpCircleSpeed, 10, v -> IceesConfig.jumpCircleSpeed = v);
+		} else if (pick == CosmeticPick.TRAIL) {
+			addHit(cx, y, cw, 16, "Leaves a soft glow while you walk / run", false, () -> {});
+			y += 20;
+			y = addTintControls(cx, y, cw, IceesConfig.auraTint);
 		} else {
 			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
 			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
@@ -264,7 +266,7 @@ public class OrbitScreen extends Screen {
 		}
 
 		y += 4;
-		if (pick != CosmeticPick.JUMP) {
+		if (pick != CosmeticPick.JUMP && pick != CosmeticPick.TRAIL) {
 			y = addStepper(cx, y, cw, "Size", sizeOfPick(), 10, this::setSizeOfPick);
 		}
 		addStepper(cx, y, cw, "Brightness", IceesConfig.cosmeticBrightness, 10, v -> IceesConfig.cosmeticBrightness = v);
@@ -276,7 +278,7 @@ public class OrbitScreen extends Screen {
 			case HALO -> IceesConfig.haloSize;
 			case HAT -> IceesConfig.hatSize;
 			case CAPE -> IceesConfig.capeSize;
-			case AURA -> IceesConfig.auraSize;
+			case AURA, TRAIL -> IceesConfig.auraSize;
 			case SHIELD -> IceesConfig.shieldSize;
 			case JUMP -> IceesConfig.jumpCircleSize;
 		};
@@ -288,7 +290,7 @@ public class OrbitScreen extends Screen {
 			case HALO -> IceesConfig.haloSize = IceesConfig.clamp10(v);
 			case HAT -> IceesConfig.hatSize = IceesConfig.clamp10(v);
 			case CAPE -> IceesConfig.capeSize = IceesConfig.clamp10(v);
-			case AURA -> IceesConfig.auraSize = IceesConfig.clamp10(v);
+			case AURA, TRAIL -> IceesConfig.auraSize = IceesConfig.clamp10(v);
 			case SHIELD -> IceesConfig.shieldSize = IceesConfig.clamp10(v);
 			case JUMP -> IceesConfig.jumpCircleSize = IceesConfig.clamp10(v);
 		}
@@ -356,6 +358,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> "Aura";
 			case SHIELD -> "Shld";
 			case JUMP -> "Jump";
+			case TRAIL -> "Trail";
 		};
 	}
 
@@ -368,6 +371,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> "Aura";
 			case SHIELD -> "Shield";
 			case JUMP -> "Jump Circles";
+			case TRAIL -> "Movement Trail";
 		};
 	}
 
@@ -380,6 +384,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> IceesConfig.aura;
 			case SHIELD -> IceesConfig.shield;
 			case JUMP -> IceesConfig.jumpCircles;
+			case TRAIL -> IceesConfig.trail;
 		};
 	}
 
@@ -392,6 +397,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> IceesConfig.aura = !IceesConfig.aura;
 			case SHIELD -> IceesConfig.shield = !IceesConfig.shield;
 			case JUMP -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles;
+			case TRAIL -> IceesConfig.trail = !IceesConfig.trail;
 		}
 	}
 
@@ -404,6 +410,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> IceesConfig.auraStyle.title;
 			case SHIELD -> IceesConfig.shieldStyle.title;
 			case JUMP -> IceesConfig.jumpCircleStyle.title;
+			case TRAIL -> "Soft Glow";
 		};
 	}
 
@@ -416,6 +423,7 @@ public class OrbitScreen extends Screen {
 			case AURA -> IceesConfig.auraStyle = IceesConfig.auraStyle.next();
 			case SHIELD -> IceesConfig.shieldStyle = IceesConfig.shieldStyle.next();
 			case JUMP -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.next();
+			case TRAIL -> {}
 		}
 	}
 
@@ -443,6 +451,7 @@ public class OrbitScreen extends Screen {
 				IceesConfig.shieldStyle = a[(IceesConfig.shieldStyle.ordinal() + a.length - 1) % a.length];
 			}
 			case JUMP -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.prev();
+			case TRAIL -> {}
 		}
 	}
 
@@ -451,7 +460,7 @@ public class OrbitScreen extends Screen {
 			case WINGS -> IceesConfig.wingTint;
 			case HALO -> IceesConfig.haloTint;
 			case CAPE -> IceesConfig.capeTint;
-			case AURA -> IceesConfig.auraTint;
+			case AURA, TRAIL -> IceesConfig.auraTint;
 			case SHIELD -> IceesConfig.shieldTint;
 			case HAT, JUMP -> IceesConfig.auraTint;
 		};

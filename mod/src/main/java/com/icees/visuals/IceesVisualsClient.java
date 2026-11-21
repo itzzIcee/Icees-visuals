@@ -2,6 +2,7 @@ package com.icees.visuals;
 
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.cosmetics.CosmeticRenderer;
+import com.icees.visuals.cosmetics.MovementTrailRenderer;
 import com.icees.visuals.cpvp.MotionBlurRenderer;
 import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
@@ -32,10 +33,12 @@ public final class IceesVisualsClient implements ClientModInitializer {
 				}
 			}
 			FallParticleRenderer.tick(client);
+			MovementTrailRenderer.tick(client);
 			IceesConfig.applyFullbright(client);
 		});
 
 		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
+		WorldRenderEvents.AFTER_ENTITIES.register(MovementTrailRenderer::render);
 		WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
 
@@ -45,6 +48,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.20 — rounder cosmetics, per-item size");
+		LOGGER.info("Icee's Sakura Visuals 1.0.21 — tighter cosmetics, working movement trail");
 	}
 }
