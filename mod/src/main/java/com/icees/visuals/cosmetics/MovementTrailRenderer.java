@@ -81,7 +81,7 @@ public final class MovementTrailRenderer {
 		Camera camera = client.gameRenderer.getMainCamera();
 		Vec3 cam = camera.position();
 		float bright = IceesConfig.brightnessFactor();
-		float[] col = IceesConfig.color(IceesConfig.auraTint, 0.55f, 0.85f, 1.0f);
+		float[] col = IceesConfig.color(IceesConfig.trailTint, 0.55f, 0.85f, 1.0f);
 		VertexConsumer vc = consumers.getBuffer(RenderTypes.eyes(TEX));
 
 		for (Point p : POINTS) {

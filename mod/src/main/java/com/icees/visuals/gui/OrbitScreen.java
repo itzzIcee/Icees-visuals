@@ -1,5 +1,6 @@
 package com.icees.visuals.gui;
 
+import com.icees.visuals.config.CosmeticColor;
 import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.config.VisualPresets;
@@ -282,6 +283,7 @@ public class OrbitScreen extends Screen {
 				() -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.next());
 			addHit(cx + cw - 24, y, 24, 18, "›", false, () -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.next());
 			y += 22;
+			y = addTintControlsFor(cx, y, cw, CosmeticPick.JUMP);
 			y = addStepper(cx, y, cw, "Rings", IceesConfig.jumpCircleCount, 10, v -> IceesConfig.jumpCircleCount = v);
 			y = addStepper(cx, y, cw, "Size", IceesConfig.jumpCircleSize, 10, v -> IceesConfig.jumpCircleSize = v);
 			y = addStepper(cx, y, cw, "Speed", IceesConfig.jumpCircleSpeed, 10, v -> IceesConfig.jumpCircleSpeed = v);
@@ -327,26 +329,25 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
-	/** Tint editors always write the tint for {@code which} — never bleed into wings/etc. */
+	/** Named colour presets (Red / Blue / …) for this cosmetic only. */
 	private int addTintControlsFor(int x, int y, int w, CosmeticPick which) {
 		CosmeticTint tint = tintOf(which);
+		CosmeticColor col = CosmeticColor.matching(tint);
 		addHit(x, y, w, 16, "Colour  ·  " + onOff(tint.enabled), tint.enabled, () -> tintOf(which).toggle());
 		y += 18;
-		y = addStepper(x, y, w, "Hue", tint.hue, 355, v -> {
-			CosmeticTint t = tintOf(which);
-			t.hue = Math.floorMod(v, 360);
-			t.enabled = true;
-		}, 5);
-		y = addStepper(x, y, w, "Sat", tint.sat, 100, v -> {
-			CosmeticTint t = tintOf(which);
-			t.sat = Math.max(0, Math.min(100, v));
-			t.enabled = true;
+		addHit(x, y, 24, 18, "‹", false, () -> {
+			CosmeticColor next = CosmeticColor.matching(tintOf(which)).prev();
+			next.apply(tintOf(which));
 		});
-		return addStepper(x, y, w, "Val", tint.val, 100, v -> {
-			CosmeticTint t = tintOf(which);
-			t.val = Math.max(0, Math.min(100, v));
-			t.enabled = true;
+		addHit(x + 28, y, w - 56, 18, "Colour  →  " + col.title, false, () -> {
+			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
+			next.apply(tintOf(which));
 		});
+		addHit(x + w - 24, y, 24, 18, "›", false, () -> {
+			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
+			next.apply(tintOf(which));
+		});
+		return y + 22;
 	}
 
 	private int addChunkRangeStepper(int x, int y, int w) {
@@ -486,7 +487,9 @@ public class OrbitScreen extends Screen {
 			case WINGS -> IceesConfig.wingTint;
 			case HALO -> IceesConfig.haloTint;
 			case CAPE -> IceesConfig.capeTint;
-			case AURA, TRAIL, JUMP -> IceesConfig.auraTint;
+			case AURA -> IceesConfig.auraTint;
+			case TRAIL -> IceesConfig.trailTint;
+			case JUMP -> IceesConfig.jumpTint;
 			case HAT -> IceesConfig.hatTint;
 		};
 	}

@@ -75,6 +75,8 @@ public final class IceesConfig {
 	public static CosmeticTint auraTint = new CosmeticTint(true, 310, 70, 100);
 	public static CosmeticTint shieldTint = new CosmeticTint(true, 330, 55, 100);
 	public static CosmeticTint hatTint = new CosmeticTint(true, 40, 55, 90);
+	public static CosmeticTint trailTint = new CosmeticTint(true, 200, 70, 100);
+	public static CosmeticTint jumpTint = new CosmeticTint(true, 310, 70, 100);
 
 	/* —— Block Overlay —— */
 	public static boolean blockOverlay = true;
@@ -292,6 +294,8 @@ public final class IceesConfig {
 			auraTint.loadFrom(data.auraTint, legacy);
 			shieldTint.loadFrom(data.shieldTint, legacy);
 			hatTint.loadFrom(data.hatTint, new CosmeticTint(true, 40, 55, 90));
+			trailTint.loadFrom(data.trailTint, auraTint.copy());
+			jumpTint.loadFrom(data.jumpTint, auraTint.copy());
 
 			blockOverlay = data.blockOverlay;
 			overlayMaterial = OverlayMaterial.fromSaved(data.overlayMaterial);
@@ -351,6 +355,8 @@ public final class IceesConfig {
 		data.auraTint = auraTint.copy();
 		data.shieldTint = shieldTint.copy();
 		data.hatTint = hatTint.copy();
+		data.trailTint = trailTint.copy();
+		data.jumpTint = jumpTint.copy();
 		data.blockOverlay = blockOverlay;
 		data.overlayMaterial = overlayMaterial.name();
 		data.overlayBrightness = overlayBrightness;
@@ -396,6 +402,7 @@ public final class IceesConfig {
 		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint; CosmeticTint hatTint;
+		CosmeticTint trailTint; CosmeticTint jumpTint;
 		boolean blockOverlay = true; String overlayMaterial = "RAINBOW"; int overlayBrightness = 3;
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;

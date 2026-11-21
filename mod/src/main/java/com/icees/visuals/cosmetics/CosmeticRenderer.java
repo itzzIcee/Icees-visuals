@@ -927,7 +927,7 @@ public final class CosmeticRenderer {
 		JumpCircleStyle style = IceesConfig.jumpCircleStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-		float[] c = IceesConfig.color(IceesConfig.auraTint, 1f, 0.75f, 0.88f);
+		float[] c = IceesConfig.color(IceesConfig.jumpTint, 1f, 0.75f, 0.88f);
 		float speed = 0.55f + IceesConfig.jumpCircleSpeed * 0.18f;
 		float size = thick;
 		int rings = Math.max(1, IceesConfig.jumpCircleCount);
