@@ -264,11 +264,34 @@ public class OrbitScreen extends Screen {
 		}
 
 		y += 4;
-		y = addStepper(cx, y, cw, "Size", IceesConfig.cosmeticSize, 10, v -> {
-			IceesConfig.cosmeticSize = v;
-			IceesConfig.cosmeticThickness = v;
-		});
+		if (pick != CosmeticPick.JUMP) {
+			y = addStepper(cx, y, cw, "Size", sizeOfPick(), 10, this::setSizeOfPick);
+		}
 		addStepper(cx, y, cw, "Brightness", IceesConfig.cosmeticBrightness, 10, v -> IceesConfig.cosmeticBrightness = v);
+	}
+
+	private int sizeOfPick() {
+		return switch (pick) {
+			case WINGS -> IceesConfig.wingSize;
+			case HALO -> IceesConfig.haloSize;
+			case HAT -> IceesConfig.hatSize;
+			case CAPE -> IceesConfig.capeSize;
+			case AURA -> IceesConfig.auraSize;
+			case SHIELD -> IceesConfig.shieldSize;
+			case JUMP -> IceesConfig.jumpCircleSize;
+		};
+	}
+
+	private void setSizeOfPick(int v) {
+		switch (pick) {
+			case WINGS -> IceesConfig.wingSize = IceesConfig.clamp10(v);
+			case HALO -> IceesConfig.haloSize = IceesConfig.clamp10(v);
+			case HAT -> IceesConfig.hatSize = IceesConfig.clamp10(v);
+			case CAPE -> IceesConfig.capeSize = IceesConfig.clamp10(v);
+			case AURA -> IceesConfig.auraSize = IceesConfig.clamp10(v);
+			case SHIELD -> IceesConfig.shieldSize = IceesConfig.clamp10(v);
+			case JUMP -> IceesConfig.jumpCircleSize = IceesConfig.clamp10(v);
+		}
 	}
 
 	private int addTintControls(int x, int y, int w, CosmeticTint tint) {

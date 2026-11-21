@@ -45,6 +45,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.19 — theme range in chunks");
+		LOGGER.info("Icee's Sakura Visuals 1.0.20 — rounder cosmetics, per-item size");
 	}
 }

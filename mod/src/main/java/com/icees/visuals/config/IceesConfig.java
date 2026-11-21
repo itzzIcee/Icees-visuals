@@ -53,8 +53,15 @@ public final class IceesConfig {
 	public static int fallRangeChunks = 3;
 	public static int fallOpacity = 7;
 	public static int cosmeticBrightness = 7;
+	/** Legacy global size — migrated into per-cosmetic sizes. */
 	public static int cosmeticSize = 5;
 	public static int cosmeticThickness = 5;
+	public static int wingSize = 5;
+	public static int haloSize = 5;
+	public static int hatSize = 5;
+	public static int capeSize = 5;
+	public static int auraSize = 5;
+	public static int shieldSize = 5;
 	/** Kept for config migration — use per-cosmetic tints. */
 	@Deprecated
 	public static boolean customColor = true;
@@ -101,8 +108,11 @@ public final class IceesConfig {
 	}
 
 	public static float thicknessFactor() {
-		int s = Math.max(clamp10(cosmeticSize), clamp10(cosmeticThickness));
-		return 0.65f + s * 0.16f;
+		return sizeFactor(cosmeticSize);
+	}
+
+	public static float sizeFactor(int level) {
+		return 0.65f + clamp10(level) * 0.16f;
 	}
 
 	public static int clamp10(int v) {
@@ -132,6 +142,33 @@ public final class IceesConfig {
 
 	public static float sizeFactor() {
 		return thicknessFactor();
+	}
+
+	public static int sizeOf(String which) {
+		return switch (which) {
+			case "wing" -> wingSize;
+			case "halo" -> haloSize;
+			case "hat" -> hatSize;
+			case "cape" -> capeSize;
+			case "aura" -> auraSize;
+			case "shield" -> shieldSize;
+			case "jump" -> jumpCircleSize;
+			default -> cosmeticSize;
+		};
+	}
+
+	public static void setSizeOf(String which, int v) {
+		v = clamp10(v);
+		switch (which) {
+			case "wing" -> wingSize = v;
+			case "halo" -> haloSize = v;
+			case "hat" -> hatSize = v;
+			case "cape" -> capeSize = v;
+			case "aura" -> auraSize = v;
+			case "shield" -> shieldSize = v;
+			case "jump" -> jumpCircleSize = v;
+			default -> { cosmeticSize = v; cosmeticThickness = v; }
+		}
 	}
 
 	public static float overlayBrightnessFactor() {
@@ -237,6 +274,12 @@ public final class IceesConfig {
 			if (data.cosmeticThickness >= 1) cosmeticThickness = clamp10(data.cosmeticThickness);
 			cosmeticSize = Math.max(cosmeticSize, cosmeticThickness);
 			cosmeticThickness = cosmeticSize;
+			wingSize = clamp10(data.wingSize > 0 ? data.wingSize : cosmeticSize);
+			haloSize = clamp10(data.haloSize > 0 ? data.haloSize : cosmeticSize);
+			hatSize = clamp10(data.hatSize > 0 ? data.hatSize : cosmeticSize);
+			capeSize = clamp10(data.capeSize > 0 ? data.capeSize : cosmeticSize);
+			auraSize = clamp10(data.auraSize > 0 ? data.auraSize : cosmeticSize);
+			shieldSize = clamp10(data.shieldSize > 0 ? data.shieldSize : cosmeticSize);
 			customColor = data.customColor;
 			cosmeticHue = Math.floorMod(data.cosmeticHue, 360);
 			if (data.cosmeticSat >= 0 && data.cosmeticSat <= 100) cosmeticSat = data.cosmeticSat;
@@ -296,6 +339,8 @@ public final class IceesConfig {
 		data.fallRangeChunks = fallRangeChunks; data.fallOpacity = fallOpacity;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
+		data.wingSize = wingSize; data.haloSize = haloSize; data.hatSize = hatSize;
+		data.capeSize = capeSize; data.auraSize = auraSize; data.shieldSize = shieldSize;
 		data.customColor = wingTint.enabled;
 		data.cosmeticHue = wingTint.hue; data.cosmeticSat = wingTint.sat; data.cosmeticVal = wingTint.val;
 		data.wingTint = wingTint.copy();
@@ -345,6 +390,7 @@ public final class IceesConfig {
 		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
 		int fallRangeChunks = 3; int fallOpacity = 7;
 		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
+		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
 		boolean blockOverlay = true; String overlayMaterial = "RAINBOW"; int overlayBrightness = 3;

@@ -80,19 +80,20 @@ public final class CosmeticRenderer {
 			float camPitch = camera.xRot();
 
 			float bright = IceesConfig.brightnessFactor();
-			float thick = IceesConfig.sizeFactor();
 
 			matrices.pushPose();
 			matrices.translate(px, py, pz);
 			matrices.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
 
-			if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, thick);
-			if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, thick);
-			if (IceesConfig.shield) drawShield(matrices, consumers, time, bright, thick);
-			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, thick);
-			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, thick);
-			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, thick, camRelYaw, camPitch);
-			if (IceesConfig.jumpCircles && !player.onGround()) drawJumpCircles(matrices, consumers, time, bright, thick);
+			if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
+			if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
+			if (IceesConfig.shield) drawShield(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize));
+			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize));
+			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize));
+			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
+			if (IceesConfig.jumpCircles && !player.onGround()) {
+				drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
+			}
 
 			matrices.popPose();
 		} catch (Throwable t) {
@@ -132,19 +133,19 @@ public final class CosmeticRenderer {
 		}
 	}
 
-	/** Soft layered blossom feathers */
+	/** Soft layered blossom feathers — overlapping so no gaps */
 	private static void wingPetal(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
-		for (int i = 0; i < 4; i++) {
-			float t = i / 3f;
+		for (int i = 0; i < 5; i++) {
+			float t = i / 4f;
 			m.pushPose();
-			m.translate(0, 0.08f * i, -0.04f * i);
-			m.mulPose(Axis.ZP.rotationDegrees(s * (-8f + i * 10f)));
-			m.mulPose(Axis.YP.rotationDegrees(s * (6f + i * 4f)));
-			float span = (0.7f + t * 0.7f) * thick;
-			float tall = (0.55f + t * 0.55f) * thick;
-			sheet(m, soft, 0, 0.05f, 0, s * span, tall, -0.08f - t * 0.1f, CR, CG, CB, 0.55f * bright);
-			sheet(m, hard, 0, 0, 0.02f, s * span * 0.85f, tall * 0.8f, -0.04f, CR, CG, CB, 0.9f * bright);
+			m.translate(0, 0.035f * i, -0.018f * i);
+			m.mulPose(Axis.ZP.rotationDegrees(s * (-6f + i * 7f)));
+			m.mulPose(Axis.YP.rotationDegrees(s * (4f + i * 3f)));
+			float span = (0.75f + t * 0.65f) * thick;
+			float tall = (0.6f + t * 0.5f) * thick;
+			sheet(m, soft, -s * 0.04f * thick, 0.02f, 0.02f, s * span * 1.05f, tall * 1.05f, -0.1f - t * 0.06f, CR, CG, CB, 0.5f * bright);
+			sheet(m, hard, 0, 0, 0.01f, s * span, tall, -0.04f, CR, CG, CB, 0.92f * bright);
 			m.popPose();
 		}
 	}
@@ -266,36 +267,36 @@ public final class CosmeticRenderer {
 		sheet(m, hard, s * 1.35f * thick, 0.7f * thick, 0, s * 1.6f * thick, 0.95f * thick, -0.12f, CR, CG, CB, bright);
 	}
 
-	/** Rising phoenix flame feathers */
+	/** Rising phoenix flame feathers — tight layers */
 	private static void wingPhoenix(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
-		float flicker = Mth.sin(time * 0.4f) * 0.08f;
-		for (int i = 0; i < 5; i++) {
-			float t = i / 4f;
+		float flicker = Mth.sin(time * 0.4f) * 0.06f;
+		for (int i = 0; i < 6; i++) {
+			float t = i / 5f;
 			m.pushPose();
-			m.translate(s * 0.08f * i, 0.12f * i + flicker * (1f - t), -0.06f * i);
-			m.mulPose(Axis.ZP.rotationDegrees(s * (-20f + i * 8f)));
-			float span = (0.55f + t * 0.9f) * thick;
-			float tall = (0.5f + t * 0.85f) * thick;
-			sheet(m, soft, 0, 0, 0, s * span, tall, -0.1f, CR, Math.max(0.2f, CG * (0.7f + t * 0.3f)), CB * 0.5f, 0.55f * bright);
-			sheet(m, hard, 0, 0.05f, 0.03f, s * span * 0.75f, tall * 0.9f, -0.05f, CR, CG, CB, 0.95f * bright);
+			m.translate(s * 0.04f * i, 0.05f * i + flicker * (1f - t), -0.03f * i);
+			m.mulPose(Axis.ZP.rotationDegrees(s * (-16f + i * 6f)));
+			float span = (0.6f + t * 0.85f) * thick;
+			float tall = (0.55f + t * 0.8f) * thick;
+			sheet(m, soft, -s * 0.03f * thick, 0, 0.02f, s * span * 1.08f, tall * 1.05f, -0.1f, CR, Math.max(0.2f, CG * (0.7f + t * 0.3f)), CB * 0.5f, 0.5f * bright);
+			sheet(m, hard, 0, 0.03f, 0.02f, s * span, tall, -0.05f, CR, CG, CB, 0.95f * bright);
 			m.popPose();
 		}
 	}
 
-	/** Soft layered leaf wings */
+	/** Soft layered leaf wings — tight overlap */
 	private static void wingLeaf(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
 		float s = side;
-		float sway = Mth.sin(time * 0.18f) * 0.08f;
-		for (int i = 0; i < 5; i++) {
-			float t = i / 4f;
+		float sway = Mth.sin(time * 0.18f) * 0.06f;
+		for (int i = 0; i < 6; i++) {
+			float t = i / 5f;
 			m.pushPose();
-			m.translate(0, 0.06f * i + sway * t, -0.03f * i);
-			m.mulPose(Axis.ZP.rotationDegrees(s * (-12f + i * 7f)));
-			float span = (0.45f + t * 0.85f) * thick;
-			float tall = (0.35f + t * 0.7f) * thick;
-			sheet(m, soft, 0, 0, 0, s * span, tall, -0.06f, CR, CG, CB, 0.6f * bright);
-			sheet(m, hard, 0, 0.02f, 0.02f, s * span * 0.7f, tall * 0.85f, -0.03f, CR * 0.85f, CG, CB * 0.7f, 0.95f * bright);
+			m.translate(0, 0.03f * i + sway * t, -0.015f * i);
+			m.mulPose(Axis.ZP.rotationDegrees(s * (-10f + i * 5f)));
+			float span = (0.5f + t * 0.8f) * thick;
+			float tall = (0.4f + t * 0.65f) * thick;
+			sheet(m, soft, -s * 0.03f * thick, 0, 0.02f, s * span * 1.08f, tall * 1.05f, -0.07f, CR, CG, CB, 0.55f * bright);
+			sheet(m, hard, 0, 0.01f, 0.01f, s * span, tall, -0.03f, CR * 0.85f, CG, CB * 0.7f, 0.95f * bright);
 			m.popPose();
 		}
 	}
@@ -326,38 +327,44 @@ public final class CosmeticRenderer {
 		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.12f, 0.10f, 0.14f);
 		float r = tint[0], g = tint[1], b = tint[2];
 		float u = 0.08f * s;
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.38f * s, 0, -0.38f * s, 0.38f * s, u, 0.38f * s, r, g, b, a);
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.22f * s, u, -0.22f * s, 0.22f * s, 0.55f * s, 0.22f * s, r * 1.1f, g * 1.1f, b * 1.1f, a);
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.24f * s, u + 0.02f * s, -0.24f * s, 0.24f * s, u + 0.1f * s, 0.24f * s, 0.75f, 0.2f, 0.28f, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0, 0, 0.38f * s, u, 20, r, g, b, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, u, 0, 0.22f * s, 0.48f * s, 16, r * 1.08f, g * 1.08f, b * 1.08f, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, u + 0.02f * s, 0, 0.24f * s, 0.08f * s, 16, 0.75f, 0.2f, 0.28f, a);
 	}
 
 	private static void drawBeanie(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
 		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.85f, 0.35f, 0.50f);
 		float r = tint[0], g = tint[1], b = tint[2];
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.28f * s, 0, -0.28f * s, 0.28f * s, 0.28f * s, 0.28f * s, r, g, b, a);
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.18f * s, 0.25f * s, -0.18f * s, 0.18f * s, 0.38f * s, 0.18f * s, r * 0.9f, g * 0.9f, b * 0.9f, a);
-		billboardOrb(m, vc, 0, 0.42f * s, 0, 0.08f * s, 1f, 0.85f, 0.9f, a, 0f);
+		// Stacked round discs — no square gaps
+		for (int i = 0; i < 5; i++) {
+			float t = i / 4f;
+			float rad = (0.30f - t * 0.08f) * s;
+			float y0 = i * 0.07f * s;
+			float y1 = y0 + 0.09f * s;
+			MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, y0, 0, rad, y1 - y0, 16, r * (1f - t * 0.08f), g * (1f - t * 0.08f), b * (1f - t * 0.08f), a);
+		}
+		billboardOrb(m, vc, 0, 0.42f * s, 0, 0.09f * s, 1f, 0.85f, 0.9f, a, 0f);
 	}
 
 	private static void drawBeret(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
 		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.55f, 0.18f, 0.22f);
 		float r = tint[0], g = tint[1], b = tint[2];
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.34f * s, 0.02f * s, -0.34f * s, 0.34f * s, 0.14f * s, 0.34f * s, r, g, b, a);
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, 0.12f * s, 0.1f * s, -0.08f * s, 0.36f * s, 0.2f * s, 0.16f * s, r * 0.85f, g * 0.85f, b * 0.85f, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0.02f * s, 0, 0.36f * s, 0.12f * s, 20, r, g, b, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0.12f * s, 0.08f * s, 0, 0.14f * s, 0.1f * s, 12, r * 0.9f, g * 0.9f, b * 0.9f, a);
 	}
 
 	private static void drawCrownBrim(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
 		float[] tint = IceesConfig.color(IceesConfig.haloTint, 1f, 0.82f, 0.4f);
 		float r = tint[0], g = tint[1], b = tint[2];
-		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.32f * s, 0, -0.32f * s, 0.32f * s, 0.08f * s, 0.32f * s, r, g, b, a);
-		for (int i = 0; i < 6; i++) {
-			float ang = i / 6f * ((float) Math.PI * 2f);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0, 0, 0.34f * s, 0.08f * s, 20, r, g, b, a);
+		for (int i = 0; i < 8; i++) {
+			float ang = i / 8f * ((float) Math.PI * 2f);
 			float x = Mth.cos(ang) * 0.26f * s;
 			float z = Mth.sin(ang) * 0.26f * s;
-			MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x - 0.04f * s, 0.06f * s, z - 0.04f * s, x + 0.04f * s, 0.28f * s, z + 0.04f * s, r, g, b, a);
+			MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, x, 0.05f * s, z, 0.05f * s, 0.24f * s, 8, r, g, b, a);
 		}
 	}
 
@@ -378,30 +385,23 @@ public final class CosmeticRenderer {
 			// dx,dz half-extent in px — each ring from outside in
 			{8, 8}, {9, 7}, {9, 6}, {8, 5}, {7, 4}
 		};
-		// Filled stepped disk: for each cell in [-9..9]^2 keep if approx circle
+		// Rounder brim: filled disc with slight overlap between cells (no gaps)
 		for (int ix = -9; ix <= 9; ix++) {
 			for (int iz = -9; iz <= 9; iz++) {
-				int ax = Math.abs(ix), az = Math.abs(iz);
-				boolean on = (ax <= 8 && az <= 8) || (ax <= 9 && az <= 6) || (ax <= 7 && az <= 9) || (ax <= 6 && az <= 9);
-				// punch jagged outer rim like the references
-				if (ax + az >= 16) on = false;
-				if (ax == 9 && az == 5) on = true;
-				if (ax == 5 && az == 9) on = true;
-				if (ax == 8 && az == 7) on = true;
-				if (ax == 7 && az == 8) on = true;
+				float dist = Mth.sqrt(ix * ix + iz * iz);
+				if (dist > 9.2f) continue;
 				// hole under crown
-				if (ax <= 3 && az <= 3) on = false;
-				if (!on) continue;
-				float x0 = ix * u, z0 = iz * u;
-				float x1 = x0 + u, z1 = z0 + u;
+				if (dist < 3.2f) continue;
+				float x0 = ix * u - u * 0.08f, z0 = iz * u - u * 0.08f;
+				float x1 = x0 + u * 1.16f, z1 = z0 + u * 1.16f;
 				boolean weave = ((ix + iz) & 1) == 0;
 				float rr = weave ? s0r : s1r, gg = weave ? s0g : s1g, bb = weave ? s0b : s1b;
-				// top
-				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x0, 0, z0, x1, u * 0.9f, z1, rr, gg, bb, a);
-				// underside
+				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x0, 0, z0, x1, u * 0.95f, z1, rr, gg, bb, a);
 				MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x0, -u * 0.35f, z0, x1, 0, z1, s2r, s2g, s2b, a * 0.95f);
 			}
 		}
+		// soft outer rim ring — fills jagged edge
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0, 0, 9.1f * u, u * 0.7f, 24, s1r, s1g, s1b, a * 0.85f);
 
 		// Crown box (6x6 x 4px tall)
 		float cw = 3.2f * u;
@@ -631,18 +631,19 @@ public final class CosmeticRenderer {
 		matrices.popPose();
 	}
 
-	/** Torus-like ring built from segments — visible from every side */
+	/** Smooth torus — overlapping segments so no gaps, more round */
 	private static void ring3D(PoseStack matrices, VertexConsumer vc, float radius, float tube, float r, float g, float b, float bright) {
-		int segments = 16;
+		int segments = 28;
+		float tubeSoft = tube * 1.25f;
 		for (int i = 0; i < segments; i++) {
 			float a0 = i / (float) segments * ((float) Math.PI * 2f);
-			float a1 = (i + 1) / (float) segments * ((float) Math.PI * 2f);
+			float a1 = (i + 1.15f) / (float) segments * ((float) Math.PI * 2f); // slight overlap
 			float x0 = Mth.cos(a0) * radius, z0 = Mth.sin(a0) * radius;
 			float x1 = Mth.cos(a1) * radius, z1 = Mth.sin(a1) * radius;
-			// horizontal band
-			sheet(matrices, vc, x0, -tube, z0, x1, tube, z1, r, g, b, 0.95f * bright);
-			// vertical lip so front/back/side all see something
-			sheetYZ(matrices, vc, x0, -tube, z0 - tube, x0, tube, z0 + tube, r, g, b, 0.55f * bright);
+			sheet(matrices, vc, x0, -tubeSoft, z0, x1, tubeSoft, z1, r, g, b, 0.95f * bright);
+			sheetYZ(matrices, vc, x0, -tubeSoft, z0 - tubeSoft, x0, tubeSoft, z0 + tubeSoft, r, g, b, 0.55f * bright);
+			// soft inner glow disc bits — fills the ring body
+			billboardOrb(matrices, vc, x0, 0, z0, tube * 1.1f, r, g, b, 0.35f * bright, 0f);
 		}
 	}
 
@@ -912,7 +913,7 @@ public final class CosmeticRenderer {
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		float[] c = IceesConfig.color(IceesConfig.auraTint, 1f, 0.75f, 0.88f);
 		float speed = 0.55f + IceesConfig.jumpCircleSpeed * 0.18f;
-		float size = thick * (0.7f + IceesConfig.jumpCircleSize * 0.12f);
+		float size = thick;
 		int rings = Math.max(1, IceesConfig.jumpCircleCount);
 		float cycle = 22f / speed;
 		float phase = (time % cycle) / cycle;
