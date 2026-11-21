@@ -361,11 +361,11 @@ public final class CosmeticRenderer {
 			0f,
 			headYawRel * Mth.DEG_TO_RAD,
 			headPitch * Mth.DEG_TO_RAD));
-		// Seat on the crown, then pull hard onto the skull (close floating gap)
+		// Crown of head (model y=-8), flip so meshes grow outward, then seat flush
 		matrices.translate(0f, -0.5f, 0f);
-		matrices.mulPose(Axis.YP.rotationDegrees(180f));
-		matrices.scale(1f, -1f, -1f);
-		matrices.translate(0f, -0.48f, 0f);
+		matrices.scale(1f, -1f, 1f);
+		// Real worn hat: brim on the skull, slight sink — no floating gap
+		matrices.translate(0f, -0.35f, 0f);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
