@@ -5,7 +5,6 @@ import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
-import com.icees.visuals.pvp.HitAnimStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,12 +32,14 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { COSMETICS, PVP, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA }
 
 	private Tab tab = Tab.COSMETICS;
+	private CosmeticPick pick = CosmeticPick.WINGS;
 	private int panelX, panelY;
 	private final int panelW = 520;
-	private final int panelH = 560;
+	private final int panelH = 500;
 	private boolean listeningKey;
 	private final List<Hit> hits = new ArrayList<>();
 	private final List<TabHit> tabHits = new ArrayList<>();
@@ -77,7 +78,6 @@ public class OrbitScreen extends Screen {
 		int tx = panelX + 20;
 		int ty = panelY + 64;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
-		addTab(tx, ty, "PvP", Tab.PVP); tx += 36;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
@@ -89,149 +89,24 @@ public class OrbitScreen extends Screen {
 		int w = panelW - 56;
 
 		switch (tab) {
-			case COSMETICS -> {
-				addHit(x, y, w, 18, "Wings  ·  " + onOff(IceesConfig.wings) + "  ·  " + IceesConfig.wingStyle.title, IceesConfig.wings,
-					() -> IceesConfig.wings = !IceesConfig.wings);
-				y += 20;
-				addHit(x, y, w, 16, "Wing form  →", false, () -> IceesConfig.wingStyle = IceesConfig.wingStyle.next());
-				y += 18;
-				y = addTintRow(x, y, w, "Wing colour", IceesConfig.wingTint);
-				addHit(x, y, w, 18, "Halo  ·  " + onOff(IceesConfig.halo) + "  ·  " + IceesConfig.haloStyle.title, IceesConfig.halo,
-					() -> IceesConfig.halo = !IceesConfig.halo);
-				y += 20;
-				addHit(x, y, w, 16, "Halo form  →", false, () -> IceesConfig.haloStyle = IceesConfig.haloStyle.next());
-				y += 18;
-				y = addTintRow(x, y, w, "Halo colour", IceesConfig.haloTint);
-				addHit(x, y, w, 18, "Hat  ·  " + onOff(IceesConfig.hat) + "  ·  " + IceesConfig.hatStyle.title, IceesConfig.hat,
-					() -> IceesConfig.hat = !IceesConfig.hat);
-				y += 20;
-				addHit(x, y, w, 16, "Hat form  →  " + IceesConfig.hatStyle.title + "  (original colour)", false,
-					() -> IceesConfig.hatStyle = IceesConfig.hatStyle.next());
-				y += 18;
-				addHit(x, y, w, 18, "Cape  ·  " + onOff(IceesConfig.cape) + "  ·  " + IceesConfig.capeStyle.title, IceesConfig.cape,
-					() -> IceesConfig.cape = !IceesConfig.cape);
-				y += 20;
-				addHit(x, y, w, 16, "Cape form  →", false, () -> IceesConfig.capeStyle = IceesConfig.capeStyle.next());
-				y += 18;
-				y = addTintRow(x, y, w, "Cape colour", IceesConfig.capeTint);
-				addHit(x, y, w, 18, "Aura  ·  " + onOff(IceesConfig.aura) + "  ·  " + IceesConfig.auraStyle.title, IceesConfig.aura,
-					() -> IceesConfig.aura = !IceesConfig.aura);
-				y += 20;
-				addHit(x, y, w, 16, "Aura form  →", false, () -> IceesConfig.auraStyle = IceesConfig.auraStyle.next());
-				y += 18;
-				y = addTintRow(x, y, w, "Aura colour", IceesConfig.auraTint);
-				addHit(x, y, w, 16, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
-					() -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles);
-				y += 20;
-				addHit(x, y, w / 2 - 4, 18, "Size  ·  " + IceesConfig.cosmeticSize + " / 5", false, () -> {
-					IceesConfig.cosmeticSize = IceesConfig.cosmeticSize >= 5 ? 1 : IceesConfig.cosmeticSize + 1;
-					IceesConfig.cosmeticThickness = IceesConfig.cosmeticSize;
-				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 18, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
-					IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
-				});
-			}
+			case COSMETICS -> buildCosmetics(x, y, w);
 			case THEMES -> {
 				for (FallTheme theme : FallTheme.values()) {
 					boolean on = IceesConfig.fallTheme == theme;
 					FallTheme selected = theme;
-					addHit(x, y, w, 22, (on ? "●  " : "○  ") + theme.title, on, () -> IceesConfig.fallTheme = selected);
-					y += 24;
+					addHit(x, y, w, 20, (on ? "●  " : "○  ") + theme.title, on, () -> IceesConfig.fallTheme = selected);
+					y += 22;
 				}
-				y += 8;
-				addHit(x, y, w / 2 - 4, 22, "Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
+				y += 6;
+				addHit(x, y, w / 2 - 4, 20, "Intensity  ·  " + IceesConfig.fallIntensity + " / 5", false, () -> {
 					IceesConfig.fallIntensity = IceesConfig.fallIntensity >= 5 ? 1 : IceesConfig.fallIntensity + 1;
 				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 22, "Size  ·  " + IceesConfig.fallSize + " / 5", false, () -> {
+				addHit(x + w / 2 + 4, y, w / 2 - 4, 20, "Size  ·  " + IceesConfig.fallSize + " / 5", false, () -> {
 					IceesConfig.fallSize = IceesConfig.fallSize >= 5 ? 1 : IceesConfig.fallSize + 1;
 				});
-				y += 26;
-				addHit(x, y, w, 22, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
+				y += 24;
+				addHit(x, y, w, 20, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
 					() -> IceesConfig.trail = !IceesConfig.trail);
-			}
-			case PVP -> {
-				addHit(x, y, w, 16, "Hit Particles  ·  " + onOff(IceesConfig.pvpHitParticles), IceesConfig.pvpHitParticles,
-					() -> IceesConfig.pvpHitParticles = !IceesConfig.pvpHitParticles);
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Particle Size  ·  " + IceesConfig.pvpParticleSize + " / 5", false, () -> {
-					IceesConfig.pvpParticleSize = IceesConfig.pvpParticleSize >= 5 ? 1 : IceesConfig.pvpParticleSize + 1;
-					IceesConfig.pvpHitParticles = true;
-				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Hit Markers  ·  " + onOff(IceesConfig.pvpHitMarkers), IceesConfig.pvpHitMarkers,
-					() -> IceesConfig.pvpHitMarkers = !IceesConfig.pvpHitMarkers);
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Hit Anim  →  " + IceesConfig.pvpHitAnim.title, false, () -> {
-					IceesConfig.pvpHitAnim = IceesConfig.pvpHitAnim.next();
-					IceesConfig.pvpHitMarkers = true;
-				});
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Anim Size  ·  " + IceesConfig.pvpHitAnimSize + " / 5", false, () -> {
-					IceesConfig.pvpHitAnimSize = IceesConfig.pvpHitAnimSize >= 5 ? 1 : IceesConfig.pvpHitAnimSize + 1;
-				});
-				y += 18;
-				int col = 0;
-				for (HitAnimStyle style : HitAnimStyle.values()) {
-					int bx = x + (col % 5) * (w / 5 + 2);
-					boolean on = IceesConfig.pvpHitAnim == style;
-					HitAnimStyle selected = style;
-					addHit(bx, y, w / 5 - 2, 14, (on ? "●" : "○") + style.title.substring(0, Math.min(4, style.title.length())), on, () -> {
-						IceesConfig.pvpHitAnim = selected;
-						IceesConfig.pvpHitMarkers = true;
-					});
-					col++;
-				}
-				y += 18;
-				addHit(x, y, w / 3 - 4, 16, "Hue  ·  " + IceesConfig.pvpHitHue, false, () -> {
-					IceesConfig.pvpHitHue = (IceesConfig.pvpHitHue + 15) % 360;
-					IceesConfig.pvpHitColour = true;
-				});
-				addHit(x + w / 3 + 2, y, w / 3 - 4, 16, "Sat  ·  " + IceesConfig.pvpHitSat, false, () -> {
-					IceesConfig.pvpHitSat = IceesConfig.pvpHitSat >= 100 ? 0 : IceesConfig.pvpHitSat + 10;
-					IceesConfig.pvpHitColour = true;
-				});
-				addHit(x + 2 * w / 3 + 4, y, w / 3 - 4, 16, "Val  ·  " + IceesConfig.pvpHitVal, false, () -> {
-					IceesConfig.pvpHitVal = IceesConfig.pvpHitVal >= 100 ? 20 : IceesConfig.pvpHitVal + 10;
-					IceesConfig.pvpHitColour = true;
-				});
-				y += 20;
-				addHit(x, y, w / 2 - 4, 16, "Mace Shockwave  ·  " + onOff(IceesConfig.pvpMace), IceesConfig.pvpMace,
-					() -> IceesConfig.pvpMace = !IceesConfig.pvpMace);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Mace Size  ·  " + IceesConfig.pvpMaceSize + " / 5", false, () -> {
-					IceesConfig.pvpMaceSize = IceesConfig.pvpMaceSize >= 5 ? 1 : IceesConfig.pvpMaceSize + 1;
-					IceesConfig.pvpMace = true;
-				});
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Stunslam  ·  " + onOff(IceesConfig.pvpStunslam), IceesConfig.pvpStunslam,
-					() -> IceesConfig.pvpStunslam = !IceesConfig.pvpStunslam);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Slam Size  ·  " + IceesConfig.pvpStunslamSize + " / 5", false, () -> {
-					IceesConfig.pvpStunslamSize = IceesConfig.pvpStunslamSize >= 5 ? 1 : IceesConfig.pvpStunslamSize + 1;
-					IceesConfig.pvpStunslam = true;
-				});
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Sword Slash  ·  " + onOff(IceesConfig.pvpSword), IceesConfig.pvpSword,
-					() -> IceesConfig.pvpSword = !IceesConfig.pvpSword);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Sword Size  ·  " + IceesConfig.pvpSwordSize + " / 5", false, () -> {
-					IceesConfig.pvpSwordSize = IceesConfig.pvpSwordSize >= 5 ? 1 : IceesConfig.pvpSwordSize + 1;
-					IceesConfig.pvpSword = true;
-				});
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Axe Cleave  ·  " + onOff(IceesConfig.pvpAxe), IceesConfig.pvpAxe,
-					() -> IceesConfig.pvpAxe = !IceesConfig.pvpAxe);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Axe Size  ·  " + IceesConfig.pvpAxeSize + " / 5", false, () -> {
-					IceesConfig.pvpAxeSize = IceesConfig.pvpAxeSize >= 5 ? 1 : IceesConfig.pvpAxeSize + 1;
-					IceesConfig.pvpAxe = true;
-				});
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Spear Thrust  ·  " + onOff(IceesConfig.pvpSpear), IceesConfig.pvpSpear,
-					() -> IceesConfig.pvpSpear = !IceesConfig.pvpSpear);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Spear Size  ·  " + IceesConfig.pvpSpearSize + " / 5", false, () -> {
-					IceesConfig.pvpSpearSize = IceesConfig.pvpSpearSize >= 5 ? 1 : IceesConfig.pvpSpearSize + 1;
-					IceesConfig.pvpSpear = true;
-				});
-				y += 18;
-				addHit(x, y, w / 2 - 4, 16, "Crosshair  ·  " + onOff(IceesConfig.pvpCrosshair), IceesConfig.pvpCrosshair,
-					() -> IceesConfig.pvpCrosshair = !IceesConfig.pvpCrosshair);
-				addHit(x + w / 2 + 4, y, w / 2 - 4, 16, "Target Cue  ·  " + onOff(IceesConfig.pvpTargetCue), IceesConfig.pvpTargetCue,
-					() -> IceesConfig.pvpTargetCue = !IceesConfig.pvpTargetCue);
 			}
 			case OVERLAY -> {
 				addHit(x, y, w, 22, "Block Overlay  ·  " + onOff(IceesConfig.blockOverlay), IceesConfig.blockOverlay,
@@ -321,8 +196,6 @@ public class OrbitScreen extends Screen {
 					IceesConfig.guiVal = 100;
 				});
 				y += 36;
-				// live colour preview swatch
-				float[] accent = IceesConfig.guiAccentRgb();
 				addHit(x, y, w, 28, "Accent preview  ·  H" + IceesConfig.guiHue + " S" + IceesConfig.guiSat + " V" + IceesConfig.guiVal,
 					true, () -> {});
 			}
@@ -338,11 +211,108 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
+	/** One cosmetic at a time — pick row, then ON / form / colour. */
+	private void buildCosmetics(int x, int y, int w) {
+		int slot = w / 5 - 4;
+		CosmeticPick[] picks = CosmeticPick.values();
+		for (int i = 0; i < picks.length; i++) {
+			CosmeticPick p = picks[i];
+			boolean selected = pick == p;
+			boolean enabled = isEnabled(p);
+			int bx = x + i * (slot + 4);
+			addHit(bx, y, slot, 22, (selected ? "● " : "") + label(p) + (enabled ? "" : " ·"), selected || enabled, () -> pick = p);
+		}
+		y += 30;
+
+		addHit(x, y, w, 22, label(pick) + "  ·  " + onOff(isEnabled(pick)), isEnabled(pick), this::togglePick);
+		y += 26;
+		addHit(x, y, w, 20, "Form  →  " + formTitle(pick), false, this::cycleForm);
+		y += 24;
+
+		if (pick != CosmeticPick.HAT) {
+			y = addTintRow(x, y, w, "Colour", tintOf(pick));
+		} else {
+			addHit(x, y, w, 18, "Natural straw colour (no tint)", false, () -> {});
+			y += 22;
+		}
+
+		y += 6;
+		addHit(x, y, w, 18, "Jump Circles  ·  " + onOff(IceesConfig.jumpCircles), IceesConfig.jumpCircles,
+			() -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles);
+		y += 22;
+		addHit(x, y, w / 2 - 4, 20, "Size  ·  " + IceesConfig.cosmeticSize + " / 5", false, () -> {
+			IceesConfig.cosmeticSize = IceesConfig.cosmeticSize >= 5 ? 1 : IceesConfig.cosmeticSize + 1;
+			IceesConfig.cosmeticThickness = IceesConfig.cosmeticSize;
+		});
+		addHit(x + w / 2 + 4, y, w / 2 - 4, 20, "Brightness  ·  " + IceesConfig.cosmeticBrightness + " / 5", false, () -> {
+			IceesConfig.cosmeticBrightness = IceesConfig.cosmeticBrightness >= 5 ? 1 : IceesConfig.cosmeticBrightness + 1;
+		});
+	}
+
+	private static String label(CosmeticPick p) {
+		return switch (p) {
+			case WINGS -> "Wings";
+			case HALO -> "Halo";
+			case HAT -> "Hat";
+			case CAPE -> "Cape";
+			case AURA -> "Aura";
+		};
+	}
+
+	private static boolean isEnabled(CosmeticPick p) {
+		return switch (p) {
+			case WINGS -> IceesConfig.wings;
+			case HALO -> IceesConfig.halo;
+			case HAT -> IceesConfig.hat;
+			case CAPE -> IceesConfig.cape;
+			case AURA -> IceesConfig.aura;
+		};
+	}
+
+	private void togglePick() {
+		switch (pick) {
+			case WINGS -> IceesConfig.wings = !IceesConfig.wings;
+			case HALO -> IceesConfig.halo = !IceesConfig.halo;
+			case HAT -> IceesConfig.hat = !IceesConfig.hat;
+			case CAPE -> IceesConfig.cape = !IceesConfig.cape;
+			case AURA -> IceesConfig.aura = !IceesConfig.aura;
+		}
+	}
+
+	private String formTitle(CosmeticPick p) {
+		return switch (p) {
+			case WINGS -> IceesConfig.wingStyle.title;
+			case HALO -> IceesConfig.haloStyle.title;
+			case HAT -> IceesConfig.hatStyle.title;
+			case CAPE -> IceesConfig.capeStyle.title;
+			case AURA -> IceesConfig.auraStyle.title;
+		};
+	}
+
+	private void cycleForm() {
+		switch (pick) {
+			case WINGS -> IceesConfig.wingStyle = IceesConfig.wingStyle.next();
+			case HALO -> IceesConfig.haloStyle = IceesConfig.haloStyle.next();
+			case HAT -> IceesConfig.hatStyle = IceesConfig.hatStyle.next();
+			case CAPE -> IceesConfig.capeStyle = IceesConfig.capeStyle.next();
+			case AURA -> IceesConfig.auraStyle = IceesConfig.auraStyle.next();
+		}
+	}
+
+	private CosmeticTint tintOf(CosmeticPick p) {
+		return switch (p) {
+			case WINGS -> IceesConfig.wingTint;
+			case HALO -> IceesConfig.haloTint;
+			case CAPE -> IceesConfig.capeTint;
+			case AURA -> IceesConfig.auraTint;
+			case HAT -> IceesConfig.wingTint;
+		};
+	}
+
 	private void addTab(int x, int y, String label, Tab value) {
 		tabHits.add(new TabHit(x, y, this.font.width(label) + 10, 16, value, label));
 	}
 
-	/** Colour row for one cosmetic — returns next Y. Hats never use this. */
 	private int addTintRow(int x, int y, int w, String label, CosmeticTint tint) {
 		addHit(x, y, w, 16, label + "  ·  " + onOff(tint.enabled), tint.enabled, tint::toggle);
 		y += 18;
@@ -409,16 +379,14 @@ public class OrbitScreen extends Screen {
 			Identifier rowTex = hit.active ? TEX_ROW_ON : hover ? TEX_ROW_HOVER : TEX_ROW;
 			graphics.blit(RenderPipelines.GUI_TEXTURED, rowTex, hit.x, hit.y, 0f, 0f, hit.w, hit.h, 512, 64, -1);
 			graphics.drawString(this.font, hit.label, hit.x + 14, hit.y + (hit.h - 8) / 2, SakuraTheme.text(), false);
-			// colour swatch on GUI preview row
 			if (tab == Tab.GUI && hit.label.startsWith("Accent preview")) {
 				graphics.fill(hit.x + hit.w - 36, hit.y + 6, hit.x + hit.w - 10, hit.y + hit.h - 6, SakuraTheme.accent());
 			}
 		}
 
 		String tip = switch (tab) {
-			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
-			case PVP -> "3D world FX — shockwave on ground, debris in air, hit anim at the target.";
-			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
+			case COSMETICS -> "Pick Wings / Halo / Hat / Cape / Aura — then form + colour. F5 to preview.";
+			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
 			case GUI -> "Paint the Orbit menu — Hue / Sat / Val or Rainbow.";

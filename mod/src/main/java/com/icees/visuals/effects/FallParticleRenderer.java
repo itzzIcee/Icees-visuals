@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Fall atmosphere in world space — petals / snow / mist float in the air around you,
- * never as a flat HUD overlay on the screen.
+ * Soft fall atmosphere in world space — petals / snow / ash / mist around you.
  */
 public final class FallParticleRenderer {
 	private static final Identifier TEX_PETAL = Identifier.fromNamespaceAndPath("icees-visuals", "textures/particle/petal.png");
@@ -58,7 +57,8 @@ public final class FallParticleRenderer {
 		int sizeLvl = Math.max(1, IceesConfig.fallSize);
 		int max = switch (theme) {
 			case SOFT_MIST -> 8 + density * 3;
-			case WHITE_SNOW -> 48 + density * 22;
+			case WHITE_SNOW, MOON_DUST -> 48 + density * 22;
+			case EMBER_ASH -> 28 + density * 14;
 			default -> 36 + density * 18;
 		};
 
@@ -90,9 +90,10 @@ public final class FallParticleRenderer {
 			double dz = p.z - pz;
 			double distSq = dx * dx + dy * dy + dz * dz;
 			boolean tooFar = distSq > 48 * 48;
-			boolean fallen = p.kind != Kind.MIST && p.y < py - 2.5;
+			boolean fallen = p.kind != Kind.MIST && p.kind != Kind.EMBER && p.y < py - 2.5;
+			boolean risen = p.kind == Kind.EMBER && p.y > py + 10;
 			boolean mistGone = p.kind == Kind.MIST && (p.y > py + 3.5 || p.y < py - 0.5);
-			if (p.life <= 0 || tooFar || fallen || mistGone) it.remove();
+			if (p.life <= 0 || tooFar || fallen || risen || mistGone) it.remove();
 		}
 	}
 
@@ -134,8 +135,7 @@ public final class FallParticleRenderer {
 			matrices.mulPose(camera.rotation());
 			matrices.mulPose(Axis.ZP.rotation(p.rot));
 
-			// soft bloom behind the main flake
-			float bloom = p.kind == Kind.MIST ? 1.55f : 1.35f;
+			float bloom = p.kind == Kind.MIST ? 1.55f : p.kind == Kind.EMBER ? 1.45f : 1.35f;
 			quad(matrices, soft, -half * bloom, -half * bloom, half * bloom, half * bloom,
 				p.r, p.g, p.b, alpha * (p.kind == Kind.MIST ? 0.22f : 0.28f));
 			quad(matrices, soft, -half, -half, half, half, p.r, p.g, p.b, alpha);
@@ -158,37 +158,57 @@ public final class FallParticleRenderer {
 		float oz = (RNG.nextFloat() - 0.5f) * spread * 2f;
 
 		switch (theme) {
-			case SAKURA_FALL -> {
-				p.kind = Kind.PETAL;
-				p.tex = RNG.nextBoolean() ? TEX_PETAL : TEX_PETAL_SOFT;
-				p.size = (0.18f + RNG.nextFloat() * 0.28f) * sizeMul;
-				p.x = origin.x + ox;
-				p.y = origin.y + 4.5f + RNG.nextFloat() * 8f;
-				p.z = origin.z + oz;
-				p.vx = -0.02f + RNG.nextFloat() * 0.04f;
-				p.vy = -(0.015f + RNG.nextFloat() * 0.035f);
-				p.vz = -0.02f + RNG.nextFloat() * 0.04f;
-				p.spin = -0.04f + RNG.nextFloat() * 0.08f;
-				p.a = 0.55f + RNG.nextFloat() * 0.35f;
-				float tint = RNG.nextFloat();
-				p.r = 1.0f;
-				p.g = 0.58f + tint * 0.28f;
-				p.b = 0.74f + tint * 0.18f;
+			case SAKURA_FALL -> fallPetal(p, origin, ox, oz, sizeMul,
+				1.0f, 0.58f, 0.74f, 0.28f, 0.18f);
+			case BLUE_BLOSSOM -> fallPetal(p, origin, ox, oz, sizeMul,
+				0.55f, 0.72f, 1.0f, 0.18f, 0.05f);
+			case GOLDEN_LEAVES -> {
+				fallPetal(p, origin, ox, oz, sizeMul, 1.0f, 0.72f, 0.28f, 0.18f, 0.08f);
+				p.size *= 1.15f;
+				p.vy *= 0.75f;
+				p.spin *= 0.7f;
 			}
 			case WHITE_SNOW -> {
 				p.kind = Kind.SNOW;
 				p.tex = TEX_SNOW;
 				p.size = (0.10f + RNG.nextFloat() * 0.18f) * sizeMul;
-				p.x = origin.x + ox;
-				p.y = origin.y + 5f + RNG.nextFloat() * 9f;
-				p.z = origin.z + oz;
-				p.vx = -0.015f + RNG.nextFloat() * 0.03f;
-				p.vy = -(0.012f + RNG.nextFloat() * 0.03f);
-				p.vz = -0.015f + RNG.nextFloat() * 0.03f;
+				placeAbove(p, origin, ox, oz, 5f, 9f);
+				driftDown(p, 0.015f, 0.03f);
 				p.spin = -0.02f + RNG.nextFloat() * 0.04f;
 				p.a = 0.5f + RNG.nextFloat() * 0.35f;
 				p.r = p.g = p.b = 1f;
 				p.sway = 0.008f + RNG.nextFloat() * 0.018f;
+			}
+			case MOON_DUST -> {
+				p.kind = Kind.SNOW;
+				p.tex = TEX_SNOW;
+				p.size = (0.06f + RNG.nextFloat() * 0.12f) * sizeMul;
+				placeAbove(p, origin, ox, oz, 3f, 7f);
+				driftDown(p, 0.006f, 0.018f);
+				p.spin = -0.01f + RNG.nextFloat() * 0.02f;
+				p.a = 0.35f + RNG.nextFloat() * 0.3f;
+				p.r = 0.86f + RNG.nextFloat() * 0.1f;
+				p.g = 0.90f + RNG.nextFloat() * 0.08f;
+				p.b = 1.0f;
+				p.sway = 0.015f + RNG.nextFloat() * 0.03f;
+			}
+			case EMBER_ASH -> {
+				p.kind = Kind.EMBER;
+				p.tex = TEX_PETAL_SOFT;
+				p.size = (0.08f + RNG.nextFloat() * 0.14f) * sizeMul;
+				p.x = origin.x + ox * 0.7f;
+				p.y = origin.y + 0.2f + RNG.nextFloat() * 1.5f;
+				p.z = origin.z + oz * 0.7f;
+				p.vx = -0.01f + RNG.nextFloat() * 0.02f;
+				p.vy = 0.02f + RNG.nextFloat() * 0.045f;
+				p.vz = -0.01f + RNG.nextFloat() * 0.02f;
+				p.spin = -0.03f + RNG.nextFloat() * 0.06f;
+				p.a = 0.45f + RNG.nextFloat() * 0.4f;
+				float tint = RNG.nextFloat();
+				p.r = 1.0f;
+				p.g = 0.35f + tint * 0.35f;
+				p.b = 0.12f + tint * 0.15f;
+				p.sway = 0.01f + RNG.nextFloat() * 0.02f;
 			}
 			case SOFT_MIST -> {
 				p.kind = Kind.MIST;
@@ -225,6 +245,33 @@ public final class FallParticleRenderer {
 		return p;
 	}
 
+	private static void fallPetal(Particle p, Vec3 origin, float ox, float oz, float sizeMul,
+		float baseR, float baseG, float baseB, float gVar, float bVar) {
+		p.kind = Kind.PETAL;
+		p.tex = RNG.nextBoolean() ? TEX_PETAL : TEX_PETAL_SOFT;
+		p.size = (0.18f + RNG.nextFloat() * 0.28f) * sizeMul;
+		placeAbove(p, origin, ox, oz, 4.5f, 8f);
+		driftDown(p, 0.015f, 0.035f);
+		p.spin = -0.04f + RNG.nextFloat() * 0.08f;
+		p.a = 0.55f + RNG.nextFloat() * 0.35f;
+		float tint = RNG.nextFloat();
+		p.r = Math.min(1f, baseR);
+		p.g = Math.min(1f, baseG + tint * gVar);
+		p.b = Math.min(1f, baseB + tint * bVar);
+	}
+
+	private static void placeAbove(Particle p, Vec3 origin, float ox, float oz, float yMin, float ySpan) {
+		p.x = origin.x + ox;
+		p.y = origin.y + yMin + RNG.nextFloat() * ySpan;
+		p.z = origin.z + oz;
+	}
+
+	private static void driftDown(Particle p, float minFall, float fallSpan) {
+		p.vx = -0.02f + RNG.nextFloat() * 0.04f;
+		p.vy = -(minFall + RNG.nextFloat() * fallSpan);
+		p.vz = -0.02f + RNG.nextFloat() * 0.04f;
+	}
+
 	private static void quad(PoseStack matrices, VertexConsumer vc,
 		float x0, float y0, float x1, float y1,
 		float r, float g, float b, float a) {
@@ -233,14 +280,13 @@ public final class FallParticleRenderer {
 		int light = LightTexture.FULL_BRIGHT;
 		int overlay = OverlayTexture.NO_OVERLAY;
 		float aa = Mth.clamp(a, 0f, 1f);
-		// Camera-facing XY plane (after camera.rotation())
 		vc.addVertex(m, x0, y0, 0).setColor(r, g, b, aa).setUv(0f, 1f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 0, 1);
 		vc.addVertex(m, x1, y0, 0).setColor(r, g, b, aa).setUv(1f, 1f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 0, 1);
 		vc.addVertex(m, x1, y1, 0).setColor(r, g, b, aa).setUv(1f, 0f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 0, 1);
 		vc.addVertex(m, x0, y1, 0).setColor(r, g, b, aa).setUv(0f, 0f).setOverlay(overlay).setLight(light).setNormal(pose, 0, 0, 1);
 	}
 
-	private enum Kind { PETAL, SNOW, MIST }
+	private enum Kind { PETAL, SNOW, MIST, EMBER }
 
 	private static final class Particle {
 		double x, y, z;

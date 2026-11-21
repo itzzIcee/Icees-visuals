@@ -7,7 +7,6 @@ import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.BlockOverlayRenderer;
-import com.icees.visuals.pvp.PvpVisualsRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -33,13 +32,11 @@ public final class IceesVisualsClient implements ClientModInitializer {
 				}
 			}
 			FallParticleRenderer.tick(client);
-			PvpVisualsRenderer.tick(client);
 			IceesConfig.applyFullbright(client);
 		});
 
 		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
 		WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
-		WorldRenderEvents.AFTER_ENTITIES.register(PvpVisualsRenderer::renderWorld);
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
 
 		HudElementRegistry.attachElementAfter(
@@ -47,12 +44,7 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
-		HudElementRegistry.attachElementAfter(
-			VanillaHudElements.MISC_OVERLAYS,
-			Identifier.fromNamespaceAndPath(MOD_ID, "pvp_cosmetics"),
-			(graphics, tickCounter) -> PvpVisualsRenderer.renderHud(graphics)
-		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.15 — 3D world PvP FX");
+		LOGGER.info("Icee's Sakura Visuals 1.0.16 — clearer cosmetics, more themes");
 	}
 }

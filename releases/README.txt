@@ -1,9 +1,11 @@
 Icee's Sakura Visuals — Fabric 1.21.11
 ======================================
-Latest: 1.0.15
+Latest: 1.0.16
 
-- PvP FX are 3D in the world (ground shockwave + debris), not on the screen
-- Hit anim / sword / axe / spear also at the target in-world
-- Orbit → PvP to configure
+- PvP tab removed
+- Cosmetics: pick one (Wings / Halo / Hat / Cape / Aura), then form + colour
+- New Themes: Golden Leaves, Ember Ash, Moon Dust, Blue Blossom
+  (same soft world-air style as Sakura / Snow / Mist)
 
 Right Shift → Orbit
+Install: drop "Icee's Sakura Visuals.jar" into mods/ (Fabric Loader + Fabric API 1.21.11)

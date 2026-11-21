@@ -11,7 +11,6 @@ import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.overlay.OverlayMaterial;
-import com.icees.visuals.pvp.HitAnimStyle;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.ARGB;
 import org.lwjgl.glfw.GLFW;
@@ -75,34 +74,6 @@ public final class IceesConfig {
 	public static boolean fullbright = false;
 	public static boolean lowParticles = false;
 
-	/* —— PvP Cosmetics —— */
-	public static boolean pvpHitMarkers = true;
-	public static HitAnimStyle pvpHitAnim = HitAnimStyle.CROSS;
-	public static int pvpHitAnimSize = 3;
-	public static boolean pvpCrosshair = false;
-	public static int pvpCrosshairSize = 2;
-	public static boolean pvpTargetCue = false;
-	public static boolean pvpHitColour = true;
-	public static int pvpHitHue = 330;
-	public static int pvpHitSat = 70;
-	public static int pvpHitVal = 100;
-	public static boolean pvpHitParticles = true;
-	public static boolean pvpMaceParticles = true;
-	public static boolean pvpSpearParticles = true;
-	public static int pvpParticleSize = 3;
-	public static CosmeticTint pvpTint = new CosmeticTint(true, 330, 70, 100);
-
-	/* —— Weapon hit animations / FX —— */
-	public static boolean pvpStunslam = true;
-	public static int pvpStunslamSize = 3;
-	public static boolean pvpMace = true;
-	public static int pvpMaceSize = 3;
-	public static boolean pvpSpear = true;
-	public static int pvpSpearSize = 3;
-	public static boolean pvpSword = true;
-	public static int pvpSwordSize = 3;
-	public static boolean pvpAxe = true;
-	public static int pvpAxeSize = 3;
 
 	/* —— Orbit GUI colours —— */
 	public static boolean guiCustomColor = false;
@@ -250,31 +221,6 @@ public final class IceesConfig {
 			fullbright = data.fullbright;
 			lowParticles = data.lowParticles;
 
-			pvpHitMarkers = data.pvpHitMarkers;
-			pvpHitAnim = safeEnum(HitAnimStyle.class, data.pvpHitAnim, HitAnimStyle.CROSS);
-			if (data.pvpHitAnimSize >= 1 && data.pvpHitAnimSize <= 5) pvpHitAnimSize = data.pvpHitAnimSize;
-			pvpCrosshair = data.pvpCrosshair;
-			if (data.pvpCrosshairSize >= 1 && data.pvpCrosshairSize <= 5) pvpCrosshairSize = data.pvpCrosshairSize;
-			pvpTargetCue = data.pvpTargetCue;
-			pvpHitColour = data.pvpHitColour;
-			pvpHitHue = Math.floorMod(data.pvpHitHue, 360);
-			if (data.pvpHitSat >= 0 && data.pvpHitSat <= 100) pvpHitSat = data.pvpHitSat;
-			if (data.pvpHitVal >= 0 && data.pvpHitVal <= 100) pvpHitVal = data.pvpHitVal;
-			pvpHitParticles = data.pvpHitParticles;
-			pvpMaceParticles = data.pvpMaceParticles;
-			pvpSpearParticles = data.pvpSpearParticles;
-			if (data.pvpParticleSize >= 1 && data.pvpParticleSize <= 5) pvpParticleSize = data.pvpParticleSize;
-			pvpTint.loadFrom(data.pvpTint, new CosmeticTint(true, 330, 70, 100));
-			pvpStunslam = data.pvpStunslam;
-			if (data.pvpStunslamSize >= 1 && data.pvpStunslamSize <= 5) pvpStunslamSize = data.pvpStunslamSize;
-			pvpMace = data.pvpMace;
-			if (data.pvpMaceSize >= 1 && data.pvpMaceSize <= 5) pvpMaceSize = data.pvpMaceSize;
-			pvpSpear = data.pvpSpear;
-			if (data.pvpSpearSize >= 1 && data.pvpSpearSize <= 5) pvpSpearSize = data.pvpSpearSize;
-			pvpSword = data.pvpSword;
-			if (data.pvpSwordSize >= 1 && data.pvpSwordSize <= 5) pvpSwordSize = data.pvpSwordSize;
-			pvpAxe = data.pvpAxe;
-			if (data.pvpAxeSize >= 1 && data.pvpAxeSize <= 5) pvpAxeSize = data.pvpAxeSize;
 
 			guiCustomColor = data.guiCustomColor;
 			guiRainbow = data.guiRainbow;
@@ -316,20 +262,6 @@ public final class IceesConfig {
 		data.overlayHue = overlayHue; data.overlaySat = overlaySat; data.overlayVal = overlayVal;
 		data.motionBlur = motionBlur; data.motionBlurStrength = motionBlurStrength;
 		data.noHurtCam = noHurtCam; data.fullbright = fullbright; data.lowParticles = lowParticles;
-		data.pvpHitMarkers = pvpHitMarkers;
-		data.pvpHitAnim = pvpHitAnim.name(); data.pvpHitAnimSize = pvpHitAnimSize;
-		data.pvpCrosshair = pvpCrosshair;
-		data.pvpCrosshairSize = pvpCrosshairSize; data.pvpTargetCue = pvpTargetCue;
-		data.pvpHitColour = pvpHitColour;
-		data.pvpHitHue = pvpHitHue; data.pvpHitSat = pvpHitSat; data.pvpHitVal = pvpHitVal;
-		data.pvpHitParticles = pvpHitParticles; data.pvpMaceParticles = pvpMaceParticles;
-		data.pvpSpearParticles = pvpSpearParticles; data.pvpParticleSize = pvpParticleSize;
-		data.pvpTint = pvpTint.copy();
-		data.pvpStunslam = pvpStunslam; data.pvpStunslamSize = pvpStunslamSize;
-		data.pvpMace = pvpMace; data.pvpMaceSize = pvpMaceSize;
-		data.pvpSpear = pvpSpear; data.pvpSpearSize = pvpSpearSize;
-		data.pvpSword = pvpSword; data.pvpSwordSize = pvpSwordSize;
-		data.pvpAxe = pvpAxe; data.pvpAxeSize = pvpAxeSize;
 		data.guiCustomColor = guiCustomColor; data.guiRainbow = guiRainbow;
 		data.guiHue = guiHue; data.guiSat = guiSat; data.guiVal = guiVal;
 		data.orbitKeyCode = orbitKeyCode;
@@ -370,17 +302,6 @@ public final class IceesConfig {
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;
 		boolean noHurtCam = true; boolean fullbright = false; boolean lowParticles = false;
-		boolean pvpHitMarkers = true; String pvpHitAnim = "CROSS"; int pvpHitAnimSize = 3;
-		boolean pvpCrosshair = false; int pvpCrosshairSize = 2;
-		boolean pvpTargetCue = false; boolean pvpHitColour = true;
-		int pvpHitHue = 330; int pvpHitSat = 70; int pvpHitVal = 100;
-		boolean pvpHitParticles = true; boolean pvpMaceParticles = true; boolean pvpSpearParticles = true;
-		int pvpParticleSize = 3; CosmeticTint pvpTint;
-		boolean pvpStunslam = true; int pvpStunslamSize = 3;
-		boolean pvpMace = true; int pvpMaceSize = 3;
-		boolean pvpSpear = true; int pvpSpearSize = 3;
-		boolean pvpSword = true; int pvpSwordSize = 3;
-		boolean pvpAxe = true; int pvpAxeSize = 3;
 		boolean guiCustomColor = false; boolean guiRainbow = false;
 		int guiHue = 330; int guiSat = 55; int guiVal = 100;
 		int orbitKeyCode = 344;
