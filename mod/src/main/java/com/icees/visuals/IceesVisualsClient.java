@@ -76,6 +76,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			LOGGER.error("HUD hook failed", t);
 		}
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.46 — hat seated on the skull");
+		LOGGER.info("Icee's Sakura Visuals 1.0.47 — hat pulled down onto the head");
 	}
 }

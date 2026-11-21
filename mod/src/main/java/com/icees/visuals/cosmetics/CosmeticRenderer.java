@@ -361,12 +361,11 @@ public final class CosmeticRenderer {
 			0f,
 			headYawRel * Mth.DEG_TO_RAD,
 			headPitch * Mth.DEG_TO_RAD));
-		// Seat on the skull like CustomHeadLayer.translateToHead (worn items / skulls)
-		matrices.translate(0f, -0.25f, 0f);
+		// Seat on the crown (head box is y=-8..0 → top at -0.5), then pull down flush
+		matrices.translate(0f, -0.55f, 0f);
 		matrices.mulPose(Axis.YP.rotationDegrees(180f));
 		matrices.scale(1f, -1f, -1f);
-		// Brim rests on the crown
-		matrices.translate(0f, 0.08f + 0.03f * thick, 0f);
+		matrices.translate(0f, -0.06f, 0f);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
