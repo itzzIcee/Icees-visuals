@@ -45,6 +45,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.17 — title splash Visuals by Icee");
+		LOGGER.info("Icee's Sakura Visuals 1.0.18 — more cosmetics, fine controls, jump circles, skin preview");
 	}
 }

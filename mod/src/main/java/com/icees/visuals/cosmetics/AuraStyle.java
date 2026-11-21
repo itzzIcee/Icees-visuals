@@ -16,7 +16,11 @@ public enum AuraStyle {
 	BEACON("Beacon", "Tall rising light columns.", 0.70f, 0.95f, 1.00f, 4, 0.06f),
 	SHIELD("Shield", "Hex shell around the body.", 0.55f, 0.80f, 1.00f, 8, 0.0f),
 	RIBBON("Ribbon", "Twisting light ribbons.", 1.00f, 0.55f, 0.75f, 5, 0.18f),
-	CUBE("Cube Orbit", "Voxel cubes orbiting you.", 0.55f, 0.90f, 1.00f, 6, 0.12f);
+	CUBE("Cube Orbit", "Voxel cubes orbiting you.", 0.55f, 0.90f, 1.00f, 6, 0.12f),
+	PETAL_STORM("Petal Storm", "Dense falling petal aura.", 1.00f, 0.62f, 0.78f, 12, 0.10f),
+	MOON("Moon Glow", "Pale silver body glow.", 0.82f, 0.90f, 1.00f, 1, 0.0f),
+	STORM("Storm", "Electric sparks around you.", 0.55f, 0.75f, 1.00f, 9, 0.24f),
+	LOTUS("Lotus", "Soft lotus ring petals.", 1.00f, 0.70f, 0.85f, 8, 0.06f);
 
 	public final String title;
 	public final String description;

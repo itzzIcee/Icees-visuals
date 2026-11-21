@@ -53,13 +53,13 @@ public final class FallParticleRenderer {
 		}
 
 		Vec3 origin = client.player.position();
-		int density = Math.max(1, IceesConfig.fallIntensity);
-		int sizeLvl = Math.max(1, IceesConfig.fallSize);
+		int density = IceesConfig.clamp10(IceesConfig.fallIntensity);
+		int sizeLvl = IceesConfig.clamp10(IceesConfig.fallSize);
 		int max = switch (theme) {
-			case SOFT_MIST -> 8 + density * 3;
-			case WHITE_SNOW, MOON_DUST -> 48 + density * 22;
-			case EMBER_ASH -> 28 + density * 14;
-			default -> 36 + density * 18;
+			case SOFT_MIST -> 8 + density * 4;
+			case WHITE_SNOW, MOON_DUST -> 40 + density * 18;
+			case EMBER_ASH -> 24 + density * 12;
+			default -> 30 + density * 15;
 		};
 
 		if (spawnCooldown > 0) spawnCooldown--;
@@ -124,7 +124,7 @@ public final class FallParticleRenderer {
 
 			float fadeIn = Math.min(1f, (p.maxLife - p.life) / 24f);
 			float fadeOut = Math.min(1f, p.life / 40f);
-			float alpha = Math.min(1f, p.a * fadeIn * fadeOut);
+			float alpha = Math.min(1f, p.a * fadeIn * fadeOut * IceesConfig.fallOpacityFactor());
 			if (alpha < 0.02f) continue;
 
 			float half = p.size * 0.5f;
@@ -146,24 +146,26 @@ public final class FallParticleRenderer {
 
 	private static Particle spawnOne(FallTheme theme, Vec3 origin, int sizeLvl) {
 		Particle p = new Particle();
-		float sizeMul = 0.55f + sizeLvl * 0.22f;
+		float sizeMul = 0.45f + sizeLvl * 0.14f;
+		float speedMul = IceesConfig.fallSpeedFactor();
+		float spreadMul = IceesConfig.fallSpreadFactor();
 		p.life = 140 + RNG.nextInt(180);
 		p.maxLife = p.life;
 		p.phase = RNG.nextFloat() * 100f;
 		p.sway = 0.012f + RNG.nextFloat() * 0.028f;
 		p.rot = RNG.nextFloat() * Mth.TWO_PI;
 
-		float spread = 10f + sizeLvl * 2.5f;
+		float spread = (8f + sizeLvl * 1.8f) * spreadMul;
 		float ox = (RNG.nextFloat() - 0.5f) * spread * 2f;
 		float oz = (RNG.nextFloat() - 0.5f) * spread * 2f;
 
 		switch (theme) {
-			case SAKURA_FALL -> fallPetal(p, origin, ox, oz, sizeMul,
+			case SAKURA_FALL -> fallPetal(p, origin, ox, oz, sizeMul, speedMul,
 				1.0f, 0.58f, 0.74f, 0.28f, 0.18f);
-			case BLUE_BLOSSOM -> fallPetal(p, origin, ox, oz, sizeMul,
+			case BLUE_BLOSSOM -> fallPetal(p, origin, ox, oz, sizeMul, speedMul,
 				0.55f, 0.72f, 1.0f, 0.18f, 0.05f);
 			case GOLDEN_LEAVES -> {
-				fallPetal(p, origin, ox, oz, sizeMul, 1.0f, 0.72f, 0.28f, 0.18f, 0.08f);
+				fallPetal(p, origin, ox, oz, sizeMul, speedMul, 1.0f, 0.72f, 0.28f, 0.18f, 0.08f);
 				p.size *= 1.15f;
 				p.vy *= 0.75f;
 				p.spin *= 0.7f;
@@ -173,7 +175,7 @@ public final class FallParticleRenderer {
 				p.tex = TEX_SNOW;
 				p.size = (0.10f + RNG.nextFloat() * 0.18f) * sizeMul;
 				placeAbove(p, origin, ox, oz, 5f, 9f);
-				driftDown(p, 0.015f, 0.03f);
+				driftDown(p, 0.015f * speedMul, 0.03f * speedMul);
 				p.spin = -0.02f + RNG.nextFloat() * 0.04f;
 				p.a = 0.5f + RNG.nextFloat() * 0.35f;
 				p.r = p.g = p.b = 1f;
@@ -184,7 +186,7 @@ public final class FallParticleRenderer {
 				p.tex = TEX_SNOW;
 				p.size = (0.06f + RNG.nextFloat() * 0.12f) * sizeMul;
 				placeAbove(p, origin, ox, oz, 3f, 7f);
-				driftDown(p, 0.006f, 0.018f);
+				driftDown(p, 0.006f * speedMul, 0.018f * speedMul);
 				p.spin = -0.01f + RNG.nextFloat() * 0.02f;
 				p.a = 0.35f + RNG.nextFloat() * 0.3f;
 				p.r = 0.86f + RNG.nextFloat() * 0.1f;
@@ -199,9 +201,9 @@ public final class FallParticleRenderer {
 				p.x = origin.x + ox * 0.7f;
 				p.y = origin.y + 0.2f + RNG.nextFloat() * 1.5f;
 				p.z = origin.z + oz * 0.7f;
-				p.vx = -0.01f + RNG.nextFloat() * 0.02f;
-				p.vy = 0.02f + RNG.nextFloat() * 0.045f;
-				p.vz = -0.01f + RNG.nextFloat() * 0.02f;
+				p.vx = (-0.01f + RNG.nextFloat() * 0.02f) * speedMul;
+				p.vy = (0.02f + RNG.nextFloat() * 0.045f) * speedMul;
+				p.vz = (-0.01f + RNG.nextFloat() * 0.02f) * speedMul;
 				p.spin = -0.03f + RNG.nextFloat() * 0.06f;
 				p.a = 0.45f + RNG.nextFloat() * 0.4f;
 				float tint = RNG.nextFloat();
@@ -214,13 +216,13 @@ public final class FallParticleRenderer {
 				p.kind = Kind.MIST;
 				p.tex = TEX_MIST;
 				p.size = (1.4f + RNG.nextFloat() * 1.8f) * sizeMul;
-				float mistSpread = 6f + sizeLvl;
+				float mistSpread = (6f + sizeLvl) * spreadMul;
 				p.x = origin.x + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
 				p.y = origin.y + 0.15f + RNG.nextFloat() * 1.4f;
 				p.z = origin.z + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
-				p.vx = -0.004f + RNG.nextFloat() * 0.008f;
-				p.vy = 0.001f + RNG.nextFloat() * 0.004f;
-				p.vz = -0.004f + RNG.nextFloat() * 0.008f;
+				p.vx = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
+				p.vy = (0.001f + RNG.nextFloat() * 0.004f) * speedMul;
+				p.vz = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
 				p.spin = 0f;
 				p.a = 0.12f + RNG.nextFloat() * 0.1f;
 				p.r = 0.96f;
@@ -237,7 +239,7 @@ public final class FallParticleRenderer {
 				p.x = origin.x;
 				p.y = origin.y + 6f;
 				p.z = origin.z;
-				p.vy = -0.02f;
+				p.vy = -0.02f * speedMul;
 				p.a = 0.4f;
 				p.r = p.g = p.b = 1f;
 			}
@@ -245,13 +247,13 @@ public final class FallParticleRenderer {
 		return p;
 	}
 
-	private static void fallPetal(Particle p, Vec3 origin, float ox, float oz, float sizeMul,
+	private static void fallPetal(Particle p, Vec3 origin, float ox, float oz, float sizeMul, float speedMul,
 		float baseR, float baseG, float baseB, float gVar, float bVar) {
 		p.kind = Kind.PETAL;
 		p.tex = RNG.nextBoolean() ? TEX_PETAL : TEX_PETAL_SOFT;
 		p.size = (0.18f + RNG.nextFloat() * 0.28f) * sizeMul;
 		placeAbove(p, origin, ox, oz, 4.5f, 8f);
-		driftDown(p, 0.015f, 0.035f);
+		driftDown(p, 0.015f * speedMul, 0.035f * speedMul);
 		p.spin = -0.04f + RNG.nextFloat() * 0.08f;
 		p.a = 0.55f + RNG.nextFloat() * 0.35f;
 		float tint = RNG.nextFloat();

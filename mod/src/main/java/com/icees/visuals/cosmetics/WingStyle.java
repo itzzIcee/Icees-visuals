@@ -8,7 +8,11 @@ public enum WingStyle {
 	PHOENIX("Phoenix", 1.00f, 0.55f, 0.30f),
 	DRAGONFLY("Dragonfly", 0.25f, 0.85f, 0.88f),
 	FAIRY("Fairy", 0.85f, 0.70f, 1.00f),
-	BAT("Bat", 0.35f, 0.22f, 0.40f);
+	BAT("Bat", 0.35f, 0.22f, 0.40f),
+	BUTTERFLY("Butterfly", 1.00f, 0.72f, 0.88f),
+	LEAF("Leaf", 0.45f, 0.85f, 0.50f),
+	ARCH("Arch", 0.92f, 0.95f, 1.00f),
+	MECHA("Mecha", 0.55f, 0.78f, 1.00f);
 
 	public final String title;
 	public final float r, g, b;

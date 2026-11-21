@@ -88,6 +88,7 @@ public final class CosmeticRenderer {
 
 			if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, thick);
 			if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, thick);
+			if (IceesConfig.shield) drawShield(matrices, consumers, time, bright, thick);
 			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, thick);
 			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, thick);
 			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, thick, camRelYaw, camPitch);
@@ -118,13 +119,14 @@ public final class CosmeticRenderer {
 
 			switch (style) {
 				case PETAL -> wingPetal(matrices, soft, hard, side, bright, thick, time);
-				case ANGEL -> wingAngel(matrices, soft, hard, side, bright, thick, time);
+				case ANGEL, ARCH -> wingAngel(matrices, soft, hard, side, bright, thick, time);
 				case DRAGON -> wingDragon(matrices, soft, hard, side, bright, thick, time);
-				case CRYSTAL -> wingCrystal(matrices, soft, hard, side, bright, thick, time);
+				case CRYSTAL, MECHA -> wingCrystal(matrices, soft, hard, side, bright, thick, time);
 				case PHOENIX -> wingPhoenix(matrices, soft, hard, side, bright, thick, time);
 				case DRAGONFLY -> wingDragonfly(matrices, soft, hard, side, bright, thick, time);
-				case FAIRY -> wingFairy(matrices, soft, hard, side, bright, thick, time);
+				case FAIRY, BUTTERFLY -> wingFairy(matrices, soft, hard, side, bright, thick, time);
 				case BAT -> wingBat(matrices, soft, hard, side, bright, thick, time);
+				case LEAF -> wingLeaf(matrices, soft, hard, side, bright, thick, time);
 			}
 			matrices.popPose();
 		}
@@ -281,7 +283,24 @@ public final class CosmeticRenderer {
 		}
 	}
 
-	/* ===================== HATS — straw (natural) + china cone ===================== */
+	/** Soft layered leaf wings */
+	private static void wingLeaf(PoseStack m, VertexConsumer soft, VertexConsumer hard, int side, float bright, float thick, float time) {
+		float s = side;
+		float sway = Mth.sin(time * 0.18f) * 0.08f;
+		for (int i = 0; i < 5; i++) {
+			float t = i / 4f;
+			m.pushPose();
+			m.translate(0, 0.06f * i + sway * t, -0.03f * i);
+			m.mulPose(Axis.ZP.rotationDegrees(s * (-12f + i * 7f)));
+			float span = (0.45f + t * 0.85f) * thick;
+			float tall = (0.35f + t * 0.7f) * thick;
+			sheet(m, soft, 0, 0, 0, s * span, tall, -0.06f, CR, CG, CB, 0.6f * bright);
+			sheet(m, hard, 0, 0.02f, 0.02f, s * span * 0.7f, tall * 0.85f, -0.03f, CR * 0.85f, CG, CB * 0.7f, 0.95f * bright);
+			m.popPose();
+		}
+	}
+
+	/* ===================== HATS ===================== */
 
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		HatStyle style = IceesConfig.hatStyle;
@@ -290,12 +309,56 @@ public final class CosmeticRenderer {
 		matrices.translate(0, 1.72f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
-		// Original straw colours only — never HSV
 		switch (style) {
 			case STRAW_RED -> drawVoxelStrawHat(matrices, vc, s, bright, 0.86f, 0.12f, 0.12f);
 			case STRAW_BROWN -> drawVoxelStrawHat(matrices, vc, s, bright, 0.42f, 0.26f, 0.14f);
+			case CHINA -> drawChinaHat(matrices, vc, s, bright);
+			case TOP_HAT -> drawTopHat(matrices, vc, s, bright);
+			case BEANIE -> drawBeanie(matrices, vc, s, bright);
+			case BERET -> drawBeret(matrices, vc, s, bright);
+			case CROWN_BRIM -> drawCrownBrim(matrices, vc, s, bright);
 		}
 		matrices.popPose();
+	}
+
+	private static void drawTopHat(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float a = Math.min(1f, 0.95f * bright);
+		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.12f, 0.10f, 0.14f);
+		float r = tint[0], g = tint[1], b = tint[2];
+		float u = 0.08f * s;
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.38f * s, 0, -0.38f * s, 0.38f * s, u, 0.38f * s, r, g, b, a);
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.22f * s, u, -0.22f * s, 0.22f * s, 0.55f * s, 0.22f * s, r * 1.1f, g * 1.1f, b * 1.1f, a);
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.24f * s, u + 0.02f * s, -0.24f * s, 0.24f * s, u + 0.1f * s, 0.24f * s, 0.75f, 0.2f, 0.28f, a);
+	}
+
+	private static void drawBeanie(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float a = Math.min(1f, 0.95f * bright);
+		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.85f, 0.35f, 0.50f);
+		float r = tint[0], g = tint[1], b = tint[2];
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.28f * s, 0, -0.28f * s, 0.28f * s, 0.28f * s, 0.28f * s, r, g, b, a);
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.18f * s, 0.25f * s, -0.18f * s, 0.18f * s, 0.38f * s, 0.18f * s, r * 0.9f, g * 0.9f, b * 0.9f, a);
+		billboardOrb(m, vc, 0, 0.42f * s, 0, 0.08f * s, 1f, 0.85f, 0.9f, a, 0f);
+	}
+
+	private static void drawBeret(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float a = Math.min(1f, 0.95f * bright);
+		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.55f, 0.18f, 0.22f);
+		float r = tint[0], g = tint[1], b = tint[2];
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.34f * s, 0.02f * s, -0.34f * s, 0.34f * s, 0.14f * s, 0.34f * s, r, g, b, a);
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, 0.12f * s, 0.1f * s, -0.08f * s, 0.36f * s, 0.2f * s, 0.16f * s, r * 0.85f, g * 0.85f, b * 0.85f, a);
+	}
+
+	private static void drawCrownBrim(PoseStack m, VertexConsumer vc, float s, float bright) {
+		float a = Math.min(1f, 0.95f * bright);
+		float[] tint = IceesConfig.color(IceesConfig.haloTint, 1f, 0.82f, 0.4f);
+		float r = tint[0], g = tint[1], b = tint[2];
+		MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, -0.32f * s, 0, -0.32f * s, 0.32f * s, 0.08f * s, 0.32f * s, r, g, b, a);
+		for (int i = 0; i < 6; i++) {
+			float ang = i / 6f * ((float) Math.PI * 2f);
+			float x = Mth.cos(ang) * 0.26f * s;
+			float z = Mth.sin(ang) * 0.26f * s;
+			MeshPrims.box(m, vc, LightTexture.FULL_BRIGHT, x - 0.04f * s, 0.06f * s, z - 0.04f * s, x + 0.04f * s, 0.28f * s, z + 0.04f * s, r, g, b, a);
+		}
 	}
 
 	/**
@@ -527,6 +590,43 @@ public final class CosmeticRenderer {
 				billboardOrb(matrices, vc, 0, 0.08f, 0, 0.28f * thick, CR, CG, CB, bright, time);
 				ring3D(matrices, glow, 0.38f * thick, 0.03f, CR, CG, CB, bright * 0.55f);
 			}
+			case STAR -> {
+				for (int i = 0; i < 5; i++) {
+					float a = i / 5f * ((float) Math.PI * 2f) + time * 0.04f;
+					matrices.pushPose();
+					matrices.mulPose(Axis.YP.rotationDegrees(a * Mth.RAD_TO_DEG));
+					sheet(matrices, vc, -0.05f, 0, 0.05f, 0.05f, 0.32f * thick, 0.42f * thick, CR, CG, CB, bright);
+					matrices.popPose();
+				}
+				ring3D(matrices, glow, 0.28f * thick, 0.03f, CR, CG, CB, bright * 0.5f);
+			}
+			case HEX -> {
+				for (int i = 0; i < 6; i++) {
+					float a0 = i / 6f * ((float) Math.PI * 2f);
+					float a1 = (i + 1) / 6f * ((float) Math.PI * 2f);
+					float r = 0.4f * thick;
+					float x0 = Mth.cos(a0) * r, z0 = Mth.sin(a0) * r;
+					float x1 = Mth.cos(a1) * r, z1 = Mth.sin(a1) * r;
+					sheet(matrices, vc, x0, -0.04f, z0, x1, 0.04f, z1, CR, CG, CB, bright);
+				}
+			}
+			case SPIRAL -> {
+				for (int i = 0; i < 10; i++) {
+					float t = i / 10f;
+					float a = t * ((float) Math.PI * 4f) + time * 0.1f;
+					float rad = 0.15f * thick + t * 0.3f * thick;
+					billboardOrb(matrices, vc, Mth.cos(a) * rad, t * 0.12f * thick, Mth.sin(a) * rad, 0.07f * thick, CR, CG, CB, bright, time);
+				}
+			}
+			case FLAME -> {
+				for (int i = 0; i < 7; i++) {
+					float a = i / 7f * ((float) Math.PI * 2f);
+					matrices.pushPose();
+					matrices.mulPose(Axis.YP.rotationDegrees(a * Mth.RAD_TO_DEG + time * 4f));
+					sheet(matrices, glow, -0.06f, 0, 0.2f * thick, 0.06f, 0.4f * thick + Mth.sin(time * 0.3f + i) * 0.05f, 0.35f * thick, CR, CG, CB, bright);
+					matrices.popPose();
+				}
+			}
 		}
 		matrices.popPose();
 	}
@@ -583,12 +683,40 @@ public final class CosmeticRenderer {
 					matrices.popPose();
 				}
 			}
-			case GOLD -> {
-				// shoulder plates
+			case GOLD, ROSE -> {
 				sheet(matrices, vc, -0.45f * thick, 0.05f, 0.05f, -0.15f * thick, 0.25f, -0.05f, CR, CG, CB, bright);
 				sheet(matrices, vc, 0.15f * thick, 0.05f, 0.05f, 0.45f * thick, 0.25f, -0.05f, CR, CG, CB, bright);
 				capeFlow(matrices, vc, glow, style, bright, thick, sway, 1);
 			}
+			case VOID, MIST -> capeFlow(matrices, vc, glow, style, bright, thick * 1.15f, sway, 1);
+			case LEAF -> capeJagged(matrices, vc, glow, style, bright, thick, sway);
+		}
+		matrices.popPose();
+	}
+
+	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+		ShieldStyle style = IceesConfig.shieldStyle;
+		float[] c = IceesConfig.color(IceesConfig.shieldTint, style.r, style.g, style.b);
+		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
+		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
+		matrices.pushPose();
+		matrices.translate(0.42f * thick, 1.1f, 0.05f);
+		matrices.mulPose(Axis.YP.rotationDegrees(-18f));
+		matrices.mulPose(Axis.ZP.rotationDegrees(8f + Mth.sin(time * 0.12f) * 2f));
+		float w = switch (style) {
+			case TOWER -> 0.28f * thick;
+			case KITE -> 0.32f * thick;
+			default -> 0.36f * thick;
+		};
+		float h = switch (style) {
+			case TOWER -> 0.7f * thick;
+			case KITE -> 0.55f * thick;
+			default -> 0.48f * thick;
+		};
+		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.04f, c[0], c[1], c[2], 0.95f * bright);
+		sheetYZ(matrices, vc, -w, -h * 0.5f, -0.02f, -w, h * 0.5f, 0.06f, c[0] * 0.8f, c[1] * 0.8f, c[2] * 0.85f, 0.7f * bright);
+		if (style == ShieldStyle.CRYSTAL || style == ShieldStyle.SAKURA) {
+			billboardOrb(matrices, glow, 0, 0, 0.05f, 0.12f * thick, c[0], c[1], c[2], bright, time);
 		}
 		matrices.popPose();
 	}
@@ -738,6 +866,33 @@ public final class CosmeticRenderer {
 					MeshPrims.box(matrices, vc, LightTexture.FULL_BRIGHT, x - hs, y - hs, z - hs, x + hs, y + hs, z + hs, CR, CG, CB, aMul);
 				}
 			}
+			case MOON -> {
+				float pulse = 0.85f + 0.15f * Mth.sin(time * 0.12f);
+				billboardOrb(matrices, vc, 0, 1.0f, 0, 1.15f * thick * pulse, CR, CG, CB, aMul * 0.55f, time);
+				ring3D(matrices, vc, 0.7f * thick, 0.03f * thick, CR, CG, CB, aMul * 0.4f);
+			}
+			case LOTUS -> {
+				matrices.pushPose();
+				matrices.translate(0, 0.1f, 0);
+				for (int i = 0; i < style.count; i++) {
+					float a = i / (float) style.count * ((float) Math.PI * 2f) + time * style.spin;
+					matrices.pushPose();
+					matrices.mulPose(Axis.YP.rotationDegrees(a * Mth.RAD_TO_DEG));
+					sheet(matrices, vc, -0.12f * thick, 0, 0.2f * thick, 0.12f * thick, 0.35f * thick, 0.75f * thick, CR, CG, CB, aMul * 0.85f);
+					matrices.popPose();
+				}
+				matrices.popPose();
+			}
+			case PETAL_STORM, STORM -> {
+				int n = Math.max(2, style.count);
+				for (int i = 0; i < n; i++) {
+					float a = time * (0.1f + style.spin) + i * ((float) Math.PI * 2f / n);
+					float radius = (style == AuraStyle.STORM ? 0.9f : 0.7f) * thick;
+					float y = 0.4f + ((time * 0.15f + i * 0.17f) % 1.6f);
+					float s = (style == AuraStyle.STORM ? 0.12f : 0.22f) * thick;
+					billboardOrb(matrices, vc, Mth.cos(a) * radius, y, Mth.sin(a) * radius, s, CR, CG, CB, aMul, time);
+				}
+			}
 			default -> {
 				int n = Math.max(2, style.count);
 				for (int i = 0; i < n; i++) {
@@ -752,16 +907,145 @@ public final class CosmeticRenderer {
 	}
 
 	private static void drawJumpCircles(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+		JumpCircleStyle style = IceesConfig.jumpCircleStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
-		float[] c = tintAura(1f, 0.75f, 0.88f);
-		float phase = (time % 28f) / 28f;
-		for (int ring = 0; ring < 2; ring++) {
-			float p = (phase + ring * 0.5f) % 1f;
-			matrices.pushPose();
-			matrices.translate(0, 0.05f, 0);
-			ring3D(matrices, vc, (0.35f + p * 1.1f) * thick, 0.04f, c[0], c[1], c[2], (1f - p) * 0.75f * bright);
-			matrices.popPose();
+		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
+		float[] c = IceesConfig.color(IceesConfig.auraTint, 1f, 0.75f, 0.88f);
+		float speed = 0.55f + IceesConfig.jumpCircleSpeed * 0.18f;
+		float size = thick * (0.7f + IceesConfig.jumpCircleSize * 0.12f);
+		int rings = Math.max(1, IceesConfig.jumpCircleCount);
+		float cycle = 22f / speed;
+		float phase = (time % cycle) / cycle;
+
+		matrices.pushPose();
+		matrices.translate(0, 0.05f, 0);
+
+		switch (style) {
+			case PULSE -> {
+				float p = 0.55f + 0.45f * (0.5f + 0.5f * Mth.sin(time * 0.2f * speed));
+				ring3D(matrices, vc, 0.7f * size * p, 0.05f * size, c[0], c[1], c[2], 0.8f * bright);
+			}
+			case DOUBLE -> {
+				for (int ring = 0; ring < Math.max(2, rings); ring++) {
+					float p = (phase + ring * (1f / Math.max(2, rings))) % 1f;
+					ring3D(matrices, vc, (0.3f + p * 1.2f) * size, 0.06f * size, c[0], c[1], c[2], (1f - p) * 0.85f * bright);
+					ring3D(matrices, glow, (0.25f + p * 1.15f) * size, 0.03f * size, c[0], c[1], c[2], (1f - p) * 0.4f * bright);
+				}
+			}
+			case HEX, SQUARE -> {
+				int sides = style == JumpCircleStyle.HEX ? 6 : 4;
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float rad = (0.35f + p * 1.15f) * size;
+					float a = (1f - p) * 0.8f * bright;
+					for (int i = 0; i < sides; i++) {
+						float a0 = i / (float) sides * ((float) Math.PI * 2f) + (style == JumpCircleStyle.SQUARE ? (float) Math.PI / 4f : 0f);
+						float a1 = (i + 1) / (float) sides * ((float) Math.PI * 2f) + (style == JumpCircleStyle.SQUARE ? (float) Math.PI / 4f : 0f);
+						sheet(matrices, vc, Mth.cos(a0) * rad, -0.03f, Mth.sin(a0) * rad,
+							Mth.cos(a1) * rad, 0.03f, Mth.sin(a1) * rad, c[0], c[1], c[2], a);
+					}
+				}
+			}
+			case STAR -> {
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float rad = (0.35f + p * 1.1f) * size;
+					float a = (1f - p) * 0.85f * bright;
+					for (int i = 0; i < 5; i++) {
+						float ang = i / 5f * ((float) Math.PI * 2f) + time * 0.05f;
+						sheet(matrices, vc, 0, 0, 0, Mth.cos(ang) * rad, 0.04f, Mth.sin(ang) * rad, c[0], c[1], c[2], a);
+					}
+					ring3D(matrices, glow, rad * 0.55f, 0.025f * size, c[0], c[1], c[2], a * 0.5f);
+				}
+			}
+			case SPIRAL -> {
+				for (int i = 0; i < 18; i++) {
+					float t = (phase + i / 18f) % 1f;
+					float a = t * ((float) Math.PI * 4f) + time * 0.08f * speed;
+					float rad = (0.25f + t * 1.1f) * size;
+					billboardOrb(matrices, vc, Mth.cos(a) * rad, 0.02f, Mth.sin(a) * rad, 0.07f * size, c[0], c[1], c[2], (1f - t) * bright, time);
+				}
+			}
+			case SPARKS -> {
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float rad = (0.3f + p * 1.2f) * size;
+					ring3D(matrices, vc, rad, 0.03f * size, c[0], c[1], c[2], (1f - p) * 0.7f * bright);
+					for (int i = 0; i < 8; i++) {
+						float a = i / 8f * ((float) Math.PI * 2f) + time * 0.1f;
+						billboardOrb(matrices, glow, Mth.cos(a) * rad, 0.04f, Mth.sin(a) * rad, 0.06f * size, c[0], c[1], c[2], (1f - p) * bright, time);
+					}
+				}
+			}
+			case HEART -> {
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float s = (0.25f + p * 0.9f) * size;
+					float a = (1f - p) * 0.8f * bright;
+					drawHeartRing(matrices, vc, s, c[0], c[1], c[2], a);
+				}
+			}
+			case ORBIT -> {
+				float rad = 0.75f * size;
+				ring3D(matrices, glow, rad, 0.025f * size, c[0], c[1], c[2], 0.45f * bright);
+				for (int i = 0; i < 6 + rings; i++) {
+					float a = time * 0.15f * speed + i * ((float) Math.PI * 2f / (6 + rings));
+					billboardOrb(matrices, vc, Mth.cos(a) * rad, 0.03f, Mth.sin(a) * rad, 0.08f * size, c[0], c[1], c[2], bright, time);
+				}
+			}
+			case WAVE -> {
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float rad = (0.35f + p * 1.15f) * size;
+					float a = (1f - p) * 0.75f * bright;
+					for (int i = 0; i < 16; i++) {
+						float a0 = i / 16f * ((float) Math.PI * 2f);
+						float a1 = (i + 1) / 16f * ((float) Math.PI * 2f);
+						float y0 = Mth.sin(a0 * 3f + time * 0.2f) * 0.05f * size;
+						float y1 = Mth.sin(a1 * 3f + time * 0.2f) * 0.05f * size;
+						sheet(matrices, vc, Mth.cos(a0) * rad, y0, Mth.sin(a0) * rad,
+							Mth.cos(a1) * rad, y1 + 0.04f, Mth.sin(a1) * rad, c[0], c[1], c[2], a);
+					}
+				}
+			}
+			case PRISM -> {
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					float rad = (0.3f + p * 1.1f) * size;
+					float a = (1f - p) * 0.8f * bright;
+					for (int i = 0; i < 8; i++) {
+						float ang = i / 8f * ((float) Math.PI * 2f);
+						billboardOrb(matrices, vc, Mth.cos(ang) * rad, 0.03f, Mth.sin(ang) * rad, 0.1f * size, c[0], c[1], c[2], a, time);
+					}
+					ring3D(matrices, glow, rad * 0.7f, 0.03f * size, c[0], c[1], c[2], a * 0.45f);
+				}
+			}
+			default -> { // RIPPLE
+				for (int ring = 0; ring < rings; ring++) {
+					float p = (phase + ring / (float) rings) % 1f;
+					ring3D(matrices, vc, (0.35f + p * 1.15f) * size, 0.04f * size, c[0], c[1], c[2], (1f - p) * 0.8f * bright);
+				}
+			}
 		}
+		matrices.popPose();
+	}
+
+	private static void drawHeartRing(PoseStack matrices, VertexConsumer vc, float s, float r, float g, float b, float a) {
+		for (int i = 0; i < 14; i++) {
+			float t0 = i / 14f * ((float) Math.PI * 2f);
+			float t1 = (i + 1) / 14f * ((float) Math.PI * 2f);
+			float x0 = heartX(t0) * s, z0 = heartY(t0) * s;
+			float x1 = heartX(t1) * s, z1 = heartY(t1) * s;
+			sheet(matrices, vc, x0, -0.02f, z0, x1, 0.04f, z1, r, g, b, a);
+		}
+	}
+
+	private static float heartX(float t) {
+		return 0.16f * Mth.sin(t) * Mth.sin(t) * Mth.sin(t);
+	}
+
+	private static float heartY(float t) {
+		return 0.13f * Mth.cos(t) - 0.05f * Mth.cos(2f * t) - 0.02f * Mth.cos(3f * t) - 0.01f * Mth.cos(4f * t);
 	}
 
 

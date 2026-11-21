@@ -26,17 +26,29 @@ public final class CosmeticTint {
 	}
 
 	public void cycleHue() {
-		hue = (hue + 15) % 360;
+		adjustHue(5);
+	}
+
+	public void adjustHue(int delta) {
+		hue = Math.floorMod(hue + delta, 360);
 		enabled = true;
 	}
 
 	public void cycleSat() {
-		sat = sat >= 100 ? 0 : sat + 10;
+		adjustSat(5);
+	}
+
+	public void adjustSat(int delta) {
+		sat = clamp(sat + delta, 0, 100);
 		enabled = true;
 	}
 
 	public void cycleVal() {
-		val = val >= 100 ? 20 : val + 10;
+		adjustVal(5);
+	}
+
+	public void adjustVal(int delta) {
+		val = clamp(val + delta, 0, 100);
 		enabled = true;
 	}
 

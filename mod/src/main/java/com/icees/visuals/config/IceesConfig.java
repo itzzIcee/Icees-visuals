@@ -7,6 +7,7 @@ import com.icees.visuals.cosmetics.AuraStyle;
 import com.icees.visuals.cosmetics.CapeStyle;
 import com.icees.visuals.cosmetics.HaloStyle;
 import com.icees.visuals.cosmetics.HatStyle;
+import com.icees.visuals.cosmetics.JumpCircleStyle;
 import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.FallTheme;
@@ -39,12 +40,19 @@ public final class IceesConfig {
 	public static ShieldStyle shieldStyle = ShieldStyle.SAKURA;
 	public static boolean trail = false;
 	public static boolean jumpCircles = true;
+	public static JumpCircleStyle jumpCircleStyle = JumpCircleStyle.RIPPLE;
+	public static int jumpCircleSize = 5;
+	public static int jumpCircleSpeed = 5;
+	public static int jumpCircleCount = 4;
 	public static FallTheme fallTheme = FallTheme.SAKURA_FALL;
-	public static int fallIntensity = 3;
-	public static int fallSize = 3;
-	public static int cosmeticBrightness = 5;
-	public static int cosmeticSize = 4;
-	public static int cosmeticThickness = 4;
+	public static int fallIntensity = 5;
+	public static int fallSize = 5;
+	public static int fallSpeed = 5;
+	public static int fallSpread = 5;
+	public static int fallOpacity = 7;
+	public static int cosmeticBrightness = 7;
+	public static int cosmeticSize = 5;
+	public static int cosmeticThickness = 5;
 	/** Kept for config migration — use per-cosmetic tints. */
 	@Deprecated
 	public static boolean customColor = true;
@@ -87,12 +95,28 @@ public final class IceesConfig {
 	private IceesConfig() {}
 
 	public static float brightnessFactor() {
-		return 0.65f + cosmeticBrightness * 0.28f;
+		return 0.5f + clamp10(cosmeticBrightness) * 0.15f;
 	}
 
 	public static float thicknessFactor() {
-		int s = Math.max(cosmeticSize, cosmeticThickness);
-		return 0.85f + s * 0.30f;
+		int s = Math.max(clamp10(cosmeticSize), clamp10(cosmeticThickness));
+		return 0.65f + s * 0.16f;
+	}
+
+	public static int clamp10(int v) {
+		return Math.max(1, Math.min(10, v));
+	}
+
+	public static float fallSpeedFactor() {
+		return 0.45f + clamp10(fallSpeed) * 0.12f;
+	}
+
+	public static float fallSpreadFactor() {
+		return 0.55f + clamp10(fallSpread) * 0.12f;
+	}
+
+	public static float fallOpacityFactor() {
+		return 0.35f + clamp10(fallOpacity) * 0.065f;
 	}
 
 	public static float sizeFactor() {
@@ -185,13 +209,20 @@ public final class IceesConfig {
 			shieldStyle = safeEnum(ShieldStyle.class, data.shieldStyle, ShieldStyle.SAKURA);
 			trail = data.trail;
 			jumpCircles = data.jumpCircles;
+			jumpCircleStyle = safeEnum(JumpCircleStyle.class, data.jumpCircleStyle, JumpCircleStyle.RIPPLE);
+			if (data.jumpCircleSize >= 1) jumpCircleSize = clamp10(data.jumpCircleSize);
+			if (data.jumpCircleSpeed >= 1) jumpCircleSpeed = clamp10(data.jumpCircleSpeed);
+			if (data.jumpCircleCount >= 1) jumpCircleCount = clamp10(data.jumpCircleCount);
 			if (data.fallTheme != null) fallTheme = safeEnum(FallTheme.class, data.fallTheme, FallTheme.SAKURA_FALL);
 			else fallTheme = data.petals ? FallTheme.SAKURA_FALL : FallTheme.OFF;
-			if (data.fallIntensity >= 1 && data.fallIntensity <= 5) fallIntensity = data.fallIntensity;
-			if (data.fallSize >= 1 && data.fallSize <= 5) fallSize = data.fallSize;
-			if (data.cosmeticBrightness >= 1 && data.cosmeticBrightness <= 5) cosmeticBrightness = data.cosmeticBrightness;
-			if (data.cosmeticSize >= 1 && data.cosmeticSize <= 5) cosmeticSize = data.cosmeticSize;
-			if (data.cosmeticThickness >= 1 && data.cosmeticThickness <= 5) cosmeticThickness = data.cosmeticThickness;
+			if (data.fallIntensity >= 1) fallIntensity = clamp10(data.fallIntensity);
+			if (data.fallSize >= 1) fallSize = clamp10(data.fallSize);
+			if (data.fallSpeed >= 1) fallSpeed = clamp10(data.fallSpeed);
+			if (data.fallSpread >= 1) fallSpread = clamp10(data.fallSpread);
+			if (data.fallOpacity >= 1) fallOpacity = clamp10(data.fallOpacity);
+			if (data.cosmeticBrightness >= 1) cosmeticBrightness = clamp10(data.cosmeticBrightness);
+			if (data.cosmeticSize >= 1) cosmeticSize = clamp10(data.cosmeticSize);
+			if (data.cosmeticThickness >= 1) cosmeticThickness = clamp10(data.cosmeticThickness);
 			cosmeticSize = Math.max(cosmeticSize, cosmeticThickness);
 			cosmeticThickness = cosmeticSize;
 			customColor = data.customColor;
@@ -244,8 +275,12 @@ public final class IceesConfig {
 		data.aura = aura; data.auraStyle = auraStyle.name();
 		data.shield = shield; data.shieldStyle = shieldStyle.name();
 		data.trail = trail; data.jumpCircles = jumpCircles;
+		data.jumpCircleStyle = jumpCircleStyle.name();
+		data.jumpCircleSize = jumpCircleSize; data.jumpCircleSpeed = jumpCircleSpeed; data.jumpCircleCount = jumpCircleCount;
 		data.petals = fallTheme == FallTheme.SAKURA_FALL;
-		data.fallTheme = fallTheme.name(); data.fallIntensity = fallIntensity; data.fallSize = fallSize;
+		data.fallTheme = fallTheme.name();
+		data.fallIntensity = fallIntensity; data.fallSize = fallSize;
+		data.fallSpeed = fallSpeed; data.fallSpread = fallSpread; data.fallOpacity = fallOpacity;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
 		data.customColor = wingTint.enabled;
@@ -273,11 +308,9 @@ public final class IceesConfig {
 		}
 	}
 
-	/** Only the two straw hats remain — anything else maps to red-band straw. */
 	private static HatStyle migrateHat(String name) {
-		if (name == null || "STRAW".equals(name) || "STRAW_RED".equals(name)) return HatStyle.STRAW_RED;
-		if ("STRAW_BROWN".equals(name)) return HatStyle.STRAW_BROWN;
-		return HatStyle.STRAW_RED;
+		if (name == null || "STRAW".equals(name)) return HatStyle.STRAW_RED;
+		return safeEnum(HatStyle.class, name, HatStyle.STRAW_RED);
 	}
 
 	private static <T extends Enum<T>> T safeEnum(Class<T> type, String name, T fallback) {
@@ -294,8 +327,10 @@ public final class IceesConfig {
 		boolean aura = true; String auraStyle = "ORBIT";
 		boolean shield = false; String shieldStyle = "SAKURA";
 		boolean trail = false; boolean jumpCircles = true;
-		boolean petals = true; String fallTheme = "SAKURA_FALL"; int fallIntensity = 3; int fallSize = 3;
-		int cosmeticBrightness = 5; int cosmeticSize = 4; int cosmeticThickness = 4;
+		String jumpCircleStyle = "RIPPLE"; int jumpCircleSize = 5; int jumpCircleSpeed = 5; int jumpCircleCount = 4;
+		boolean petals = true; String fallTheme = "SAKURA_FALL";
+		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5; int fallOpacity = 7;
+		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
 		boolean blockOverlay = true; String overlayMaterial = "RAINBOW"; int overlayBrightness = 3;
