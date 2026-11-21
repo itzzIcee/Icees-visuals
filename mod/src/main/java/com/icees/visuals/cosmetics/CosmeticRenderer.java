@@ -125,7 +125,7 @@ public final class CosmeticRenderer {
 		float bodyDrop = crouch ? 3.2f / 16f : 0f;
 		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), bodyDrop);
 		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize), bodyDrop);
-		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headYawRel, headPitch, headDrop);
+		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headDrop);
 		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, headDrop);
 		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
 		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
@@ -339,10 +339,10 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Same signs as HumanoidModel head (yRot / xRot). Drop with crouch (head.y += 4.2).
+		// Drop with crouch. Pitch is inverted vs getXRot so looking down tips the brim down.
 		matrices.translate(0, 1.5f - headDrop, 0);
 		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
+		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
@@ -537,17 +537,15 @@ public final class CosmeticRenderer {
 
 	/* ===================== HALO — distinct models ===================== */
 
+	/** Halo stays level (no head look) but drops with sneak. */
 	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
-		float headYawRel, float headPitch, float headDrop) {
+		float headDrop) {
 		HaloStyle style = IceesConfig.haloStyle;
 		float[] c = tintHalo(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
-		matrices.translate(0, 1.5f - headDrop, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
-		matrices.translate(0, 0.55f + 0.08f * thick, 0);
+		matrices.translate(0, 1.5f - headDrop + 0.55f + 0.08f * thick, 0);
 
 		switch (style) {
 			case BLOSSOM -> {
