@@ -1,0 +1,12 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "icees-visuals:title.ttf",
+      "shift": [0, 1.5],
+      "size": 16.0,
+      "oversample": 8.0,
+      "skip": ""
+    }
+  ]
+}

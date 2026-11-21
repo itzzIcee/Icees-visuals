@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "icees-visuals",
+  "version": "${version}",
+  "name": "Icee's Sakura Visuals",
+  "description": "Sakura-styled visuals client for Fabric 1.21.11: fall themes, cosmetics and Orbit menu.",
+  "authors": ["Icees"],
+  "license": "MIT",
+  "icon": "assets/icees-visuals/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.icees.visuals.IceesVisualsClient"]
+  },
+  "mixins": [
+    "icees-visuals.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
