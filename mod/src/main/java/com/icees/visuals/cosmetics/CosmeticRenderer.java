@@ -83,7 +83,7 @@ public final class CosmeticRenderer {
 			matrices.pushPose();
 			matrices.translate(px, py, pz);
 			matrices.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
-			drawAll(matrices, consumers, player, time, camRelYaw, camPitch, false);
+			drawAll(matrices, consumers, player, time, camRelYaw, camPitch);
 			matrices.popPose();
 		} catch (Throwable t) {
 			disabledForSession = true;
@@ -91,38 +91,18 @@ public final class CosmeticRenderer {
 		}
 	}
 
-	/**
-	 * Cosmetics in the Orbit skin preview (same pose space as the GUI entity).
-	 * {@code bodyRot} matches LivingEntityRenderState.bodyRot.
-	 */
-	public static void renderInGuiPreview(PoseStack matrices, MultiBufferSource buffers, float bodyRot) {
-		if (disabledForSession) return;
-		Minecraft client = Minecraft.getInstance();
-		LocalPlayer player = client.player;
-		if (player == null || buffers == null) return;
-		try {
-			float time = player.tickCount + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-			matrices.pushPose();
-			matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyRot));
-			drawAll(matrices, buffers, player, time, 0f, 0f, true);
-			matrices.popPose();
-		} catch (Throwable t) {
-			IceesVisualsClient.LOGGER.warn("Cosmetic GUI preview failed", t);
-		}
-	}
-
 	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
-		float time, float camRelYaw, float camPitch, boolean preview) {
+		float time, float camRelYaw, float camPitch) {
 		float bright = IceesConfig.brightnessFactor();
 		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
 		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
-		if (IceesConfig.shield && (preview || holdingMinecraftShield(player))) {
-			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize), preview);
+		if (IceesConfig.shield && holdingMinecraftShield(player)) {
+			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize));
 		}
 		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize));
 		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize));
 		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
-		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
+		if (IceesConfig.jumpCircles && !player.onGround()) {
 			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
 		}
 	}
@@ -729,7 +709,7 @@ public final class CosmeticRenderer {
 	 * Only drawn while a shield is in hand — see holdingMinecraftShield.
 	 */
 	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, LocalPlayer player,
-		float time, float bright, float thick, boolean preview) {
+		float time, float bright, float thick) {
 		ShieldStyle style = IceesConfig.shieldStyle;
 		float[] c = IceesConfig.color(IceesConfig.shieldTint, style.r, style.g, style.b);
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
@@ -740,11 +720,6 @@ public final class CosmeticRenderer {
 		boolean blocking = player.isBlocking();
 		float raise = blocking ? 1f : 0.35f;
 
-		if (preview && !main && !off) {
-			// Preview: show on offhand side so you can see the form
-			drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, -1f, 0.7f);
-			return;
-		}
 		if (off) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, -1f, raise);
 		if (main) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, 1f, raise);
 	}

@@ -575,6 +575,8 @@ public class OrbitScreen extends Screen {
 			if (this.minecraft != null && this.minecraft.player != null) {
 				InventoryScreen.renderEntityInInventoryFollowsMouse(
 					graphics, px + 8, py + 22, px + 120, py + 172, 48, 0.0625F, mouseX, mouseY, this.minecraft.player);
+				float t = this.minecraft.player.tickCount + delta;
+				CosmeticPreviewOverlay.draw(graphics, px + 8, py + 22, 112, 150, t);
 			}
 			graphics.drawString(this.font, "skin + cosmetics", px + 8, py + 164, SakuraTheme.muted(), false);
 		}

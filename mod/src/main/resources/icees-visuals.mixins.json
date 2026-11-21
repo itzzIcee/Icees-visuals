@@ -5,8 +5,7 @@
 	"client": [
     "GameRendererMixin",
     "ClientLevelMixin",
-    "SplashManagerMixin",
-    "GuiEntityRendererMixin"
+    "SplashManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

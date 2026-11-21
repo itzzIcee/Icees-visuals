@@ -24,32 +24,58 @@ public final class IceesVisualsClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		IceesConfig.load();
-		VisualPresets.load();
-		IceesKeybinds.register();
+		try {
+			IceesConfig.load();
+		} catch (Throwable t) {
+			LOGGER.error("Config load failed — using defaults", t);
+		}
+		try {
+			VisualPresets.load();
+		} catch (Throwable t) {
+			LOGGER.error("Presets load failed", t);
+		}
+		try {
+			IceesKeybinds.register();
+		} catch (Throwable t) {
+			LOGGER.error("Keybind register failed", t);
+		}
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			while (IceesKeybinds.OPEN_ORBIT.consumeClick()) {
-				if (client.screen == null) {
-					client.setScreen(new OrbitScreen());
+			try {
+				if (IceesKeybinds.OPEN_ORBIT != null) {
+					while (IceesKeybinds.OPEN_ORBIT.consumeClick()) {
+						if (client.screen == null) {
+							client.setScreen(new OrbitScreen());
+						}
+					}
 				}
+				FallParticleRenderer.tick(client);
+				MovementTrailRenderer.tick(client);
+				IceesConfig.applyFullbright(client);
+			} catch (Throwable t) {
+				LOGGER.warn("Client tick visuals failed", t);
 			}
-			FallParticleRenderer.tick(client);
-			MovementTrailRenderer.tick(client);
-			IceesConfig.applyFullbright(client);
 		});
 
-		WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
-		WorldRenderEvents.AFTER_ENTITIES.register(MovementTrailRenderer::render);
-		WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
-		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
+		try {
+			WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
+			WorldRenderEvents.AFTER_ENTITIES.register(MovementTrailRenderer::render);
+			WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
+			WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
+		} catch (Throwable t) {
+			LOGGER.error("World render hooks failed", t);
+		}
 
-		HudElementRegistry.attachElementAfter(
-			VanillaHudElements.MISC_OVERLAYS,
-			Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
-			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
-		);
+		try {
+			HudElementRegistry.attachElementAfter(
+				VanillaHudElements.MISC_OVERLAYS,
+				Identifier.fromNamespaceAndPath(MOD_ID, "motion_blur"),
+				(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
+			);
+		} catch (Throwable t) {
+			LOGGER.error("HUD hook failed", t);
+		}
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.22 — preview cosmetics, saved looks, shield fix");
+		LOGGER.info("Icee's Sakura Visuals 1.0.23 — crash hotfix (safe preview, no GUI entity mixin)");
 	}
 }
