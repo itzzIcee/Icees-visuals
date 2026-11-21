@@ -392,6 +392,11 @@ public final class IceesConfig {
 		} catch (IOException e) {
 			IceesVisualsClient.LOGGER.warn("Failed to save config", e);
 		}
+		try {
+			com.icees.visuals.network.CosmeticClientSync.onConfigChanged();
+		} catch (Throwable ignored) {
+			// Sync is best-effort (e.g. not connected yet).
+		}
 	}
 
 	private static HatStyle migrateHat(String name) {

@@ -20,12 +20,16 @@ public final class CosmeticClientSync {
 		ClientPlayNetworking.registerGlobalReceiver(CosmeticSyncPayload.TYPE, (payload, context) -> {
 			Minecraft client = context.client();
 			if (client.player != null && payload.playerId().equals(client.player.getUUID())) return;
+			if (!payload.state().anyVisible()) {
+				REMOTE.remove(payload.playerId());
+				return;
+			}
 			REMOTE.put(payload.playerId(), payload.state());
 		});
 
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
 			REMOTE.clear();
-			ticksSinceSend = 999;
+			ticksSinceSend = 999; // send ASAP after join
 		});
 
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
@@ -46,7 +50,7 @@ public final class CosmeticClientSync {
 		sendNow(client);
 	}
 
-	/** Call after Orbit saves cosmetics. */
+	/** Push local cosmetics to the server relay (other mod clients). */
 	public static void sendNow(Minecraft client) {
 		if (client == null || client.player == null) return;
 		if (!ClientPlayNetworking.canSend(CosmeticSyncPayload.TYPE)) return;

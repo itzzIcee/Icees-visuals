@@ -2,12 +2,14 @@ package com.icees.visuals.cosmetics;
 
 import com.icees.visuals.IceesVisualsClient;
 import com.icees.visuals.config.IceesConfig;
+import com.icees.visuals.network.CosmeticClientSync;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,11 +18,13 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 /**
  * Third-person cosmetics with distinct 3D models per style, double-sided so visible from every angle.
+ * Local look from {@link IceesConfig}; other mod users via {@link CosmeticClientSync}.
  */
 public final class CosmeticRenderer {
 	private static final Identifier TEX_WING = Identifier.fromNamespaceAndPath("icees-visuals", "textures/cosmetic/wing.png");
@@ -32,6 +36,8 @@ public final class CosmeticRenderer {
 	private static boolean disabledForSession;
 	private static float CR = 1f, CG = 1f, CB = 1f;
 	private static float C2R = 1f, C2G = 1f, C2B = 1f;
+	/** Active look while drawing one player (local or remote). */
+	private static CosmeticState S = CosmeticState.fromLocal();
 
 	private CosmeticRenderer() {}
 
@@ -40,19 +46,19 @@ public final class CosmeticRenderer {
 	}
 
 	private static float[] tintWings(float r, float g, float b, float time) {
-		return IceesConfig.color(IceesConfig.wingTint, r, g, b, gradPhase(time));
+		return IceesConfig.color(S.wingTint, r, g, b, gradPhase(time));
 	}
 
 	private static float[] tintHalo(float r, float g, float b, float time) {
-		return IceesConfig.color(IceesConfig.haloTint, r, g, b, gradPhase(time));
+		return IceesConfig.color(S.haloTint, r, g, b, gradPhase(time));
 	}
 
 	private static float[] tintCape(float r, float g, float b, float time) {
-		return IceesConfig.color(IceesConfig.capeTint, r, g, b, gradPhase(time));
+		return IceesConfig.color(S.capeTint, r, g, b, gradPhase(time));
 	}
 
 	private static float[] tintAura(float r, float g, float b, float time) {
-		return IceesConfig.color(IceesConfig.auraTint, r, g, b, gradPhase(time));
+		return IceesConfig.color(S.auraTint, r, g, b, gradPhase(time));
 	}
 
 
@@ -60,9 +66,8 @@ public final class CosmeticRenderer {
 	public static void render(WorldRenderContext context) {
 		if (disabledForSession) return;
 		Minecraft client = Minecraft.getInstance();
-		LocalPlayer player = client.player;
-		if (player == null || client.level == null) return;
-		if (client.options.getCameraType().isFirstPerson()) return;
+		LocalPlayer self = client.player;
+		if (self == null || client.level == null) return;
 
 		try {
 			MultiBufferSource consumers = context.consumers();
@@ -71,27 +76,39 @@ public final class CosmeticRenderer {
 			if (matrices == null) return;
 
 			float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-			float time = player.tickCount + partial;
 			Camera camera = client.gameRenderer.getMainCamera();
 			Vec3 cam = camera.position();
+			boolean firstPerson = client.options.getCameraType().isFirstPerson();
 
-			double px = Mth.lerp(partial, player.xo, player.getX()) - cam.x;
-			double py = Mth.lerp(partial, player.yo, player.getY()) - cam.y;
-			double pz = Mth.lerp(partial, player.zo, player.getZ()) - cam.z;
-			float bodyYaw = Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot);
-			float headYaw = Mth.rotLerp(partial, player.yHeadRotO, player.yHeadRot);
-			float headPitch = Mth.lerp(partial, player.xRotO, player.getXRot());
-			float headYawRel = Mth.wrapDegrees(headYaw - bodyYaw);
+			for (Player player : client.level.players()) {
+				if (!(player instanceof AbstractClientPlayer)) continue;
+				boolean local = player == self;
+				CosmeticState state;
+				if (local) {
+					if (firstPerson) continue; // hide own cosmetics in first person
+					state = CosmeticState.fromLocal();
+				} else {
+					state = CosmeticClientSync.getRemote(player.getUUID());
+					if (state == null || !state.anyVisible()) continue;
+				}
 
-			float camRelYaw = camera.yRot() - bodyYaw;
-			float camPitch = camera.xRot();
+				float time = player.tickCount + partial;
+				double px = Mth.lerp(partial, player.xo, player.getX()) - cam.x;
+				double py = Mth.lerp(partial, player.yo, player.getY()) - cam.y;
+				double pz = Mth.lerp(partial, player.zo, player.getZ()) - cam.z;
+				float bodyYaw = Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot);
+				float headYaw = Mth.rotLerp(partial, player.yHeadRotO, player.yHeadRot);
+				float headPitch = Mth.lerp(partial, player.xRotO, player.getXRot());
+				float headYawRel = Mth.wrapDegrees(headYaw - bodyYaw);
+				float camRelYaw = camera.yRot() - bodyYaw;
+				float camPitch = camera.xRot();
 
-			matrices.pushPose();
-			matrices.translate(px, py, pz);
-			// Same body frame as LivingEntityRenderer.setupRotations / HumanoidModel
-			matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyYaw));
-			drawAll(matrices, consumers, player, time, camRelYaw, camPitch, headYawRel, headPitch, false);
-			matrices.popPose();
+				matrices.pushPose();
+				matrices.translate(px, py, pz);
+				matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyYaw));
+				drawAll(matrices, consumers, player, state, time, camRelYaw, camPitch, headYawRel, headPitch, false);
+				matrices.popPose();
+			}
 		} catch (Throwable t) {
 			disabledForSession = true;
 			IceesVisualsClient.LOGGER.error("Cosmetics crashed — disabled for this session", t);
@@ -110,37 +127,35 @@ public final class CosmeticRenderer {
 		if (player == null) return;
 		float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
 		float time = player.tickCount + partial;
-		// living.yRot / xRot are already the head pose HumanoidModel uses
 		float headYawRel = living.yRot;
 		float headPitch = living.xRot;
 		matrices.pushPose();
-		// Match LivingEntityRenderer.setupRotations so cape/hat sit on the entity
 		matrices.mulPose(Axis.YP.rotationDegrees(180f - living.bodyRot));
-		drawAll(matrices, buffers, player, time, 0f, 0f, headYawRel, headPitch, true);
+		drawAll(matrices, buffers, player, CosmeticState.fromLocal(), time, 0f, 0f, headYawRel, headPitch, true);
 		matrices.popPose();
 	}
 
-	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
-		float time, float camRelYaw, float camPitch, float headYawRel, float headPitch, boolean preview) {
-		float bright = IceesConfig.brightnessFactor() * (preview ? 1.15f : 1f);
-		// HumanoidModel crouch: head.y += 4.2, body.y += 3.2 (model units / 16)
+	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, Player player,
+		CosmeticState state, float time, float camRelYaw, float camPitch, float headYawRel, float headPitch, boolean preview) {
+		S = state;
+		float bright = state.brightnessFactor() * (preview ? 1.15f : 1f);
 		boolean crouch = !preview && player.isCrouching();
 		float headDrop = crouch ? 4.2f / 16f : 0f;
 		float bodyDrop = crouch ? 3.2f / 16f : 0f;
-		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), bodyDrop);
-		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize), bodyDrop);
-		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headDrop);
-		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, crouch);
-		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
-		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
-			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
+		if (state.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.capeSize), bodyDrop);
+		if (state.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.wingSize), bodyDrop);
+		if (state.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.haloSize), headDrop);
+		if (state.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.hatSize), headYawRel, headPitch, crouch);
+		if (state.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.auraSize), camRelYaw, camPitch);
+		if (state.jumpCircles && (preview || !player.onGround())) {
+			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(state.jumpCircleSize));
 		}
 	}
 
 	/* ===================== WINGS — distinct models ===================== */
 
 	private static void drawWings(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
-		WingStyle style = IceesConfig.wingStyle;
+		WingStyle style = S.wingStyle;
 		float[] col = tintWings(style.r, style.g, style.b, time);
 		CR = col[0]; CG = col[1]; CB = col[2];
 		float beat = Mth.sin(time * 0.22f) * 0.35f;
@@ -337,7 +352,7 @@ public final class CosmeticRenderer {
 	private static float hatGradT = 0.5f;
 
 	private static float[] hatColor(float baseR, float baseG, float baseB) {
-		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB, hatGradT);
+		return IceesConfig.color(S.hatTint, baseR, baseG, baseB, hatGradT);
 	}
 
 	/**
@@ -348,7 +363,7 @@ public final class CosmeticRenderer {
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
 		float headYawRel, float headPitch, boolean crouch) {
 		hatGradT = gradPhase(time);
-		HatStyle style = IceesConfig.hatStyle;
+		HatStyle style = S.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
 		// LivingEntityRenderer after setupRotations:
@@ -561,7 +576,7 @@ public final class CosmeticRenderer {
 	/** Halo stays level (no head look) but drops with sneak. */
 	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
 		float headDrop) {
-		HaloStyle style = IceesConfig.haloStyle;
+		HaloStyle style = S.haloStyle;
 		float[] c = tintHalo(style.r, style.g, style.b, time); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
@@ -714,7 +729,7 @@ public final class CosmeticRenderer {
 	/* ===================== CAPE — distinct models ===================== */
 
 	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
-		CapeStyle style = IceesConfig.capeStyle;
+		CapeStyle style = S.capeStyle;
 		float[] c1 = tintCape(style.r1, style.g1, style.b1, time); CR = c1[0]; CG = c1[1]; CB = c1[2];
 		float[] c2 = tintCape(style.r2, style.g2, style.b2, time + 1.7f); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
 		float sway = Mth.sin(time * 0.16f) * 0.2f;
@@ -807,7 +822,7 @@ public final class CosmeticRenderer {
 	/* ===================== AURA ===================== */
 
 	private static void drawAura(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw, float camPitch) {
-		AuraStyle style = IceesConfig.auraStyle;
+		AuraStyle style = S.auraStyle;
 		float[] c = tintAura(style.r, style.g, style.b, time); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		float aMul = Math.min(1f, 0.9f * bright);
@@ -946,13 +961,13 @@ public final class CosmeticRenderer {
 	}
 
 	private static void drawJumpCircles(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
-		JumpCircleStyle style = IceesConfig.jumpCircleStyle;
+		JumpCircleStyle style = S.jumpCircleStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-		float[] c = IceesConfig.color(IceesConfig.jumpTint, 1f, 0.75f, 0.88f, gradPhase(time));
-		float speed = 0.55f + IceesConfig.jumpCircleSpeed * 0.18f;
+		float[] c = IceesConfig.color(S.jumpTint, 1f, 0.75f, 0.88f, gradPhase(time));
+		float speed = 0.55f + S.jumpCircleSpeed * 0.18f;
 		float size = thick;
-		int rings = Math.max(1, IceesConfig.jumpCircleCount);
+		int rings = Math.max(1, S.jumpCircleCount);
 		float cycle = 22f / speed;
 		float phase = (time % cycle) / cycle;
 

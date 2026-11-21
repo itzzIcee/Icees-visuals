@@ -1,8 +1,10 @@
 package com.icees.visuals.network;
 
+import com.icees.visuals.cosmetics.CosmeticState;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
@@ -25,12 +27,7 @@ public final class CosmeticNetwork {
 			ServerPlayer sender = context.player();
 			CosmeticSyncPayload stamped = new CosmeticSyncPayload(sender.getUUID(), payload.state());
 			CACHE.put(sender.getUUID(), stamped);
-			for (ServerPlayer other : sender.level().getServer().getPlayerList().getPlayers()) {
-				if (other.getUUID().equals(sender.getUUID())) continue;
-				if (ServerPlayNetworking.canSend(other, CosmeticSyncPayload.TYPE)) {
-					ServerPlayNetworking.send(other, stamped);
-				}
-			}
+			relay(sender.level().getServer(), stamped, sender.getUUID());
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -46,8 +43,21 @@ public final class CosmeticNetwork {
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			CACHE.remove(handler.getPlayer().getUUID());
+			UUID id = handler.getPlayer().getUUID();
+			CACHE.remove(id);
+			relay(server, new CosmeticSyncPayload(id, CosmeticState.cleared()), null);
 		});
+	}
+
+	/** Send to every mod client except {@code except} (null = everyone). */
+	private static void relay(MinecraftServer server, CosmeticSyncPayload payload, UUID except) {
+		if (server == null) return;
+		for (ServerPlayer other : server.getPlayerList().getPlayers()) {
+			if (except != null && other.getUUID().equals(except)) continue;
+			if (ServerPlayNetworking.canSend(other, CosmeticSyncPayload.TYPE)) {
+				ServerPlayNetworking.send(other, payload);
+			}
+		}
 	}
 
 	public static void clearCache() {

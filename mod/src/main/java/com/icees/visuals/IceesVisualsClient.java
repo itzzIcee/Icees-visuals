@@ -8,6 +8,7 @@ import com.icees.visuals.cpvp.MotionBlurRenderer;
 import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
 import com.icees.visuals.keybind.IceesKeybinds;
+import com.icees.visuals.network.CosmeticClientSync;
 import com.icees.visuals.overlay.BlockOverlayRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -39,6 +40,11 @@ public final class IceesVisualsClient implements ClientModInitializer {
 		} catch (Throwable t) {
 			LOGGER.error("Keybind register failed", t);
 		}
+		try {
+			CosmeticClientSync.register();
+		} catch (Throwable t) {
+			LOGGER.error("Cosmetic sync register failed", t);
+		}
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			try {
@@ -51,6 +57,7 @@ public final class IceesVisualsClient implements ClientModInitializer {
 				}
 				FallParticleRenderer.tick(client);
 				MovementTrailRenderer.tick(client);
+				CosmeticClientSync.tick(client);
 				IceesConfig.applyFullbright(client);
 			} catch (Throwable t) {
 				LOGGER.warn("Client tick visuals failed", t);
@@ -76,6 +83,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			LOGGER.error("HUD hook failed", t);
 		}
 
-		LOGGER.info("Icee's Visuals 1.0.51");
+		LOGGER.info("Icee's Visuals 1.0.52 — cosmetics sync between players");
 	}
 }

@@ -3,12 +3,13 @@
   "id": "icees-visuals",
   "version": "${version}",
   "name": "Icee's Visuals",
-  "description": "Visuals client for Fabric 1.21.11: fall themes, cosmetics and Orbit menu.",
+  "description": "Visuals client for Fabric 1.21.11: fall themes, cosmetics and Orbit menu. Cosmetics sync when others have the mod (server needs the mod too).",
   "authors": ["Icee"],
   "license": "MIT",
   "icon": "assets/icees-visuals/icon.png",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": ["com.icees.visuals.IceesVisuals"],
     "client": ["com.icees.visuals.IceesVisualsClient"]
   },
   "mixins": [

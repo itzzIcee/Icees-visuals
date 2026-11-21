@@ -14,6 +14,6 @@ public final class IceesVisuals implements ModInitializer {
 	public void onInitialize() {
 		CosmeticNetwork.registerCommon();
 		CosmeticNetwork.registerServer();
-		LOGGER.info("Icee's Sakura Visuals — cosmetic sync relay ready");
+		LOGGER.info("Icee's Visuals — cosmetic sync relay ready");
 	}
 }
