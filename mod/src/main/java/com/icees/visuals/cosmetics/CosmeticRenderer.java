@@ -18,6 +18,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 /**
  * Third-person cosmetics with distinct 3D models per style, double-sided so visible from every angle.
  */
@@ -345,10 +346,11 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Follow head fully; pitch sign matches the previous (correct) lean convention
+		// Full head follow — same Euler order/signs as HumanoidModel.head (yRot / xRot).
 		matrices.translate(0, 1.5f - headDrop, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
+		float yawRad = headYawRel * Mth.DEG_TO_RAD;
+		float pitchRad = headPitch * Mth.DEG_TO_RAD;
+		matrices.mulPose(new Quaternionf().rotationZYX(0f, yawRad, pitchRad));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
