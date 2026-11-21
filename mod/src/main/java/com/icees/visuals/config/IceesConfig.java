@@ -68,12 +68,13 @@ public final class IceesConfig {
 	public static int cosmeticHue = 330;
 	public static int cosmeticSat = 70;
 	public static int cosmeticVal = 100;
-	/** Per-cosmetic colours (hats stay natural — no tint). */
+	/** Per-cosmetic colours. */
 	public static CosmeticTint wingTint = new CosmeticTint(true, 330, 70, 100);
 	public static CosmeticTint haloTint = new CosmeticTint(true, 320, 65, 100);
 	public static CosmeticTint capeTint = new CosmeticTint(true, 330, 70, 100);
 	public static CosmeticTint auraTint = new CosmeticTint(true, 310, 70, 100);
 	public static CosmeticTint shieldTint = new CosmeticTint(true, 330, 55, 100);
+	public static CosmeticTint hatTint = new CosmeticTint(true, 40, 55, 90);
 
 	/* —— Block Overlay —— */
 	public static boolean blockOverlay = true;
@@ -290,6 +291,7 @@ public final class IceesConfig {
 			capeTint.loadFrom(data.capeTint, legacy);
 			auraTint.loadFrom(data.auraTint, legacy);
 			shieldTint.loadFrom(data.shieldTint, legacy);
+			hatTint.loadFrom(data.hatTint, new CosmeticTint(true, 40, 55, 90));
 
 			blockOverlay = data.blockOverlay;
 			overlayMaterial = OverlayMaterial.fromSaved(data.overlayMaterial);
@@ -348,6 +350,7 @@ public final class IceesConfig {
 		data.capeTint = capeTint.copy();
 		data.auraTint = auraTint.copy();
 		data.shieldTint = shieldTint.copy();
+		data.hatTint = hatTint.copy();
 		data.blockOverlay = blockOverlay;
 		data.overlayMaterial = overlayMaterial.name();
 		data.overlayBrightness = overlayBrightness;
@@ -392,7 +395,7 @@ public final class IceesConfig {
 		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
 		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
-		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
+		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint; CosmeticTint hatTint;
 		boolean blockOverlay = true; String overlayMaterial = "RAINBOW"; int overlayBrightness = 3;
 		boolean overlayCustomColor = false; int overlayHue = 330; int overlaySat = 70; int overlayVal = 100;
 		boolean motionBlur = false; int motionBlurStrength = 2;

@@ -1,6 +1,6 @@
 package com.icees.visuals.cosmetics;
 
-/** Hats — straw / woven stay natural (no HSV); others use cape tint soft colours. */
+/** Hats — all styles use hatTint for colour. */
 public enum HatStyle {
 	STRAW_RED("Straw Hat · Red Band", true),
 	STRAW_BROWN("Straw Hat · Brown Band", true),
@@ -11,7 +11,7 @@ public enum HatStyle {
 	CROWN_BRIM("Crown Brim", false);
 
 	public final String title;
-	/** Natural woven colour — skip HSV tint. */
+	/** Legacy flag — tint is always available now. */
 	public final boolean natural;
 
 	HatStyle(String title, boolean natural) {

@@ -302,12 +302,7 @@ public class OrbitScreen extends Screen {
 			addHit(cx + cw - 24, y, 24, 18, "›", false, this::cycleForm);
 			y += 22;
 
-			if (pick == CosmeticPick.HAT && IceesConfig.hatStyle.natural) {
-				addHit(cx, y, cw, 16, "Natural colour (no tint)", false, () -> {});
-				y += 20;
-			} else {
-				y = addTintControls(cx, y, cw, tintOf(pick));
-			}
+			y = addTintControls(cx, y, cw, tintOf(pick));
 		}
 
 		y += 4;
@@ -507,7 +502,8 @@ public class OrbitScreen extends Screen {
 			case CAPE -> IceesConfig.capeTint;
 			case AURA, TRAIL -> IceesConfig.auraTint;
 			case SHIELD -> IceesConfig.shieldTint;
-			case HAT, JUMP -> IceesConfig.auraTint;
+			case HAT -> IceesConfig.hatTint;
+			case JUMP -> IceesConfig.auraTint;
 		};
 	}
 

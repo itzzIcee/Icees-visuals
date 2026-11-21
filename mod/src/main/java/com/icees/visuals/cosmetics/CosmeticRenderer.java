@@ -303,6 +303,10 @@ public final class CosmeticRenderer {
 
 	/* ===================== HATS ===================== */
 
+	private static float[] hatColor(float baseR, float baseG, float baseB) {
+		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB);
+	}
+
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
@@ -324,19 +328,19 @@ public final class CosmeticRenderer {
 
 	private static void drawTopHat(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
-		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.12f, 0.10f, 0.14f);
+		float[] tint = hatColor(0.12f, 0.10f, 0.14f);
 		float r = tint[0], g = tint[1], b = tint[2];
+		float[] band = hatColor(0.75f, 0.2f, 0.28f);
 		float u = 0.08f * s;
 		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0, 0, 0.38f * s, u, 20, r, g, b, a);
 		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, u, 0, 0.22f * s, 0.48f * s, 16, r * 1.08f, g * 1.08f, b * 1.08f, a);
-		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, u + 0.02f * s, 0, 0.24f * s, 0.08f * s, 16, 0.75f, 0.2f, 0.28f, a);
+		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, u + 0.02f * s, 0, 0.24f * s, 0.08f * s, 16, band[0], band[1], band[2], a);
 	}
 
 	private static void drawBeanie(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
-		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.85f, 0.35f, 0.50f);
+		float[] tint = hatColor(0.85f, 0.35f, 0.50f);
 		float r = tint[0], g = tint[1], b = tint[2];
-		// Stacked round discs — no square gaps
 		for (int i = 0; i < 5; i++) {
 			float t = i / 4f;
 			float rad = (0.30f - t * 0.08f) * s;
@@ -344,12 +348,12 @@ public final class CosmeticRenderer {
 			float y1 = y0 + 0.09f * s;
 			MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, y0, 0, rad, y1 - y0, 16, r * (1f - t * 0.08f), g * (1f - t * 0.08f), b * (1f - t * 0.08f), a);
 		}
-		billboardOrb(m, vc, 0, 0.42f * s, 0, 0.09f * s, 1f, 0.85f, 0.9f, a, 0f);
+		billboardOrb(m, vc, 0, 0.42f * s, 0, 0.09f * s, Math.min(1f, r + 0.15f), Math.min(1f, g + 0.15f), Math.min(1f, b + 0.1f), a, 0f);
 	}
 
 	private static void drawBeret(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
-		float[] tint = IceesConfig.color(IceesConfig.capeTint, 0.55f, 0.18f, 0.22f);
+		float[] tint = hatColor(0.55f, 0.18f, 0.22f);
 		float r = tint[0], g = tint[1], b = tint[2];
 		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0.02f * s, 0, 0.36f * s, 0.12f * s, 20, r, g, b, a);
 		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0.12f * s, 0.08f * s, 0, 0.14f * s, 0.1f * s, 12, r * 0.9f, g * 0.9f, b * 0.9f, a);
@@ -357,7 +361,7 @@ public final class CosmeticRenderer {
 
 	private static void drawCrownBrim(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float a = Math.min(1f, 0.95f * bright);
-		float[] tint = IceesConfig.color(IceesConfig.haloTint, 1f, 0.82f, 0.4f);
+		float[] tint = hatColor(1f, 0.82f, 0.4f);
 		float r = tint[0], g = tint[1], b = tint[2];
 		MeshPrims.cylinder(m, vc, LightTexture.FULL_BRIGHT, 0, 0, 0, 0.34f * s, 0.08f * s, 20, r, g, b, a);
 		for (int i = 0; i < 8; i++) {
@@ -368,17 +372,19 @@ public final class CosmeticRenderer {
 		}
 	}
 
-	/**
-	 * Blockbench / DualPrac-style voxel straw hat — stepped brim, box crown, band.
-	 * Natural straw colours only (no HSV).
-	 */
+	/** Voxel straw hat — body + band respect hatTint. */
 	private static void drawVoxelStrawHat(PoseStack m, VertexConsumer vc, float s, float bright,
 		float bandR, float bandG, float bandB) {
-		float u = 0.0625f * s; // 1px in player-model space
+		float u = 0.0625f * s;
 		float a = Math.min(1f, 0.98f * bright);
-		float s0r = 0.93f, s0g = 0.80f, s0b = 0.48f; // light straw
-		float s1r = 0.82f, s1g = 0.66f, s1b = 0.34f; // mid
-		float s2r = 0.70f, s2g = 0.54f, s2b = 0.26f; // dark
+		float[] light = hatColor(0.93f, 0.80f, 0.48f);
+		float[] mid = hatColor(0.82f, 0.66f, 0.34f);
+		float[] dark = hatColor(0.70f, 0.54f, 0.26f);
+		float[] band = hatColor(bandR, bandG, bandB);
+		float s0r = light[0], s0g = light[1], s0b = light[2];
+		float s1r = mid[0], s1g = mid[1], s1b = mid[2];
+		float s2r = dark[0], s2g = dark[1], s2b = dark[2];
+		bandR = band[0]; bandG = band[1]; bandB = band[2];
 
 		// Stepped circular brim (voxel ring masks)
 		int[][] brim = {
@@ -454,8 +460,10 @@ public final class CosmeticRenderer {
 	private static void drawChinaHat(PoseStack m, VertexConsumer vc, float s, float bright) {
 		float r0 = 0.62f * s;
 		float h = 0.42f * s;
-		float bambooR = 0.78f, bambooG = 0.68f, bambooB = 0.42f;
-		float tipR = 0.55f, tipG = 0.45f, tipB = 0.28f;
+		float[] bamboo = hatColor(0.78f, 0.68f, 0.42f);
+		float[] tip = hatColor(0.55f, 0.45f, 0.28f);
+		float bambooR = bamboo[0], bambooG = bamboo[1], bambooB = bamboo[2];
+		float tipR = tip[0], tipG = tip[1], tipB = tip[2];
 		float a = Math.min(1f, 0.95f * bright);
 		int rings = 6;
 		int segs = 16;
@@ -727,40 +735,40 @@ public final class CosmeticRenderer {
 	private static void drawShieldPlate(PoseStack matrices, VertexConsumer vc, VertexConsumer glow,
 		ShieldStyle style, float[] c, float bright, float thick, float time, float side, float raise) {
 		matrices.pushPose();
-		// Arm / offhand position — larger, readable from F5
-		matrices.translate(side * 0.55f * thick, 0.95f + raise * 0.25f, 0.28f + raise * 0.15f);
-		matrices.mulPose(Axis.YP.rotationDegrees(side * -55f));
-		matrices.mulPose(Axis.XP.rotationDegrees(-12f - raise * 25f));
-		matrices.mulPose(Axis.ZP.rotationDegrees(side * (6f + Mth.sin(time * 0.15f) * 2f)));
+		// Sit on the arm — X must NOT scale with size or it flies off the body
+		float armX = side * 0.28f;
+		float armY = 0.92f + raise * 0.12f;
+		float armZ = 0.08f + raise * 0.35f;
+		matrices.translate(armX, armY, armZ);
+		matrices.mulPose(Axis.YP.rotationDegrees(side * (-20f - raise * 35f)));
+		matrices.mulPose(Axis.XP.rotationDegrees(-8f - raise * 40f));
+		matrices.mulPose(Axis.ZP.rotationDegrees(side * 4f));
 
+		// Size only grows the plate, not the attach point
+		float s = 0.75f + (thick - 1f) * 0.35f;
 		float w = switch (style) {
-			case TOWER -> 0.38f * thick;
-			case KITE -> 0.42f * thick;
-			case ROUND -> 0.48f * thick;
-			default -> 0.44f * thick;
+			case TOWER -> 0.22f * s;
+			case KITE -> 0.26f * s;
+			case ROUND -> 0.28f * s;
+			default -> 0.25f * s;
 		};
 		float h = switch (style) {
-			case TOWER -> 0.95f * thick;
-			case KITE -> 0.78f * thick;
-			case ROUND -> 0.7f * thick;
-			default -> 0.72f * thick;
+			case TOWER -> 0.55f * s;
+			case KITE -> 0.48f * s;
+			case ROUND -> 0.42f * s;
+			default -> 0.45f * s;
 		};
 
 		float a = 0.95f * bright;
-		// Face + back so it's visible from every angle
-		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.06f, c[0], c[1], c[2], a);
-		sheet(matrices, vc, -w, -h * 0.5f, 0.06f, w, h * 0.5f, 0, c[0] * 0.75f, c[1] * 0.75f, c[2] * 0.8f, a * 0.85f);
-		sheetYZ(matrices, vc, -w, -h * 0.5f, -0.02f, -w, h * 0.5f, 0.08f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.8f);
-		sheetYZ(matrices, vc, w, -h * 0.5f, -0.02f, w, h * 0.5f, 0.08f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.8f);
+		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.05f, c[0], c[1], c[2], a);
+		sheet(matrices, vc, -w, -h * 0.5f, 0.05f, w, h * 0.5f, 0, c[0] * 0.75f, c[1] * 0.75f, c[2] * 0.8f, a * 0.85f);
+		sheetYZ(matrices, vc, -w, -h * 0.5f, 0, -w, h * 0.5f, 0.05f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.75f);
+		sheetYZ(matrices, vc, w, -h * 0.5f, 0, w, h * 0.5f, 0.05f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.75f);
 
-		// Soft outer glow
-		sheet(matrices, glow, -w * 1.2f, -h * 0.55f, -0.04f, w * 1.2f, h * 0.55f, 0.1f,
-			c[0], c[1], c[2], 0.35f * bright);
-		billboardOrb(matrices, glow, 0, 0, 0.08f, 0.18f * thick, c[0], c[1], c[2], bright, time);
-
-		if (style == ShieldStyle.CRYSTAL || style == ShieldStyle.SAKURA) {
-			billboardOrb(matrices, glow, 0, h * 0.15f, 0.1f, 0.1f * thick, c[0], c[1], c[2], bright * 1.1f, time);
-		}
+		sheet(matrices, glow, -w * 1.15f, -h * 0.55f, -0.02f, w * 1.15f, h * 0.55f, 0.07f,
+			c[0], c[1], c[2], 0.3f * bright);
+		// Soft center gem — keep small so it doesn't look like a floating orb away from body
+		billboardOrb(matrices, glow, 0, 0, 0.04f, 0.08f * s, c[0], c[1], c[2], bright * 0.85f, time);
 		matrices.popPose();
 	}
 

@@ -1,7 +1,7 @@
 package com.icees.visuals.config;
 
 /**
- * Per-cosmetic colour channel. Hats stay natural and never use a tint.
+ * Per-cosmetic colour channel (Hue / Sat / Val).
  */
 public final class CosmeticTint {
 	public boolean enabled;

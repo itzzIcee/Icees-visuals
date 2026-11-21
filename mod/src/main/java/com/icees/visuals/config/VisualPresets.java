@@ -132,6 +132,7 @@ public final class VisualPresets {
 		s.capeTint = IceesConfig.capeTint.copy();
 		s.auraTint = IceesConfig.auraTint.copy();
 		s.shieldTint = IceesConfig.shieldTint.copy();
+		s.hatTint = IceesConfig.hatTint.copy();
 		s.fallTheme = IceesConfig.fallTheme.name();
 		s.fallIntensity = IceesConfig.fallIntensity;
 		s.fallSize = IceesConfig.fallSize;
@@ -177,6 +178,7 @@ public final class VisualPresets {
 		applyTint(IceesConfig.capeTint, s.capeTint);
 		applyTint(IceesConfig.auraTint, s.auraTint);
 		applyTint(IceesConfig.shieldTint, s.shieldTint);
+		applyTint(IceesConfig.hatTint, s.hatTint);
 		IceesConfig.fallTheme = enumOr(FallTheme.class, s.fallTheme, FallTheme.SAKURA_FALL);
 		if (s.fallIntensity >= 1) IceesConfig.fallIntensity = IceesConfig.clamp10(s.fallIntensity);
 		if (s.fallSize >= 1) IceesConfig.fallSize = IceesConfig.clamp10(s.fallSize);
@@ -231,7 +233,7 @@ public final class VisualPresets {
 		int jumpCircleSize = 5; int jumpCircleSpeed = 5; int jumpCircleCount = 4;
 		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		int cosmeticBrightness = 7;
-		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;
+		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint; CosmeticTint hatTint;
 		String fallTheme = "SAKURA_FALL";
 		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
 		int fallRangeChunks = 3; int fallOpacity = 7;
