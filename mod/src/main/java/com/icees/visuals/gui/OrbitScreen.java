@@ -58,6 +58,7 @@ public class OrbitScreen extends Screen {
 	@Override
 	protected void init() {
 		listeningKey = false;
+		CosmeticPreviewGate.active = true;
 		rebuildHits();
 	}
 
@@ -287,7 +288,7 @@ public class OrbitScreen extends Screen {
 		} else if (pick == CosmeticPick.TRAIL) {
 			addHit(cx, y, cw, 16, "Leaves a soft glow while you walk / run", false, () -> {});
 			y += 20;
-			y = addTintControls(cx, y, cw, IceesConfig.auraTint);
+			y = addTintControlsFor(cx, y, cw, CosmeticPick.TRAIL);
 		} else if (pick == CosmeticPick.SHIELD) {
 			addHit(cx, y, cw, 16, "Only visible while a Minecraft shield is in your hand", false, () -> {});
 			y += 20;
@@ -295,14 +296,14 @@ public class OrbitScreen extends Screen {
 			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
 			addHit(cx + cw - 24, y, 24, 18, "›", false, this::cycleForm);
 			y += 22;
-			y = addTintControls(cx, y, cw, IceesConfig.shieldTint);
+			y = addTintControlsFor(cx, y, cw, CosmeticPick.SHIELD);
 		} else {
 			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
 			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
 			addHit(cx + cw - 24, y, 24, 18, "›", false, this::cycleForm);
 			y += 22;
 
-			y = addTintControls(cx, y, cw, tintOf(pick));
+			y = addTintControlsFor(cx, y, cw, pick);
 		}
 
 		y += 4;
@@ -336,20 +337,25 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
-	private int addTintControls(int x, int y, int w, CosmeticTint tint) {
-		addHit(x, y, w, 16, "Colour  ·  " + onOff(tint.enabled), tint.enabled, tint::toggle);
+	/** Tint editors always write the tint for {@code which} — never bleed into wings/etc. */
+	private int addTintControlsFor(int x, int y, int w, CosmeticPick which) {
+		CosmeticTint tint = tintOf(which);
+		addHit(x, y, w, 16, "Colour  ·  " + onOff(tint.enabled), tint.enabled, () -> tintOf(which).toggle());
 		y += 18;
 		y = addStepper(x, y, w, "Hue", tint.hue, 355, v -> {
-			tint.hue = Math.floorMod(v, 360);
-			tint.enabled = true;
+			CosmeticTint t = tintOf(which);
+			t.hue = Math.floorMod(v, 360);
+			t.enabled = true;
 		}, 5);
 		y = addStepper(x, y, w, "Sat", tint.sat, 100, v -> {
-			tint.sat = Math.max(0, Math.min(100, v));
-			tint.enabled = true;
+			CosmeticTint t = tintOf(which);
+			t.sat = Math.max(0, Math.min(100, v));
+			t.enabled = true;
 		});
 		return addStepper(x, y, w, "Val", tint.val, 100, v -> {
-			tint.val = Math.max(0, Math.min(100, v));
-			tint.enabled = true;
+			CosmeticTint t = tintOf(which);
+			t.val = Math.max(0, Math.min(100, v));
+			t.enabled = true;
 		});
 	}
 
@@ -569,12 +575,11 @@ public class OrbitScreen extends Screen {
 			graphics.fill(px, py, px + 128, py + 180, ARGB.colorFromFloat(0.18f, accent[0], accent[1], accent[2]));
 			graphics.drawString(this.font, "preview", px + 8, py + 6, SakuraTheme.muted(), false);
 			if (this.minecraft != null && this.minecraft.player != null) {
+				CosmeticPreviewGate.active = true;
 				InventoryScreen.renderEntityInInventoryFollowsMouse(
 					graphics, px + 8, py + 22, px + 120, py + 172, 48, 0.0625F, mouseX, mouseY, this.minecraft.player);
-				float t = this.minecraft.player.tickCount + delta;
-				CosmeticPreviewOverlay.draw(graphics, px + 8, py + 22, 112, 150, t);
 			}
-			graphics.drawString(this.font, "skin + cosmetics", px + 8, py + 164, SakuraTheme.muted(), false);
+			CosmeticPreviewOverlay.drawLabels(graphics, this.font, px + 4, py + 168, 120);
 		}
 
 		for (Hit hit : hits) {
@@ -648,6 +653,7 @@ public class OrbitScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		CosmeticPreviewGate.active = false;
 		IceesConfig.save();
 		super.onClose();
 	}

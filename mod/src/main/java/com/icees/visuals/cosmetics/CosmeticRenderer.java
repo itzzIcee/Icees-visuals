@@ -76,6 +76,9 @@ public final class CosmeticRenderer {
 			double py = Mth.lerp(partial, player.yo, player.getY()) - cam.y;
 			double pz = Mth.lerp(partial, player.zo, player.getZ()) - cam.z;
 			float bodyYaw = Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot);
+			float headYaw = Mth.rotLerp(partial, player.yHeadRotO, player.yHeadRot);
+			float headPitch = Mth.lerp(partial, player.xRotO, player.getXRot());
+			float headYawRel = Mth.wrapDegrees(headYaw - bodyYaw);
 
 			float camRelYaw = camera.yRot() - bodyYaw;
 			float camPitch = camera.xRot();
@@ -83,7 +86,7 @@ public final class CosmeticRenderer {
 			matrices.pushPose();
 			matrices.translate(px, py, pz);
 			matrices.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
-			drawAll(matrices, consumers, player, time, camRelYaw, camPitch);
+			drawAll(matrices, consumers, player, time, camRelYaw, camPitch, headYawRel, headPitch, false);
 			matrices.popPose();
 		} catch (Throwable t) {
 			disabledForSession = true;
@@ -91,18 +94,36 @@ public final class CosmeticRenderer {
 		}
 	}
 
+	/** Real 3D cosmetics inside the Orbit skin preview (same pose as the GUI entity). */
+	public static void renderInGuiPreview(PoseStack matrices, MultiBufferSource buffers, float bodyRot) {
+		if (disabledForSession || buffers == null) return;
+		Minecraft client = Minecraft.getInstance();
+		LocalPlayer player = client.player;
+		if (player == null) return;
+		float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+		float time = player.tickCount + partial;
+		float headYaw = Mth.rotLerp(partial, player.yHeadRotO, player.yHeadRot);
+		float headPitch = Mth.lerp(partial, player.xRotO, player.getXRot());
+		// bodyRot matches inventory preview; head relative to that facing
+		float headYawRel = Mth.wrapDegrees(headYaw - player.yBodyRot);
+		matrices.pushPose();
+		matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyRot));
+		drawAll(matrices, buffers, player, time, 0f, 0f, headYawRel, headPitch, true);
+		matrices.popPose();
+	}
+
 	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
-		float time, float camRelYaw, float camPitch) {
-		float bright = IceesConfig.brightnessFactor();
+		float time, float camRelYaw, float camPitch, float headYawRel, float headPitch, boolean preview) {
+		float bright = IceesConfig.brightnessFactor() * (preview ? 1.15f : 1f);
 		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
 		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
-		if (IceesConfig.shield && holdingMinecraftShield(player)) {
-			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize));
+		if (IceesConfig.shield && (preview || holdingMinecraftShield(player))) {
+			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize), preview);
 		}
-		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize));
-		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize));
+		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headYawRel, headPitch);
+		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch);
 		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
-		if (IceesConfig.jumpCircles && !player.onGround()) {
+		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
 			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
 		}
 	}
@@ -307,11 +328,16 @@ public final class CosmeticRenderer {
 		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB);
 	}
 
-	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
+		float headYawRel, float headPitch) {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		matrices.translate(0, 1.72f + 0.04f * thick, 0);
+		// Follow head look — pivot at neck, then sit on crown
+		matrices.translate(0, 1.5f, 0);
+		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
+		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
@@ -505,13 +531,17 @@ public final class CosmeticRenderer {
 
 	/* ===================== HALO — distinct models ===================== */
 
-	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
+		float headYawRel, float headPitch) {
 		HaloStyle style = IceesConfig.haloStyle;
 		float[] c = tintHalo(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
-		matrices.translate(0, 2.05f + 0.08f * thick, 0);
+		matrices.translate(0, 1.5f, 0);
+		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
+		matrices.translate(0, 0.55f + 0.08f * thick, 0);
 
 		switch (style) {
 			case BLOSSOM -> {
@@ -713,62 +743,70 @@ public final class CosmeticRenderer {
 	}
 
 	/**
-	 * Glowing shield plate on the arm that holds a Minecraft shield.
+	 * Solid shield plate on the arm that holds a Minecraft shield.
 	 * Only drawn while a shield is in hand — see holdingMinecraftShield.
 	 */
 	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, LocalPlayer player,
-		float time, float bright, float thick) {
+		float time, float bright, float thick, boolean preview) {
 		ShieldStyle style = IceesConfig.shieldStyle;
 		float[] c = IceesConfig.color(IceesConfig.shieldTint, style.r, style.g, style.b);
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
-		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 
 		boolean main = isShieldStack(player.getMainHandItem());
 		boolean off = isShieldStack(player.getOffhandItem());
 		boolean blocking = player.isBlocking();
-		float raise = blocking ? 1f : 0.35f;
+		float raise = blocking ? 1f : 0.25f;
 
-		if (off) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, -1f, raise);
-		if (main) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, 1f, raise);
+		if (preview && !main && !off) {
+			drawShieldPlate(matrices, vc, style, c, bright, thick, -1f, 0.45f);
+			return;
+		}
+		if (off) drawShieldPlate(matrices, vc, style, c, bright, thick, -1f, raise);
+		if (main) drawShieldPlate(matrices, vc, style, c, bright, thick, 1f, raise);
 	}
 
-	private static void drawShieldPlate(PoseStack matrices, VertexConsumer vc, VertexConsumer glow,
-		ShieldStyle style, float[] c, float bright, float thick, float time, float side, float raise) {
+	/** Clean box shield — no jagged sheets / floating orbs. */
+	private static void drawShieldPlate(PoseStack matrices, VertexConsumer vc,
+		ShieldStyle style, float[] c, float bright, float thick, float side, float raise) {
 		matrices.pushPose();
-		// Sit on the arm — X must NOT scale with size or it flies off the body
-		float armX = side * 0.28f;
-		float armY = 0.92f + raise * 0.12f;
-		float armZ = 0.08f + raise * 0.35f;
+		float armX = side * 0.22f;
+		float armY = 0.88f + raise * 0.08f;
+		float armZ = 0.02f + raise * 0.42f;
 		matrices.translate(armX, armY, armZ);
-		matrices.mulPose(Axis.YP.rotationDegrees(side * (-20f - raise * 35f)));
-		matrices.mulPose(Axis.XP.rotationDegrees(-8f - raise * 40f));
-		matrices.mulPose(Axis.ZP.rotationDegrees(side * 4f));
+		matrices.mulPose(Axis.YP.rotationDegrees(side * (-12f - raise * 50f)));
+		matrices.mulPose(Axis.XP.rotationDegrees(-6f - raise * 35f));
 
-		// Size only grows the plate, not the attach point
-		float s = 0.75f + (thick - 1f) * 0.35f;
+		float s = 0.7f + (thick - 1f) * 0.25f;
 		float w = switch (style) {
-			case TOWER -> 0.22f * s;
-			case KITE -> 0.26f * s;
-			case ROUND -> 0.28f * s;
-			default -> 0.25f * s;
+			case TOWER -> 0.18f * s;
+			case KITE -> 0.20f * s;
+			case ROUND -> 0.22f * s;
+			default -> 0.19f * s;
 		};
 		float h = switch (style) {
-			case TOWER -> 0.55f * s;
-			case KITE -> 0.48f * s;
-			case ROUND -> 0.42f * s;
-			default -> 0.45f * s;
+			case TOWER -> 0.48f * s;
+			case KITE -> 0.42f * s;
+			case ROUND -> 0.36f * s;
+			default -> 0.40f * s;
 		};
+		float depth = 0.06f * s;
+		float a = Math.min(1f, 0.98f * bright);
+		float r = c[0], g = c[1], b = c[2];
+		int light = LightTexture.FULL_BRIGHT;
 
-		float a = 0.95f * bright;
-		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.05f, c[0], c[1], c[2], a);
-		sheet(matrices, vc, -w, -h * 0.5f, 0.05f, w, h * 0.5f, 0, c[0] * 0.75f, c[1] * 0.75f, c[2] * 0.8f, a * 0.85f);
-		sheetYZ(matrices, vc, -w, -h * 0.5f, 0, -w, h * 0.5f, 0.05f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.75f);
-		sheetYZ(matrices, vc, w, -h * 0.5f, 0, w, h * 0.5f, 0.05f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.75f);
-
-		sheet(matrices, glow, -w * 1.15f, -h * 0.55f, -0.02f, w * 1.15f, h * 0.55f, 0.07f,
-			c[0], c[1], c[2], 0.3f * bright);
-		// Soft center gem — keep small so it doesn't look like a floating orb away from body
-		billboardOrb(matrices, glow, 0, 0, 0.04f, 0.08f * s, c[0], c[1], c[2], bright * 0.85f, time);
+		MeshPrims.box(matrices, vc, light, -w, -h * 0.5f, 0, w, h * 0.5f, depth, r, g, b, a);
+		float rw = w + 0.02f * s;
+		float rh = h * 0.5f + 0.02f * s;
+		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.01f, rw, -h * 0.5f + 0.03f * s, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, -rw, h * 0.5f - 0.03f * s, -0.01f, rw, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.01f, -w + 0.02f * s, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, w - 0.02f * s, -rh, -0.01f, rw, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		float ew = w * 0.35f, eh = h * 0.22f;
+		MeshPrims.box(matrices, vc, light, -ew, -eh, depth - 0.005f, ew, eh, depth + 0.025f,
+			Math.min(1f, r + 0.2f), Math.min(1f, g + 0.15f), Math.min(1f, b + 0.1f), a);
+		if (style == ShieldStyle.ROUND) {
+			MeshPrims.cylinder(matrices, vc, light, 0, -h * 0.05f, depth * 0.5f, w * 0.85f, depth, 14, r, g, b, a * 0.9f);
+		}
 		matrices.popPose();
 	}
 
