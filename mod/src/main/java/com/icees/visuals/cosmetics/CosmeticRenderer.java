@@ -345,10 +345,10 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Follow the head bone (not body): same yaw/pitch as HumanoidModel.head
+		// Follow head fully; pitch sign matches the previous (correct) lean convention
 		matrices.translate(0, 1.5f - headDrop, 0);
 		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
+		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
