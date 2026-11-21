@@ -19,7 +19,6 @@ final class CosmeticPreviewOverlay {
 		append(sb, IceesConfig.hat, "Hat");
 		append(sb, IceesConfig.cape, "Cape");
 		append(sb, IceesConfig.aura, "Aura");
-		append(sb, IceesConfig.shield, "Shield");
 		append(sb, IceesConfig.jumpCircles, "Jump");
 		append(sb, IceesConfig.trail, "Trail");
 		String line = sb.isEmpty() ? "none on" : sb.toString();

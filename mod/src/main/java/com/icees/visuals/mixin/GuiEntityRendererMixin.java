@@ -29,7 +29,7 @@ public abstract class GuiEntityRendererMixin {
 			if (!(state.renderState() instanceof LivingEntityRenderState living)) return;
 			MultiBufferSource.BufferSource buffers = ((PipBufferAccessor) (Object) this).icees$getBufferSource();
 			if (buffers == null) return;
-			CosmeticRenderer.renderInGuiPreview(poseStack, buffers, living.bodyRot);
+			CosmeticRenderer.renderInGuiPreview(poseStack, buffers, living);
 		} catch (Throwable ignored) {
 			// Never break inventory / owo entity previews
 		}

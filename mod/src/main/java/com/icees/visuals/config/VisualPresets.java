@@ -158,7 +158,7 @@ public final class VisualPresets {
 		IceesConfig.capeStyle = enumOr(CapeStyle.class, s.capeStyle, CapeStyle.SAKURA);
 		IceesConfig.aura = s.aura;
 		IceesConfig.auraStyle = enumOr(AuraStyle.class, s.auraStyle, AuraStyle.ORBIT);
-		IceesConfig.shield = s.shield;
+		IceesConfig.shield = false; // shield cosmetic removed
 		IceesConfig.shieldStyle = enumOr(ShieldStyle.class, s.shieldStyle, ShieldStyle.SAKURA);
 		IceesConfig.trail = s.trail;
 		IceesConfig.jumpCircles = s.jumpCircles;

@@ -254,7 +254,7 @@ public final class IceesConfig {
 			capeStyle = safeEnum(CapeStyle.class, data.capeStyle, CapeStyle.SAKURA);
 			aura = data.aura;
 			auraStyle = safeEnum(AuraStyle.class, data.auraStyle, AuraStyle.ORBIT);
-			shield = data.shield;
+			shield = false; // shield cosmetic removed
 			shieldStyle = safeEnum(ShieldStyle.class, data.shieldStyle, ShieldStyle.SAKURA);
 			trail = data.trail;
 			jumpCircles = data.jumpCircles;

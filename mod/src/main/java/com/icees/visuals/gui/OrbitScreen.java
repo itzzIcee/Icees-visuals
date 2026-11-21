@@ -36,7 +36,7 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
 	private enum Tab { COSMETICS, THEMES, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
-	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, SHIELD, JUMP, TRAIL }
+	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, JUMP, TRAIL }
 
 	private Tab tab = Tab.COSMETICS;
 	private CosmeticPick pick = CosmeticPick.WINGS;
@@ -289,14 +289,6 @@ public class OrbitScreen extends Screen {
 			addHit(cx, y, cw, 16, "Leaves a soft glow while you walk / run", false, () -> {});
 			y += 20;
 			y = addTintControlsFor(cx, y, cw, CosmeticPick.TRAIL);
-		} else if (pick == CosmeticPick.SHIELD) {
-			addHit(cx, y, cw, 16, "Only visible while a Minecraft shield is in your hand", false, () -> {});
-			y += 20;
-			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
-			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
-			addHit(cx + cw - 24, y, 24, 18, "›", false, this::cycleForm);
-			y += 22;
-			y = addTintControlsFor(cx, y, cw, CosmeticPick.SHIELD);
 		} else {
 			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
 			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
@@ -320,7 +312,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hatSize;
 			case CAPE -> IceesConfig.capeSize;
 			case AURA, TRAIL -> IceesConfig.auraSize;
-			case SHIELD -> IceesConfig.shieldSize;
 			case JUMP -> IceesConfig.jumpCircleSize;
 		};
 	}
@@ -332,7 +323,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hatSize = IceesConfig.clamp10(v);
 			case CAPE -> IceesConfig.capeSize = IceesConfig.clamp10(v);
 			case AURA, TRAIL -> IceesConfig.auraSize = IceesConfig.clamp10(v);
-			case SHIELD -> IceesConfig.shieldSize = IceesConfig.clamp10(v);
 			case JUMP -> IceesConfig.jumpCircleSize = IceesConfig.clamp10(v);
 		}
 	}
@@ -402,7 +392,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> "Hat";
 			case CAPE -> "Cape";
 			case AURA -> "Aura";
-			case SHIELD -> "Shield";
 			case JUMP -> "Jump";
 			case TRAIL -> "Trail";
 		};
@@ -415,7 +404,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> "Hat";
 			case CAPE -> "Cape";
 			case AURA -> "Aura";
-			case SHIELD -> "Shield";
 			case JUMP -> "Jump Circles";
 			case TRAIL -> "Movement Trail";
 		};
@@ -428,7 +416,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hat;
 			case CAPE -> IceesConfig.cape;
 			case AURA -> IceesConfig.aura;
-			case SHIELD -> IceesConfig.shield;
 			case JUMP -> IceesConfig.jumpCircles;
 			case TRAIL -> IceesConfig.trail;
 		};
@@ -441,7 +428,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hat = !IceesConfig.hat;
 			case CAPE -> IceesConfig.cape = !IceesConfig.cape;
 			case AURA -> IceesConfig.aura = !IceesConfig.aura;
-			case SHIELD -> IceesConfig.shield = !IceesConfig.shield;
 			case JUMP -> IceesConfig.jumpCircles = !IceesConfig.jumpCircles;
 			case TRAIL -> IceesConfig.trail = !IceesConfig.trail;
 		}
@@ -454,7 +440,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hatStyle.title;
 			case CAPE -> IceesConfig.capeStyle.title;
 			case AURA -> IceesConfig.auraStyle.title;
-			case SHIELD -> IceesConfig.shieldStyle.title;
 			case JUMP -> IceesConfig.jumpCircleStyle.title;
 			case TRAIL -> "Soft Glow";
 		};
@@ -467,7 +452,6 @@ public class OrbitScreen extends Screen {
 			case HAT -> IceesConfig.hatStyle = IceesConfig.hatStyle.next();
 			case CAPE -> IceesConfig.capeStyle = IceesConfig.capeStyle.next();
 			case AURA -> IceesConfig.auraStyle = IceesConfig.auraStyle.next();
-			case SHIELD -> IceesConfig.shieldStyle = IceesConfig.shieldStyle.next();
 			case JUMP -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.next();
 			case TRAIL -> {}
 		}
@@ -492,10 +476,6 @@ public class OrbitScreen extends Screen {
 				var a = com.icees.visuals.cosmetics.AuraStyle.values();
 				IceesConfig.auraStyle = a[(IceesConfig.auraStyle.ordinal() + a.length - 1) % a.length];
 			}
-			case SHIELD -> {
-				var a = com.icees.visuals.cosmetics.ShieldStyle.values();
-				IceesConfig.shieldStyle = a[(IceesConfig.shieldStyle.ordinal() + a.length - 1) % a.length];
-			}
 			case JUMP -> IceesConfig.jumpCircleStyle = IceesConfig.jumpCircleStyle.prev();
 			case TRAIL -> {}
 		}
@@ -506,10 +486,8 @@ public class OrbitScreen extends Screen {
 			case WINGS -> IceesConfig.wingTint;
 			case HALO -> IceesConfig.haloTint;
 			case CAPE -> IceesConfig.capeTint;
-			case AURA, TRAIL -> IceesConfig.auraTint;
-			case SHIELD -> IceesConfig.shieldTint;
+			case AURA, TRAIL, JUMP -> IceesConfig.auraTint;
 			case HAT -> IceesConfig.hatTint;
-			case JUMP -> IceesConfig.auraTint;
 		};
 	}
 
@@ -592,9 +570,7 @@ public class OrbitScreen extends Screen {
 		String tip = switch (tab) {
 			case COSMETICS -> pick == CosmeticPick.JUMP
 				? IceesConfig.jumpCircleStyle.description
-				: pick == CosmeticPick.SHIELD
-					? "Shield cosmetic only shows when a Minecraft shield is in your hand. F5."
-					: "Preview shows your cosmetics — pick one, then form / colour.";
+				: "Preview shows your cosmetics — pick one, then form / colour.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
 			case CONFIGS -> "Save writes Themes + Cosmetics into a slot. Load restores them.";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
