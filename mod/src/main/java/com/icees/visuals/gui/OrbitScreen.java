@@ -119,6 +119,7 @@ public class OrbitScreen extends Screen {
 		rowY = addStepper(x, rowY, w, "Size", IceesConfig.fallSize, 10, v -> IceesConfig.fallSize = v);
 		rowY = addStepper(x, rowY, w, "Speed", IceesConfig.fallSpeed, 10, v -> IceesConfig.fallSpeed = v);
 		rowY = addStepper(x, rowY, w, "Spread", IceesConfig.fallSpread, 10, v -> IceesConfig.fallSpread = v);
+		rowY = addChunkRangeStepper(x, rowY, w);
 		rowY = addStepper(x, rowY, w, "Opacity", IceesConfig.fallOpacity, 10, v -> IceesConfig.fallOpacity = v);
 		addHit(x, rowY, w, 18, "Movement Trail  ·  " + onOff(IceesConfig.trail), IceesConfig.trail,
 			() -> IceesConfig.trail = !IceesConfig.trail);
@@ -285,6 +286,17 @@ public class OrbitScreen extends Screen {
 			tint.val = Math.max(0, Math.min(100, v));
 			tint.enabled = true;
 		});
+	}
+
+	private int addChunkRangeStepper(int x, int y, int w) {
+		int value = IceesConfig.clampChunks(IceesConfig.fallRangeChunks);
+		addHit(x, y, 24, 16, "−", false, () -> IceesConfig.fallRangeChunks = Math.max(1, value - 1));
+		addHit(x + 28, y, w - 56, 16,
+			"Range  ·  " + value + " chunk" + (value == 1 ? "" : "s") + "  (" + (value * 16) + "m)",
+			false,
+			() -> IceesConfig.fallRangeChunks = value >= 8 ? 1 : value + 1);
+		addHit(x + w - 24, y, 24, 16, "+", false, () -> IceesConfig.fallRangeChunks = Math.min(8, value + 1));
+		return y + 18;
 	}
 
 	private int addStepper(int x, int y, int w, String label, int value, int max, IntConsumer set) {

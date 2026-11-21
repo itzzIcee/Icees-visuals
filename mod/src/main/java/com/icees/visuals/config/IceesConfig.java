@@ -49,6 +49,8 @@ public final class IceesConfig {
 	public static int fallSize = 5;
 	public static int fallSpeed = 5;
 	public static int fallSpread = 5;
+	/** How far themes fill around you, in chunks (1–8). */
+	public static int fallRangeChunks = 3;
 	public static int fallOpacity = 7;
 	public static int cosmeticBrightness = 7;
 	public static int cosmeticSize = 5;
@@ -113,6 +115,15 @@ public final class IceesConfig {
 
 	public static float fallSpreadFactor() {
 		return 0.55f + clamp10(fallSpread) * 0.12f;
+	}
+
+	public static int clampChunks(int v) {
+		return Math.max(1, Math.min(8, v));
+	}
+
+	/** Theme fill radius in blocks (chunks × 16). */
+	public static float fallRangeBlocks() {
+		return clampChunks(fallRangeChunks) * 16f;
 	}
 
 	public static float fallOpacityFactor() {
@@ -219,6 +230,7 @@ public final class IceesConfig {
 			if (data.fallSize >= 1) fallSize = clamp10(data.fallSize);
 			if (data.fallSpeed >= 1) fallSpeed = clamp10(data.fallSpeed);
 			if (data.fallSpread >= 1) fallSpread = clamp10(data.fallSpread);
+			if (data.fallRangeChunks >= 1) fallRangeChunks = clampChunks(data.fallRangeChunks);
 			if (data.fallOpacity >= 1) fallOpacity = clamp10(data.fallOpacity);
 			if (data.cosmeticBrightness >= 1) cosmeticBrightness = clamp10(data.cosmeticBrightness);
 			if (data.cosmeticSize >= 1) cosmeticSize = clamp10(data.cosmeticSize);
@@ -280,7 +292,8 @@ public final class IceesConfig {
 		data.petals = fallTheme == FallTheme.SAKURA_FALL;
 		data.fallTheme = fallTheme.name();
 		data.fallIntensity = fallIntensity; data.fallSize = fallSize;
-		data.fallSpeed = fallSpeed; data.fallSpread = fallSpread; data.fallOpacity = fallOpacity;
+		data.fallSpeed = fallSpeed; data.fallSpread = fallSpread;
+		data.fallRangeChunks = fallRangeChunks; data.fallOpacity = fallOpacity;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
 		data.customColor = wingTint.enabled;
@@ -329,7 +342,8 @@ public final class IceesConfig {
 		boolean trail = false; boolean jumpCircles = true;
 		String jumpCircleStyle = "RIPPLE"; int jumpCircleSize = 5; int jumpCircleSpeed = 5; int jumpCircleCount = 4;
 		boolean petals = true; String fallTheme = "SAKURA_FALL";
-		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5; int fallOpacity = 7;
+		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
+		int fallRangeChunks = 3; int fallOpacity = 7;
 		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
 		CosmeticTint wingTint; CosmeticTint haloTint; CosmeticTint capeTint; CosmeticTint auraTint; CosmeticTint shieldTint;

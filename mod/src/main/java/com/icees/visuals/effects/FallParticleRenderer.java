@@ -55,12 +55,16 @@ public final class FallParticleRenderer {
 		Vec3 origin = client.player.position();
 		int density = IceesConfig.clamp10(IceesConfig.fallIntensity);
 		int sizeLvl = IceesConfig.clamp10(IceesConfig.fallSize);
+		int chunks = IceesConfig.clampChunks(IceesConfig.fallRangeChunks);
+		float range = IceesConfig.fallRangeBlocks();
 		int max = switch (theme) {
 			case SOFT_MIST -> 8 + density * 4;
 			case WHITE_SNOW, MOON_DUST -> 40 + density * 18;
 			case EMBER_ASH -> 24 + density * 12;
 			default -> 30 + density * 15;
 		};
+		// Cover more area when range is larger without exploding particle count
+		max = Math.min(420, max + (chunks - 1) * (8 + density * 3));
 
 		if (spawnCooldown > 0) spawnCooldown--;
 		else {
@@ -89,7 +93,7 @@ public final class FallParticleRenderer {
 			double dy = p.y - py;
 			double dz = p.z - pz;
 			double distSq = dx * dx + dy * dy + dz * dz;
-			boolean tooFar = distSq > 48 * 48;
+			boolean tooFar = distSq > (double) range * range;
 			boolean fallen = p.kind != Kind.MIST && p.kind != Kind.EMBER && p.y < py - 2.5;
 			boolean risen = p.kind == Kind.EMBER && p.y > py + 10;
 			boolean mistGone = p.kind == Kind.MIST && (p.y > py + 3.5 || p.y < py - 0.5);
@@ -149,13 +153,15 @@ public final class FallParticleRenderer {
 		float sizeMul = 0.45f + sizeLvl * 0.14f;
 		float speedMul = IceesConfig.fallSpeedFactor();
 		float spreadMul = IceesConfig.fallSpreadFactor();
+		float rangeBlocks = IceesConfig.fallRangeBlocks();
 		p.life = 140 + RNG.nextInt(180);
 		p.maxLife = p.life;
 		p.phase = RNG.nextFloat() * 100f;
 		p.sway = 0.012f + RNG.nextFloat() * 0.028f;
 		p.rot = RNG.nextFloat() * Mth.TWO_PI;
 
-		float spread = (8f + sizeLvl * 1.8f) * spreadMul;
+		// Spawn across the configured chunk range; Spread fine-tunes density within it
+		float spread = rangeBlocks * (0.55f + 0.45f * spreadMul);
 		float ox = (RNG.nextFloat() - 0.5f) * spread * 2f;
 		float oz = (RNG.nextFloat() - 0.5f) * spread * 2f;
 
@@ -216,7 +222,7 @@ public final class FallParticleRenderer {
 				p.kind = Kind.MIST;
 				p.tex = TEX_MIST;
 				p.size = (1.4f + RNG.nextFloat() * 1.8f) * sizeMul;
-				float mistSpread = (6f + sizeLvl) * spreadMul;
+				float mistSpread = rangeBlocks * (0.45f + 0.35f * spreadMul);
 				p.x = origin.x + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
 				p.y = origin.y + 0.15f + RNG.nextFloat() * 1.4f;
 				p.z = origin.z + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
