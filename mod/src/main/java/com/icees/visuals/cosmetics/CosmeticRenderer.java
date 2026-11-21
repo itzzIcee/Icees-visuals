@@ -18,7 +18,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 /**
  * Third-person cosmetics with distinct 3D models per style, double-sided so visible from every angle.
  */
@@ -346,11 +345,11 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Move with the head: full yaw + full pitch (inverted vs getXRot).
+		// Head bone only — not body. Invert yaw so left/right tracks the head
+		// (positive netHeadYaw was turning the hat the wrong way → looked body-locked).
 		matrices.translate(0, 1.5f - headDrop, 0);
-		float yawRad = headYawRel * Mth.DEG_TO_RAD;
-		float pitchRad = (-headPitch) * Mth.DEG_TO_RAD;
-		matrices.mulPose(new Quaternionf().rotationZYX(0f, yawRad, pitchRad));
+		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
