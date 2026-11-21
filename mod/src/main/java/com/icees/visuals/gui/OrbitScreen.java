@@ -329,7 +329,7 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
-	/** Named colour presets (Red / Blue / …) for this cosmetic only. */
+	/** Named presets + custom Hue/Sat/Val for this cosmetic only. */
 	private int addTintControlsFor(int x, int y, int w, CosmeticPick which) {
 		CosmeticTint tint = tintOf(which);
 		CosmeticColor col = CosmeticColor.matching(tint);
@@ -339,7 +339,7 @@ public class OrbitScreen extends Screen {
 			CosmeticColor next = CosmeticColor.matching(tintOf(which)).prev();
 			next.apply(tintOf(which));
 		});
-		addHit(x + 28, y, w - 56, 18, "Colour  →  " + col.title, false, () -> {
+		addHit(x + 28, y, w - 56, 18, "Preset  →  " + col.title, false, () -> {
 			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
 			next.apply(tintOf(which));
 		});
@@ -347,7 +347,24 @@ public class OrbitScreen extends Screen {
 			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
 			next.apply(tintOf(which));
 		});
-		return y + 22;
+		y += 22;
+		addHit(x, y, w, 14, "Custom colour", false, () -> {});
+		y += 16;
+		y = addStepper(x, y, w, "Hue", tint.hue, 355, v -> {
+			CosmeticTint t = tintOf(which);
+			t.hue = Math.floorMod(v, 360);
+			t.enabled = true;
+		}, 5);
+		y = addStepper(x, y, w, "Sat", tint.sat, 100, v -> {
+			CosmeticTint t = tintOf(which);
+			t.sat = Math.max(0, Math.min(100, v));
+			t.enabled = true;
+		});
+		return addStepper(x, y, w, "Val", tint.val, 100, v -> {
+			CosmeticTint t = tintOf(which);
+			t.val = Math.max(0, Math.min(100, v));
+			t.enabled = true;
+		});
 	}
 
 	private int addChunkRangeStepper(int x, int y, int w) {

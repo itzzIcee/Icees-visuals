@@ -76,6 +76,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			LOGGER.error("HUD hook failed", t);
 		}
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.32 — hat soft pitch lean (leichte Schräge)");
+		LOGGER.info("Icee's Sakura Visuals 1.0.33 — custom colour (Hue/Sat/Val) back on cosmetics");
 	}
 }
