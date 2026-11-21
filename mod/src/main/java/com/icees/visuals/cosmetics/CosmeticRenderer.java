@@ -345,10 +345,10 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Head bone only — not body. Invert yaw so left/right tracks the head
-		// (positive netHeadYaw was turning the hat the wrong way → looked body-locked).
+		// Same as HumanoidModel.head: sit on the neck, turn wherever the head looks.
+		// +yRot = look left/right with the head; -xRot = look up/down (our pitch convention).
 		matrices.translate(0, 1.5f - headDrop, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
+		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
 		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
