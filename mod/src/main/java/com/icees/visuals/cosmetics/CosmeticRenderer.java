@@ -335,12 +335,13 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Pivot at neck, then HumanoidModel head (yRot then xRot).
-		// World cosmetics use -bodyYaw (180° from vanilla setupRotations) — compensate once.
+		// Pivot at neck. Preview shares vanilla body frame (+angles).
+		// World uses -bodyYaw — invert head so the hat tracks the visible skull.
 		matrices.translate(0, 1.5f, 0);
-		if (!preview) matrices.mulPose(Axis.YP.rotationDegrees(180f));
-		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
+		float yaw = preview ? headYawRel : -headYawRel;
+		float pitch = preview ? headPitch : -headPitch;
+		matrices.mulPose(Axis.YP.rotationDegrees(yaw));
+		matrices.mulPose(Axis.XP.rotationDegrees(pitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
@@ -543,9 +544,10 @@ public final class CosmeticRenderer {
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
 		matrices.translate(0, 1.5f, 0);
-		if (!preview) matrices.mulPose(Axis.YP.rotationDegrees(180f));
-		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
+		float yaw = preview ? headYawRel : -headYawRel;
+		float pitch = preview ? headPitch : -headPitch;
+		matrices.mulPose(Axis.YP.rotationDegrees(yaw));
+		matrices.mulPose(Axis.XP.rotationDegrees(pitch));
 		matrices.translate(0, 0.55f + 0.08f * thick, 0);
 
 		switch (style) {
