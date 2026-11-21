@@ -184,8 +184,13 @@ public final class IceesConfig {
 	}
 
 	public static float[] color(CosmeticTint tint, float baseR, float baseG, float baseB) {
+		return color(tint, baseR, baseG, baseB, 0.5f);
+	}
+
+	/** @param t 0..1 along gradient (or animated phase) */
+	public static float[] color(CosmeticTint tint, float baseR, float baseG, float baseB, float t) {
 		if (tint == null) return new float[]{baseR, baseG, baseB};
-		return tint.apply(baseR, baseG, baseB);
+		return tint.apply(baseR, baseG, baseB, t);
 	}
 
 	public static float[] overlayColor(float time) {

@@ -203,10 +203,7 @@ public final class VisualPresets {
 
 	private static void applyTint(CosmeticTint target, CosmeticTint src) {
 		if (src == null) return;
-		target.enabled = src.enabled;
-		target.hue = Math.floorMod(src.hue, 360);
-		target.sat = Math.max(0, Math.min(100, src.sat));
-		target.val = Math.max(0, Math.min(100, src.val));
+		target.loadFrom(src, target);
 	}
 
 	private static <T extends Enum<T>> T enumOr(Class<T> type, String name, T fallback) {

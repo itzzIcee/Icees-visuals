@@ -36,20 +36,24 @@ public final class CosmeticRenderer {
 
 	private CosmeticRenderer() {}
 
-	private static float[] tintWings(float r, float g, float b) {
-		return IceesConfig.color(IceesConfig.wingTint, r, g, b);
+	private static float gradPhase(float time) {
+		return 0.5f + 0.5f * Mth.sin(time * 0.12f);
 	}
 
-	private static float[] tintHalo(float r, float g, float b) {
-		return IceesConfig.color(IceesConfig.haloTint, r, g, b);
+	private static float[] tintWings(float r, float g, float b, float time) {
+		return IceesConfig.color(IceesConfig.wingTint, r, g, b, gradPhase(time));
 	}
 
-	private static float[] tintCape(float r, float g, float b) {
-		return IceesConfig.color(IceesConfig.capeTint, r, g, b);
+	private static float[] tintHalo(float r, float g, float b, float time) {
+		return IceesConfig.color(IceesConfig.haloTint, r, g, b, gradPhase(time));
 	}
 
-	private static float[] tintAura(float r, float g, float b) {
-		return IceesConfig.color(IceesConfig.auraTint, r, g, b);
+	private static float[] tintCape(float r, float g, float b, float time) {
+		return IceesConfig.color(IceesConfig.capeTint, r, g, b, gradPhase(time));
+	}
+
+	private static float[] tintAura(float r, float g, float b, float time) {
+		return IceesConfig.color(IceesConfig.auraTint, r, g, b, gradPhase(time));
 	}
 
 
@@ -138,7 +142,7 @@ public final class CosmeticRenderer {
 
 	private static void drawWings(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
 		WingStyle style = IceesConfig.wingStyle;
-		float[] col = tintWings(style.r, style.g, style.b);
+		float[] col = tintWings(style.r, style.g, style.b, time);
 		CR = col[0]; CG = col[1]; CB = col[2];
 		float beat = Mth.sin(time * 0.22f) * 0.35f;
 		VertexConsumer soft = buffers.getBuffer(RenderTypes.eyes(TEX_WING_SOFT));
@@ -331,12 +335,15 @@ public final class CosmeticRenderer {
 
 	/* ===================== HATS ===================== */
 
+	private static float hatGradT = 0.5f;
+
 	private static float[] hatColor(float baseR, float baseG, float baseB) {
-		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB);
+		return IceesConfig.color(IceesConfig.hatTint, baseR, baseG, baseB, hatGradT);
 	}
 
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
 		float headYawRel, float headPitch, float headDrop) {
+		hatGradT = gradPhase(time);
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
@@ -543,7 +550,7 @@ public final class CosmeticRenderer {
 	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
 		float headDrop) {
 		HaloStyle style = IceesConfig.haloStyle;
-		float[] c = tintHalo(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
+		float[] c = tintHalo(style.r, style.g, style.b, time); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
@@ -695,8 +702,8 @@ public final class CosmeticRenderer {
 
 	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
 		CapeStyle style = IceesConfig.capeStyle;
-		float[] c1 = tintCape(style.r1, style.g1, style.b1); CR = c1[0]; CG = c1[1]; CB = c1[2];
-		float[] c2 = tintCape(style.r2, style.g2, style.b2); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
+		float[] c1 = tintCape(style.r1, style.g1, style.b1, time); CR = c1[0]; CG = c1[1]; CB = c1[2];
+		float[] c2 = tintCape(style.r2, style.g2, style.b2, time + 1.7f); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
 		float sway = Mth.sin(time * 0.16f) * 0.2f;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
@@ -788,7 +795,7 @@ public final class CosmeticRenderer {
 
 	private static void drawAura(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float camRelYaw, float camPitch) {
 		AuraStyle style = IceesConfig.auraStyle;
-		float[] c = tintAura(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
+		float[] c = tintAura(style.r, style.g, style.b, time); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		float aMul = Math.min(1f, 0.9f * bright);
 
@@ -929,7 +936,7 @@ public final class CosmeticRenderer {
 		JumpCircleStyle style = IceesConfig.jumpCircleStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-		float[] c = IceesConfig.color(IceesConfig.jumpTint, 1f, 0.75f, 0.88f);
+		float[] c = IceesConfig.color(IceesConfig.jumpTint, 1f, 0.75f, 0.88f, gradPhase(time));
 		float speed = 0.55f + IceesConfig.jumpCircleSpeed * 0.18f;
 		float size = thick;
 		int rings = Math.max(1, IceesConfig.jumpCircleCount);

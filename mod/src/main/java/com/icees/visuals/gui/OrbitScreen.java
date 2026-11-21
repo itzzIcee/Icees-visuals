@@ -1,6 +1,7 @@
 package com.icees.visuals.gui;
 
 import com.icees.visuals.config.CosmeticColor;
+import com.icees.visuals.config.CosmeticGradient;
 import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.config.VisualPresets;
@@ -329,24 +330,22 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
-	/** Named presets + custom Hue/Sat/Val for this cosmetic only. */
+	/** Named presets, gradients, and custom Hue/Sat/Val for this cosmetic only. */
 	private int addTintControlsFor(int x, int y, int w, CosmeticPick which) {
 		CosmeticTint tint = tintOf(which);
 		CosmeticColor col = CosmeticColor.matching(tint);
+		CosmeticGradient grad = CosmeticGradient.matching(tint);
 		addHit(x, y, w, 16, "Colour  ·  " + onOff(tint.enabled), tint.enabled, () -> tintOf(which).toggle());
 		y += 18;
-		addHit(x, y, 24, 18, "‹", false, () -> {
-			CosmeticColor next = CosmeticColor.matching(tintOf(which)).prev();
-			next.apply(tintOf(which));
-		});
-		addHit(x + 28, y, w - 56, 18, "Preset  →  " + col.title, false, () -> {
-			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
-			next.apply(tintOf(which));
-		});
-		addHit(x + w - 24, y, 24, 18, "›", false, () -> {
-			CosmeticColor next = CosmeticColor.matching(tintOf(which)).next();
-			next.apply(tintOf(which));
-		});
+		addHit(x, y, 24, 18, "‹", false, () -> CosmeticColor.matching(tintOf(which)).prev().apply(tintOf(which)));
+		addHit(x + 28, y, w - 56, 18, "Preset  →  " + col.title, false,
+			() -> CosmeticColor.matching(tintOf(which)).next().apply(tintOf(which)));
+		addHit(x + w - 24, y, 24, 18, "›", false, () -> CosmeticColor.matching(tintOf(which)).next().apply(tintOf(which)));
+		y += 22;
+		addHit(x, y, 24, 18, "‹", false, () -> CosmeticGradient.matching(tintOf(which)).prev().apply(tintOf(which)));
+		addHit(x + 28, y, w - 56, 18, "Gradient  →  " + grad.title, false,
+			() -> CosmeticGradient.matching(tintOf(which)).next().apply(tintOf(which)));
+		addHit(x + w - 24, y, 24, 18, "›", false, () -> CosmeticGradient.matching(tintOf(which)).next().apply(tintOf(which)));
 		y += 22;
 		addHit(x, y, w, 14, "Custom colour", false, () -> {});
 		y += 16;
@@ -360,11 +359,20 @@ public class OrbitScreen extends Screen {
 			t.sat = Math.max(0, Math.min(100, v));
 			t.enabled = true;
 		});
-		return addStepper(x, y, w, "Val", tint.val, 100, v -> {
+		y = addStepper(x, y, w, "Val", tint.val, 100, v -> {
 			CosmeticTint t = tintOf(which);
 			t.val = Math.max(0, Math.min(100, v));
 			t.enabled = true;
 		});
+		if (tint.gradient) {
+			y = addStepper(x, y, w, "Hue 2", tint.hue2, 355, v -> {
+				CosmeticTint t = tintOf(which);
+				t.hue2 = Math.floorMod(v, 360);
+				t.enabled = true;
+				t.gradient = true;
+			}, 5);
+		}
+		return y;
 	}
 
 	private int addChunkRangeStepper(int x, int y, int w) {
