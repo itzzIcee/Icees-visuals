@@ -9,7 +9,8 @@ public enum FallTheme {
 	EMBER_ASH("Ember Ash", "Soft glowing embers floating upward."),
 	MOON_DUST("Moon Dust", "Pale silver motes in quiet air."),
 	BLUE_BLOSSOM("Blue Blossom", "Cool blue petals in a gentle fall."),
-	SOFT_MIST("Soft Mist", "Low ground haze in the air — not on your screen.");
+	SOFT_MIST("Soft Mist", "Low ground haze in the air — not on your screen."),
+	CUSTOM("Custom", "Your own colour + particle style for the fall atmosphere.");
 
 	public final String title;
 	public final String description;

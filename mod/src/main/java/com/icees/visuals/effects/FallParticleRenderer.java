@@ -34,6 +34,7 @@ public final class FallParticleRenderer {
 	private static final Random RNG = new Random();
 	private static int spawnCooldown;
 	private static FallTheme lastTheme = FallTheme.OFF;
+	private static CustomThemeStyle lastCustomStyle = CustomThemeStyle.PETALS;
 
 	private FallParticleRenderer() {}
 
@@ -43,9 +44,11 @@ public final class FallParticleRenderer {
 			return;
 		}
 		FallTheme theme = IceesConfig.fallTheme;
-		if (theme != lastTheme) {
+		CustomThemeStyle customStyle = IceesConfig.customThemeStyle;
+		if (theme != lastTheme || (theme == FallTheme.CUSTOM && customStyle != lastCustomStyle)) {
 			PARTICLES.clear();
 			lastTheme = theme;
+			lastCustomStyle = customStyle;
 		}
 		if (theme == FallTheme.OFF) {
 			PARTICLES.clear();
@@ -61,6 +64,12 @@ public final class FallParticleRenderer {
 			case SOFT_MIST -> 8 + density * 4;
 			case WHITE_SNOW, MOON_DUST -> 40 + density * 18;
 			case EMBER_ASH -> 24 + density * 12;
+			case CUSTOM -> switch (IceesConfig.customThemeStyle) {
+				case MIST -> 8 + density * 4;
+				case SNOW -> 40 + density * 18;
+				case EMBER -> 24 + density * 12;
+				case PETALS -> 30 + density * 15;
+			};
 			default -> 30 + density * 15;
 		};
 		// Cover more area when range is larger without exploding particle count
@@ -68,11 +77,13 @@ public final class FallParticleRenderer {
 
 		if (spawnCooldown > 0) spawnCooldown--;
 		else {
-			int spawn = theme == FallTheme.SOFT_MIST ? 1 : 1 + density / 2;
+			boolean misty = theme == FallTheme.SOFT_MIST
+				|| (theme == FallTheme.CUSTOM && IceesConfig.customThemeStyle == CustomThemeStyle.MIST);
+			int spawn = misty ? 1 : 1 + density / 2;
 			for (int i = 0; i < spawn && PARTICLES.size() < max; i++) {
 				PARTICLES.add(spawnOne(theme, origin, sizeLvl));
 			}
-			spawnCooldown = theme == FallTheme.SOFT_MIST ? Math.max(2, 7 - density) : Math.max(0, 1);
+			spawnCooldown = misty ? Math.max(2, 7 - density) : Math.max(0, 1);
 		}
 
 		double px = origin.x;
@@ -218,25 +229,43 @@ public final class FallParticleRenderer {
 				p.b = 0.12f + tint * 0.15f;
 				p.sway = 0.01f + RNG.nextFloat() * 0.02f;
 			}
-			case SOFT_MIST -> {
-				p.kind = Kind.MIST;
-				p.tex = TEX_MIST;
-				p.size = (1.4f + RNG.nextFloat() * 1.8f) * sizeMul;
-				float mistSpread = rangeBlocks * (0.45f + 0.35f * spreadMul);
-				p.x = origin.x + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
-				p.y = origin.y + 0.15f + RNG.nextFloat() * 1.4f;
-				p.z = origin.z + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
-				p.vx = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
-				p.vy = (0.001f + RNG.nextFloat() * 0.004f) * speedMul;
-				p.vz = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
-				p.spin = 0f;
-				p.a = 0.12f + RNG.nextFloat() * 0.1f;
-				p.r = 0.96f;
-				p.g = 0.97f;
-				p.b = 1.0f;
-				p.life = 160 + RNG.nextInt(120);
-				p.maxLife = p.life;
-				p.sway = 0.004f;
+			case SOFT_MIST -> mistParticle(p, origin, sizeMul, speedMul, spreadMul, rangeBlocks, 0.96f, 0.97f, 1.0f);
+			case CUSTOM -> {
+				float[] rgb = IceesConfig.hsvToRgb(
+					IceesConfig.customThemeHue,
+					IceesConfig.customThemeSat / 100f,
+					IceesConfig.customThemeVal / 100f);
+				switch (IceesConfig.customThemeStyle) {
+					case PETALS -> fallPetal(p, origin, ox, oz, sizeMul, speedMul,
+						rgb[0], rgb[1], rgb[2], 0.12f, 0.10f);
+					case SNOW -> {
+						p.kind = Kind.SNOW;
+						p.tex = TEX_SNOW;
+						p.size = (0.10f + RNG.nextFloat() * 0.18f) * sizeMul;
+						placeAbove(p, origin, ox, oz, 5f, 9f);
+						driftDown(p, 0.015f * speedMul, 0.03f * speedMul);
+						p.spin = -0.02f + RNG.nextFloat() * 0.04f;
+						p.a = 0.5f + RNG.nextFloat() * 0.35f;
+						p.r = rgb[0]; p.g = rgb[1]; p.b = rgb[2];
+						p.sway = 0.008f + RNG.nextFloat() * 0.018f;
+					}
+					case EMBER -> {
+						p.kind = Kind.EMBER;
+						p.tex = TEX_PETAL_SOFT;
+						p.size = (0.08f + RNG.nextFloat() * 0.14f) * sizeMul;
+						p.x = origin.x + ox * 0.7f;
+						p.y = origin.y + 0.2f + RNG.nextFloat() * 1.5f;
+						p.z = origin.z + oz * 0.7f;
+						p.vx = (-0.01f + RNG.nextFloat() * 0.02f) * speedMul;
+						p.vy = (0.02f + RNG.nextFloat() * 0.045f) * speedMul;
+						p.vz = (-0.01f + RNG.nextFloat() * 0.02f) * speedMul;
+						p.spin = -0.03f + RNG.nextFloat() * 0.06f;
+						p.a = 0.45f + RNG.nextFloat() * 0.4f;
+						p.r = rgb[0]; p.g = rgb[1]; p.b = rgb[2];
+						p.sway = 0.01f + RNG.nextFloat() * 0.02f;
+					}
+					case MIST -> mistParticle(p, origin, sizeMul, speedMul, spreadMul, rangeBlocks, rgb[0], rgb[1], rgb[2]);
+				}
 			}
 			default -> {
 				p.kind = Kind.SNOW;
@@ -266,6 +295,28 @@ public final class FallParticleRenderer {
 		p.r = Math.min(1f, baseR);
 		p.g = Math.min(1f, baseG + tint * gVar);
 		p.b = Math.min(1f, baseB + tint * bVar);
+	}
+
+	private static void mistParticle(Particle p, Vec3 origin, float sizeMul, float speedMul, float spreadMul,
+		float rangeBlocks, float r, float g, float b) {
+		p.kind = Kind.MIST;
+		p.tex = TEX_MIST;
+		p.size = (1.4f + RNG.nextFloat() * 1.8f) * sizeMul;
+		float mistSpread = rangeBlocks * (0.45f + 0.35f * spreadMul);
+		p.x = origin.x + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
+		p.y = origin.y + 0.15f + RNG.nextFloat() * 1.4f;
+		p.z = origin.z + (RNG.nextFloat() - 0.5f) * mistSpread * 2f;
+		p.vx = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
+		p.vy = (0.001f + RNG.nextFloat() * 0.004f) * speedMul;
+		p.vz = (-0.004f + RNG.nextFloat() * 0.008f) * speedMul;
+		p.spin = 0f;
+		p.a = 0.12f + RNG.nextFloat() * 0.1f;
+		p.r = r;
+		p.g = g;
+		p.b = b;
+		p.life = 160 + RNG.nextInt(120);
+		p.maxLife = p.life;
+		p.sway = 0.004f;
 	}
 
 	private static void placeAbove(Particle p, Vec3 origin, float ox, float oz, float yMin, float ySpan) {

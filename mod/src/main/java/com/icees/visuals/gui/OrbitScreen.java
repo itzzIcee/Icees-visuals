@@ -5,6 +5,7 @@ import com.icees.visuals.config.CosmeticGradient;
 import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.config.VisualPresets;
+import com.icees.visuals.effects.CustomThemeStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
@@ -155,6 +156,26 @@ public class OrbitScreen extends Screen {
 		}
 		if (col != 0) rowY += 20;
 		rowY += 8;
+		if (IceesConfig.fallTheme == FallTheme.CUSTOM) {
+			addHit(x, rowY, 24, 18, "‹", false, () -> IceesConfig.customThemeStyle = IceesConfig.customThemeStyle.prev());
+			addHit(x + 28, rowY, w - 56, 18, "Style  →  " + IceesConfig.customThemeStyle.title, false,
+				() -> IceesConfig.customThemeStyle = IceesConfig.customThemeStyle.next());
+			addHit(x + w - 24, rowY, 24, 18, "›", false, () -> IceesConfig.customThemeStyle = IceesConfig.customThemeStyle.next());
+			rowY += 22;
+			rowY = addStepper(x, rowY, w, "Hue", IceesConfig.customThemeHue, 355, v -> {
+				IceesConfig.customThemeHue = Math.floorMod(v, 360);
+				IceesConfig.fallTheme = FallTheme.CUSTOM;
+			}, 5);
+			rowY = addStepper(x, rowY, w, "Sat", IceesConfig.customThemeSat, 100, v -> {
+				IceesConfig.customThemeSat = Math.max(0, Math.min(100, v));
+				IceesConfig.fallTheme = FallTheme.CUSTOM;
+			});
+			rowY = addStepper(x, rowY, w, "Val", IceesConfig.customThemeVal, 100, v -> {
+				IceesConfig.customThemeVal = Math.max(0, Math.min(100, v));
+				IceesConfig.fallTheme = FallTheme.CUSTOM;
+			});
+			rowY += 4;
+		}
 		rowY = addStepper(x, rowY, w, "Intensity", IceesConfig.fallIntensity, 10, v -> IceesConfig.fallIntensity = v);
 		rowY = addStepper(x, rowY, w, "Size", IceesConfig.fallSize, 10, v -> IceesConfig.fallSize = v);
 		rowY = addStepper(x, rowY, w, "Speed", IceesConfig.fallSpeed, 10, v -> IceesConfig.fallSpeed = v);
@@ -599,7 +620,10 @@ public class OrbitScreen extends Screen {
 			case COSMETICS -> pick == CosmeticPick.JUMP
 				? IceesConfig.jumpCircleStyle.description
 				: "Preview shows your cosmetics — pick one, then form / colour.";
-			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
+			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off."
+				: IceesConfig.fallTheme == FallTheme.CUSTOM
+					? "Custom · " + IceesConfig.customThemeStyle.title + " · H" + IceesConfig.customThemeHue
+					: IceesConfig.fallTheme.description;
 			case CONFIGS -> "Save writes Themes + Cosmetics into a slot. Load restores them.";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";

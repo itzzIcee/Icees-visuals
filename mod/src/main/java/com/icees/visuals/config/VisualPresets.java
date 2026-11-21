@@ -10,6 +10,7 @@ import com.icees.visuals.cosmetics.HatStyle;
 import com.icees.visuals.cosmetics.JumpCircleStyle;
 import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
+import com.icees.visuals.effects.CustomThemeStyle;
 import com.icees.visuals.effects.FallTheme;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -142,6 +143,10 @@ public final class VisualPresets {
 		s.fallSpread = IceesConfig.fallSpread;
 		s.fallRangeChunks = IceesConfig.fallRangeChunks;
 		s.fallOpacity = IceesConfig.fallOpacity;
+		s.customThemeStyle = IceesConfig.customThemeStyle.name();
+		s.customThemeHue = IceesConfig.customThemeHue;
+		s.customThemeSat = IceesConfig.customThemeSat;
+		s.customThemeVal = IceesConfig.customThemeVal;
 		saveFile();
 	}
 
@@ -190,6 +195,10 @@ public final class VisualPresets {
 		if (s.fallSpread >= 1) IceesConfig.fallSpread = IceesConfig.clamp10(s.fallSpread);
 		if (s.fallRangeChunks >= 1) IceesConfig.fallRangeChunks = IceesConfig.clampChunks(s.fallRangeChunks);
 		if (s.fallOpacity >= 1) IceesConfig.fallOpacity = IceesConfig.clamp10(s.fallOpacity);
+		IceesConfig.customThemeStyle = enumOr(CustomThemeStyle.class, s.customThemeStyle, CustomThemeStyle.PETALS);
+		IceesConfig.customThemeHue = Math.floorMod(s.customThemeHue, 360);
+		if (s.customThemeSat >= 0 && s.customThemeSat <= 100) IceesConfig.customThemeSat = s.customThemeSat;
+		if (s.customThemeVal >= 0 && s.customThemeVal <= 100) IceesConfig.customThemeVal = s.customThemeVal;
 		IceesConfig.save();
 		return true;
 	}
@@ -239,5 +248,7 @@ public final class VisualPresets {
 		String fallTheme = "SAKURA_FALL";
 		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
 		int fallRangeChunks = 3; int fallOpacity = 7;
+		String customThemeStyle = "PETALS";
+		int customThemeHue = 330; int customThemeSat = 70; int customThemeVal = 100;
 	}
 }

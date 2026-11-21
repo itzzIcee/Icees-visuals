@@ -10,6 +10,7 @@ import com.icees.visuals.cosmetics.HatStyle;
 import com.icees.visuals.cosmetics.JumpCircleStyle;
 import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
+import com.icees.visuals.effects.CustomThemeStyle;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.overlay.OverlayMaterial;
 import net.fabricmc.loader.api.FabricLoader;
@@ -52,6 +53,11 @@ public final class IceesConfig {
 	/** How far themes fill around you, in chunks (1–8). */
 	public static int fallRangeChunks = 3;
 	public static int fallOpacity = 7;
+	/** Custom fall theme colour + particle style (used when fallTheme == CUSTOM). */
+	public static CustomThemeStyle customThemeStyle = CustomThemeStyle.PETALS;
+	public static int customThemeHue = 330;
+	public static int customThemeSat = 70;
+	public static int customThemeVal = 100;
 	public static int cosmeticBrightness = 7;
 	/** Legacy global size — migrated into per-cosmetic sizes. */
 	public static int cosmeticSize = 5;
@@ -277,6 +283,10 @@ public final class IceesConfig {
 			if (data.fallSpread >= 1) fallSpread = clamp10(data.fallSpread);
 			if (data.fallRangeChunks >= 1) fallRangeChunks = clampChunks(data.fallRangeChunks);
 			if (data.fallOpacity >= 1) fallOpacity = clamp10(data.fallOpacity);
+			customThemeStyle = safeEnum(CustomThemeStyle.class, data.customThemeStyle, CustomThemeStyle.PETALS);
+			customThemeHue = Math.floorMod(data.customThemeHue, 360);
+			if (data.customThemeSat >= 0 && data.customThemeSat <= 100) customThemeSat = data.customThemeSat;
+			if (data.customThemeVal >= 0 && data.customThemeVal <= 100) customThemeVal = data.customThemeVal;
 			if (data.cosmeticBrightness >= 1) cosmeticBrightness = clamp10(data.cosmeticBrightness);
 			if (data.cosmeticSize >= 1) cosmeticSize = clamp10(data.cosmeticSize);
 			if (data.cosmeticThickness >= 1) cosmeticThickness = clamp10(data.cosmeticThickness);
@@ -348,6 +358,10 @@ public final class IceesConfig {
 		data.fallIntensity = fallIntensity; data.fallSize = fallSize;
 		data.fallSpeed = fallSpeed; data.fallSpread = fallSpread;
 		data.fallRangeChunks = fallRangeChunks; data.fallOpacity = fallOpacity;
+		data.customThemeStyle = customThemeStyle.name();
+		data.customThemeHue = customThemeHue;
+		data.customThemeSat = customThemeSat;
+		data.customThemeVal = customThemeVal;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
 		data.wingSize = wingSize; data.haloSize = haloSize; data.hatSize = hatSize;
@@ -403,6 +417,7 @@ public final class IceesConfig {
 		boolean petals = true; String fallTheme = "SAKURA_FALL";
 		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
 		int fallRangeChunks = 3; int fallOpacity = 7;
+		String customThemeStyle = "PETALS"; int customThemeHue = 330; int customThemeSat = 70; int customThemeVal = 100;
 		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
 		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
