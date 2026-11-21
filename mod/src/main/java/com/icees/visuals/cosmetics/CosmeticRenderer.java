@@ -33,6 +33,8 @@ public final class CosmeticRenderer {
 	private static boolean disabledForSession;
 	private static float CR = 1f, CG = 1f, CB = 1f;
 	private static float C2R = 1f, C2G = 1f, C2B = 1f;
+	/** Smoothed 0..1 shield deploy — 0 = flush on vanilla shield, 1 = raised/blocking. */
+	private static float shieldRaiseAnim;
 
 	private CosmeticRenderer() {}
 
@@ -105,9 +107,12 @@ public final class CosmeticRenderer {
 		float headYaw = Mth.rotLerp(partial, player.yHeadRotO, player.yHeadRot);
 		float headPitch = Mth.lerp(partial, player.xRotO, player.getXRot());
 		// bodyRot matches inventory preview; head relative to that facing
-		float headYawRel = Mth.wrapDegrees(headYaw - player.yBodyRot);
+		// Preview entity uses inventory bodyRot; keep head relative to that facing
+		float headYawRel = Mth.wrapDegrees(headYaw - bodyRot);
 		matrices.pushPose();
-		matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyRot));
+		// Match world cosmetics (-bodyYaw). Inventory entity already faces via GUI quaternion;
+		// 180-bodyRot put the cape on the chest — use the same convention as world.
+		matrices.mulPose(Axis.YP.rotationDegrees(-bodyRot));
 		drawAll(matrices, buffers, player, time, 0f, 0f, headYawRel, headPitch, true);
 		matrices.popPose();
 	}
@@ -115,7 +120,7 @@ public final class CosmeticRenderer {
 	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
 		float time, float camRelYaw, float camPitch, float headYawRel, float headPitch, boolean preview) {
 		float bright = IceesConfig.brightnessFactor() * (preview ? 1.15f : 1f);
-		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
+		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), preview);
 		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
 		if (IceesConfig.shield && (preview || holdingMinecraftShield(player))) {
 			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize), preview);
@@ -333,10 +338,10 @@ public final class CosmeticRenderer {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Follow head look — pivot at neck, then sit on crown
+		// Follow head look (same signs as vanilla PlayerModel head bone)
 		matrices.translate(0, 1.5f, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
+		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
@@ -539,8 +544,8 @@ public final class CosmeticRenderer {
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
 		matrices.translate(0, 1.5f, 0);
-		matrices.mulPose(Axis.YP.rotationDegrees(-headYawRel));
-		matrices.mulPose(Axis.XP.rotationDegrees(-headPitch));
+		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
 		matrices.translate(0, 0.55f + 0.08f * thick, 0);
 
 		switch (style) {
@@ -687,48 +692,50 @@ public final class CosmeticRenderer {
 
 	/* ===================== CAPE — distinct models ===================== */
 
-	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, boolean preview) {
 		CapeStyle style = IceesConfig.capeStyle;
 		float[] c1 = tintCape(style.r1, style.g1, style.b1); CR = c1[0]; CG = c1[1]; CB = c1[2];
 		float[] c2 = tintCape(style.r2, style.g2, style.b2); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
 		float sway = Mth.sin(time * 0.16f) * 0.2f;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
+		// World convention: back = -Z. Preview PIP flips Z; keep cape on the spine.
+		float back = preview ? 0.22f : -0.22f;
 
 		matrices.pushPose();
-		matrices.translate(0, 1.35f, -0.22f);
+		matrices.translate(0, 1.35f, back);
 		matrices.mulPose(Axis.XP.rotationDegrees(10f + sway * 16f));
 
 		switch (style) {
-			case SAKURA, BLOOM -> capeFlow(matrices, vc, glow, style, bright, thick, sway, 1);
+			case SAKURA, BLOOM -> capeFlow(matrices, vc, glow, style, bright, thick, sway, back);
 			case AURORA -> {
 				for (int i = -1; i <= 1; i++) {
 					matrices.pushPose();
-					matrices.translate(i * 0.22f * thick, 0, i * 0.02f);
+					matrices.translate(i * 0.22f * thick, 0, i * 0.02f * Math.signum(back));
 					matrices.mulPose(Axis.ZP.rotationDegrees(i * 8f));
-					capeFlow(matrices, vc, glow, style, bright, thick * 0.7f, sway + i * 0.05f, 1);
+					capeFlow(matrices, vc, glow, style, bright, thick * 0.7f, sway + i * 0.05f, back);
 					matrices.popPose();
 				}
 			}
-			case EMBER -> capeJagged(matrices, vc, glow, style, bright, thick, sway);
-			case FROST, PRISM -> capeFacets(matrices, vc, glow, style, bright, thick, sway);
-			case NIGHT -> capeFlow(matrices, vc, glow, style, bright, thick * 1.25f, sway, 1);
+			case EMBER -> capeJagged(matrices, vc, glow, style, bright, thick, sway, back);
+			case FROST, PRISM -> capeFacets(matrices, vc, glow, style, bright, thick, sway, back);
+			case NIGHT -> capeFlow(matrices, vc, glow, style, bright, thick * 1.25f, sway, back);
 			case TIDE -> {
 				for (int layer = 0; layer < 3; layer++) {
 					matrices.pushPose();
-					matrices.translate(0, -0.05f * layer, -0.04f * layer);
+					matrices.translate(0, -0.05f * layer, Math.signum(back) * -0.04f * layer);
 					matrices.mulPose(Axis.XP.rotationDegrees(layer * 4f + sway * 5f));
-					capeFlow(matrices, vc, glow, style, bright * (1f - layer * 0.15f), thick * (1f - layer * 0.1f), sway, 1);
+					capeFlow(matrices, vc, glow, style, bright * (1f - layer * 0.15f), thick * (1f - layer * 0.1f), sway, back);
 					matrices.popPose();
 				}
 			}
 			case GOLD, ROSE -> {
-				sheet(matrices, vc, -0.45f * thick, 0.05f, 0.05f, -0.15f * thick, 0.25f, -0.05f, CR, CG, CB, bright);
-				sheet(matrices, vc, 0.15f * thick, 0.05f, 0.05f, 0.45f * thick, 0.25f, -0.05f, CR, CG, CB, bright);
-				capeFlow(matrices, vc, glow, style, bright, thick, sway, 1);
+				sheet(matrices, vc, -0.45f * thick, 0.05f, -back * 0.2f, -0.15f * thick, 0.25f, back * 0.25f, CR, CG, CB, bright);
+				sheet(matrices, vc, 0.15f * thick, 0.05f, -back * 0.2f, 0.45f * thick, 0.25f, back * 0.25f, CR, CG, CB, bright);
+				capeFlow(matrices, vc, glow, style, bright, thick, sway, back);
 			}
-			case VOID, MIST -> capeFlow(matrices, vc, glow, style, bright, thick * 1.15f, sway, 1);
-			case LEAF -> capeJagged(matrices, vc, glow, style, bright, thick, sway);
+			case VOID, MIST -> capeFlow(matrices, vc, glow, style, bright, thick * 1.15f, sway, back);
+			case LEAF -> capeJagged(matrices, vc, glow, style, bright, thick, sway, back);
 		}
 		matrices.popPose();
 	}
@@ -743,8 +750,8 @@ public final class CosmeticRenderer {
 	}
 
 	/**
-	 * Solid shield plate on the arm that holds a Minecraft shield.
-	 * Only drawn while a shield is in hand — see holdingMinecraftShield.
+	 * Cosmetic plate sits flush on the held Minecraft shield, with smooth
+	 * ein-/ausfahr (lower / raise) when blocking.
 	 */
 	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, LocalPlayer player,
 		float time, float bright, float thick, boolean preview) {
@@ -754,55 +761,72 @@ public final class CosmeticRenderer {
 
 		boolean main = isShieldStack(player.getMainHandItem());
 		boolean off = isShieldStack(player.getOffhandItem());
-		boolean blocking = player.isBlocking();
-		float raise = blocking ? 1f : 0.25f;
+		float target = player.isBlocking() ? 1f : 0f;
+		if (preview && !main && !off) {
+			// Demo pulse in Orbit when no shield equipped
+			target = 0.35f + 0.65f * (0.5f + 0.5f * Mth.sin(time * 0.12f));
+		}
+		float speed = target > shieldRaiseAnim ? 0.32f : 0.2f;
+		shieldRaiseAnim += (target - shieldRaiseAnim) * speed;
+		if (Math.abs(target - shieldRaiseAnim) < 0.002f) shieldRaiseAnim = target;
+		float raise = shieldRaiseAnim;
 
 		if (preview && !main && !off) {
-			drawShieldPlate(matrices, vc, style, c, bright, thick, -1f, 0.45f);
+			drawShieldPlate(matrices, vc, style, c, bright, thick, -1f, raise);
 			return;
 		}
 		if (off) drawShieldPlate(matrices, vc, style, c, bright, thick, -1f, raise);
 		if (main) drawShieldPlate(matrices, vc, style, c, bright, thick, 1f, raise);
 	}
 
-	/** Clean box shield — no jagged sheets / floating orbs. */
+	/**
+	 * Overlay on the vanilla shield face. raise=0 → eingefahren (flush on shield),
+	 * raise=1 → ausgefahren (blocking pose, plate extends forward).
+	 */
 	private static void drawShieldPlate(PoseStack matrices, VertexConsumer vc,
 		ShieldStyle style, float[] c, float bright, float thick, float side, float raise) {
 		matrices.pushPose();
-		float armX = side * 0.22f;
-		float armY = 0.88f + raise * 0.08f;
-		float armZ = 0.02f + raise * 0.42f;
+		// Match third-person held shield: on the arm, slightly in front of the torso
+		float armX = side * (0.48f - raise * 0.18f);
+		float armY = 1.02f + raise * 0.28f;
+		float armZ = 0.38f + raise * 0.22f;
 		matrices.translate(armX, armY, armZ);
-		matrices.mulPose(Axis.YP.rotationDegrees(side * (-12f - raise * 50f)));
-		matrices.mulPose(Axis.XP.rotationDegrees(-6f - raise * 35f));
+		// Face outward on the shield; tip up and toward center when raised
+		matrices.mulPose(Axis.YP.rotationDegrees(side * (6f - raise * 14f)));
+		matrices.mulPose(Axis.XP.rotationDegrees(-12f - raise * 48f));
+		matrices.mulPose(Axis.ZP.rotationDegrees(side * (4f - raise * 8f)));
+		// Ausfahr: slide along shield normal so the plate sits on top, then extends out
+		matrices.translate(0, 0, 0.02f + raise * 0.12f);
 
-		float s = 0.7f + (thick - 1f) * 0.25f;
+		float s = 0.85f + (thick - 1f) * 0.2f;
 		float w = switch (style) {
-			case TOWER -> 0.18f * s;
-			case KITE -> 0.20f * s;
-			case ROUND -> 0.22f * s;
-			default -> 0.19f * s;
+			case TOWER -> 0.20f * s;
+			case KITE -> 0.22f * s;
+			case ROUND -> 0.24f * s;
+			default -> 0.21f * s;
 		};
 		float h = switch (style) {
-			case TOWER -> 0.48f * s;
-			case KITE -> 0.42f * s;
-			case ROUND -> 0.36f * s;
-			default -> 0.40f * s;
+			case TOWER -> 0.52f * s;
+			case KITE -> 0.46f * s;
+			case ROUND -> 0.40f * s;
+			default -> 0.44f * s;
 		};
-		float depth = 0.06f * s;
+		// Thin overlay — depth grows slightly when ausgefahren
+		float depth = (0.04f + raise * 0.05f) * s;
 		float a = Math.min(1f, 0.98f * bright);
 		float r = c[0], g = c[1], b = c[2];
 		int light = LightTexture.FULL_BRIGHT;
 
+		// Back face sits on the vanilla shield (z≈0), front face extends with raise
 		MeshPrims.box(matrices, vc, light, -w, -h * 0.5f, 0, w, h * 0.5f, depth, r, g, b, a);
-		float rw = w + 0.02f * s;
-		float rh = h * 0.5f + 0.02f * s;
-		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.01f, rw, -h * 0.5f + 0.03f * s, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
-		MeshPrims.box(matrices, vc, light, -rw, h * 0.5f - 0.03f * s, -0.01f, rw, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
-		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.01f, -w + 0.02f * s, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
-		MeshPrims.box(matrices, vc, light, w - 0.02f * s, -rh, -0.01f, rw, rh, depth + 0.01f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		float rw = w + 0.015f * s;
+		float rh = h * 0.5f + 0.015f * s;
+		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.005f, rw, -h * 0.5f + 0.025f * s, depth + 0.008f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, -rw, h * 0.5f - 0.025f * s, -0.005f, rw, rh, depth + 0.008f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, -rw, -rh, -0.005f, -w + 0.015f * s, rh, depth + 0.008f, r * 0.55f, g * 0.55f, b * 0.6f, a);
+		MeshPrims.box(matrices, vc, light, w - 0.015f * s, -rh, -0.005f, rw, rh, depth + 0.008f, r * 0.55f, g * 0.55f, b * 0.6f, a);
 		float ew = w * 0.35f, eh = h * 0.22f;
-		MeshPrims.box(matrices, vc, light, -ew, -eh, depth - 0.005f, ew, eh, depth + 0.025f,
+		MeshPrims.box(matrices, vc, light, -ew, -eh, depth - 0.005f, ew, eh, depth + 0.02f,
 			Math.min(1f, r + 0.2f), Math.min(1f, g + 0.15f), Math.min(1f, b + 0.1f), a);
 		if (style == ShieldStyle.ROUND) {
 			MeshPrims.cylinder(matrices, vc, light, 0, -h * 0.05f, depth * 0.5f, w * 0.85f, depth, 14, r, g, b, a * 0.9f);
@@ -810,20 +834,21 @@ public final class CosmeticRenderer {
 		matrices.popPose();
 	}
 
-	private static void capeFlow(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway, int panels) {
+	private static void capeFlow(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway, float back) {
 		float w = 0.4f * thick;
 		float len = -1.3f * thick;
-		// front face + back face
-		sheet(m, vc, -w, 0, 0, w, len, -0.22f, CR, CG, CB, 0.95f * bright);
-		// side edges for side-view visibility
-		sheetYZ(m, vc, -w, 0, 0.02f, -w, len, -0.22f, C2R, C2G, C2B, 0.7f * bright);
-		sheetYZ(m, vc, w, 0, 0.02f, w, len, -0.22f, C2R, C2G, C2B, 0.7f * bright);
-		sheet(m, glow, -w * 1.1f, 0.02f, 0.03f, w * 1.1f, len * 1.02f, -0.28f, C2R, C2G, C2B, 0.3f * bright);
+		float zFar = back;
+		float zGlow = back * (0.28f / 0.22f);
+		sheet(m, vc, -w, 0, 0, w, len, zFar, CR, CG, CB, 0.95f * bright);
+		sheetYZ(m, vc, -w, 0, -Math.signum(back) * 0.02f, -w, len, zFar, C2R, C2G, C2B, 0.7f * bright);
+		sheetYZ(m, vc, w, 0, -Math.signum(back) * 0.02f, w, len, zFar, C2R, C2G, C2B, 0.7f * bright);
+		sheet(m, glow, -w * 1.1f, 0.02f, -Math.signum(back) * 0.03f, w * 1.1f, len * 1.02f, zGlow, C2R, C2G, C2B, 0.3f * bright);
 	}
 
-	private static void capeJagged(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway) {
+	private static void capeJagged(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway, float back) {
 		float w = 0.42f * thick;
 		int tips = 5;
+		float zHang = back * (0.2f / 0.22f);
 		for (int i = 0; i < tips; i++) {
 			float t0 = i / (float) tips;
 			float t1 = (i + 1) / (float) tips;
@@ -831,22 +856,23 @@ public final class CosmeticRenderer {
 			float x1 = -w + t1 * 2f * w;
 			float mid = (x0 + x1) * 0.5f;
 			float tipY = -1.15f * thick - (i % 2 == 0 ? 0.25f : 0.05f) * thick;
-			sheet(m, vc, x0, 0, 0, mid, tipY, -0.2f, CR, CG, CB, bright);
-			sheet(m, vc, mid, tipY, -0.2f, x1, 0, 0, C2R, C2G, C2B, bright);
+			sheet(m, vc, x0, 0, 0, mid, tipY, zHang, CR, CG, CB, bright);
+			sheet(m, vc, mid, tipY, zHang, x1, 0, 0, C2R, C2G, C2B, bright);
 		}
 	}
 
-	private static void capeFacets(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway) {
+	private static void capeFacets(PoseStack m, VertexConsumer vc, VertexConsumer glow, CapeStyle style, float bright, float thick, float sway, float back) {
 		float w = 0.4f * thick;
+		float zSign = Math.signum(back);
 		for (int row = 0; row < 3; row++) {
 			for (int col = 0; col < 3; col++) {
 				float x0 = -w + col * (2f * w / 3f);
 				float x1 = x0 + (2f * w / 3f);
 				float y0 = -row * (1.2f * thick / 3f);
 				float y1 = y0 - (1.2f * thick / 3f);
-				float z = -0.05f * row - 0.08f * (col % 2);
-				sheet(m, vc, x0, y0, z, x1, y1, z - 0.08f, CR, CG, CB, 0.9f * bright);
-				sheetYZ(m, vc, x0, y0, z + 0.03f, x0, y1, z - 0.08f, C2R, C2G, C2B, 0.55f * bright);
+				float z = zSign * (0.05f * row + 0.08f * (col % 2));
+				sheet(m, vc, x0, y0, z, x1, y1, z + zSign * 0.08f, CR, CG, CB, 0.9f * bright);
+				sheetYZ(m, vc, x0, y0, z - zSign * 0.03f, x0, y1, z + zSign * 0.08f, C2R, C2G, C2B, 0.55f * bright);
 			}
 		}
 	}
