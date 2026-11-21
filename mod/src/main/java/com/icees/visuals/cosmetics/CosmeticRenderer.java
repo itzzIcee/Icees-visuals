@@ -361,11 +361,10 @@ public final class CosmeticRenderer {
 			0f,
 			headYawRel * Mth.DEG_TO_RAD,
 			headPitch * Mth.DEG_TO_RAD));
-		// Crown of head (model y=-8), flip so meshes grow outward, then seat flush
-		matrices.translate(0f, -0.5f, 0f);
+		// Wear on the skull like a real hat (neck → upper head, brim on crown)
+		matrices.translate(0f, -0.25f, 0f);
 		matrices.scale(1f, -1f, 1f);
-		// Real worn hat: brim on the skull, slight sink — no floating gap
-		matrices.translate(0f, -0.35f, 0f);
+		matrices.translate(0f, 0.02f, 0f);
 		float s = 0.85f + thick * 0.2f;
 
 		switch (style) {
@@ -567,7 +566,8 @@ public final class CosmeticRenderer {
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
-		matrices.translate(0, 1.5f - headDrop + 0.55f + 0.08f * thick, 0);
+		// Just above the crown — not floating a half-block up
+		matrices.translate(0, 1.5f - headDrop + 0.28f + 0.04f * thick, 0);
 
 		switch (style) {
 			case BLOSSOM -> {
