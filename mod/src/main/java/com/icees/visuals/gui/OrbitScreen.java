@@ -2,6 +2,7 @@ package com.icees.visuals.gui;
 
 import com.icees.visuals.config.CosmeticTint;
 import com.icees.visuals.config.IceesConfig;
+import com.icees.visuals.config.VisualPresets;
 import com.icees.visuals.effects.FallTheme;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
@@ -34,11 +35,12 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { COSMETICS, THEMES, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, THEMES, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
 	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, SHIELD, JUMP, TRAIL }
 
 	private Tab tab = Tab.COSMETICS;
 	private CosmeticPick pick = CosmeticPick.WINGS;
+	private int configSlot = 0;
 	private int panelX, panelY;
 	private final int panelW = 640;
 	private final int panelH = 520;
@@ -80,6 +82,7 @@ public class OrbitScreen extends Screen {
 		int ty = panelY + 64;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
+		addTab(tx, ty, "Configs", Tab.CONFIGS); tx += 62;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
 		addTab(tx, ty, "GUI", Tab.GUI); tx += 36;
@@ -92,11 +95,45 @@ public class OrbitScreen extends Screen {
 		switch (tab) {
 			case COSMETICS -> buildCosmetics(x, y, w);
 			case THEMES -> buildThemes(x, y, w);
+			case CONFIGS -> buildConfigs(x, y, w);
 			case OVERLAY -> buildOverlay(x, y, w);
 			case CPVP -> buildCpvp(x, y, w);
 			case GUI -> buildGui(x, y, w);
 			case KEYBIND -> buildKeybind(x, y, w);
 		}
+	}
+
+	/** Save / load Themes + Cosmetics looks into named slots. */
+	private void buildConfigs(int x, int y, int w) {
+		addHit(x, y, w, 16, "Save themes + cosmetics as a look — load anytime", false, () -> {});
+		y += 24;
+
+		for (int i = 0; i < VisualPresets.SLOT_COUNT; i++) {
+			int slot = i;
+			boolean selected = configSlot == slot;
+			boolean filled = VisualPresets.isFilled(slot);
+			String status = filled ? "saved" : "empty";
+			String mark = selected ? "●" : "○";
+			addHit(x, y, w - 200, 20,
+				mark + " " + VisualPresets.name(slot) + "  ·  " + status,
+				selected || filled,
+				() -> configSlot = slot);
+			addHit(x + w - 190, y, 58, 20, "Load", filled, () -> {
+				if (VisualPresets.loadSlot(slot)) configSlot = slot;
+			});
+			addHit(x + w - 126, y, 58, 20, "Save", true, () -> {
+				VisualPresets.saveCurrent(slot);
+				configSlot = slot;
+			});
+			addHit(x + w - 62, y, 62, 20, "Clear", filled, () -> VisualPresets.clearSlot(slot));
+			y += 26;
+		}
+
+		y += 8;
+		addHit(x, y, w, 20,
+			"Rename selected  →  " + VisualPresets.name(configSlot) + "  (click to cycle)",
+			false,
+			() -> VisualPresets.cycleName(configSlot));
 	}
 
 	private void buildThemes(int x, int y, int w) {
@@ -251,6 +288,14 @@ public class OrbitScreen extends Screen {
 			addHit(cx, y, cw, 16, "Leaves a soft glow while you walk / run", false, () -> {});
 			y += 20;
 			y = addTintControls(cx, y, cw, IceesConfig.auraTint);
+		} else if (pick == CosmeticPick.SHIELD) {
+			addHit(cx, y, cw, 16, "Only visible while a Minecraft shield is in your hand", false, () -> {});
+			y += 20;
+			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
+			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
+			addHit(cx + cw - 24, y, 24, 18, "›", false, this::cycleForm);
+			y += 22;
+			y = addTintControls(cx, y, cw, IceesConfig.shieldTint);
 		} else {
 			addHit(cx, y, 24, 18, "‹", false, this::prevForm);
 			addHit(cx + 28, y, cw - 56, 18, "Form  →  " + formTitle(pick), false, this::cycleForm);
@@ -356,7 +401,7 @@ public class OrbitScreen extends Screen {
 			case HAT -> "Hat";
 			case CAPE -> "Cape";
 			case AURA -> "Aura";
-			case SHIELD -> "Shld";
+			case SHIELD -> "Shield";
 			case JUMP -> "Jump";
 			case TRAIL -> "Trail";
 		};
@@ -531,7 +576,7 @@ public class OrbitScreen extends Screen {
 				InventoryScreen.renderEntityInInventoryFollowsMouse(
 					graphics, px + 8, py + 22, px + 120, py + 172, 48, 0.0625F, mouseX, mouseY, this.minecraft.player);
 			}
-			graphics.drawString(this.font, "your skin", px + 8, py + 164, SakuraTheme.muted(), false);
+			graphics.drawString(this.font, "skin + cosmetics", px + 8, py + 164, SakuraTheme.muted(), false);
 		}
 
 		for (Hit hit : hits) {
@@ -544,8 +589,11 @@ public class OrbitScreen extends Screen {
 		String tip = switch (tab) {
 			case COSMETICS -> pick == CosmeticPick.JUMP
 				? IceesConfig.jumpCircleStyle.description
-				: "Skin preview left — pick a cosmetic, then form / colour. F5 in-world.";
+				: pick == CosmeticPick.SHIELD
+					? "Shield cosmetic only shows when a Minecraft shield is in your hand. F5."
+					: "Preview shows your cosmetics — pick one, then form / colour.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description;
+			case CONFIGS -> "Save writes Themes + Cosmetics into a slot. Load restores them.";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
 			case GUI -> "Paint the Orbit menu — fine Hue / Sat / Val.";
@@ -574,6 +622,7 @@ public class OrbitScreen extends Screen {
 		for (Hit hit : hits) {
 			if (inside(mx, my, hit.x, hit.y, hit.w, hit.h)) {
 				hit.action.run();
+				rebuildHits();
 				return true;
 			}
 		}

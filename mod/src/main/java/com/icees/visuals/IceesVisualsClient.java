@@ -1,6 +1,7 @@
 package com.icees.visuals;
 
 import com.icees.visuals.config.IceesConfig;
+import com.icees.visuals.config.VisualPresets;
 import com.icees.visuals.cosmetics.CosmeticRenderer;
 import com.icees.visuals.cosmetics.MovementTrailRenderer;
 import com.icees.visuals.cpvp.MotionBlurRenderer;
@@ -24,6 +25,7 @@ public final class IceesVisualsClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		IceesConfig.load();
+		VisualPresets.load();
 		IceesKeybinds.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -48,6 +50,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> MotionBlurRenderer.render(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.21 — tighter cosmetics, working movement trail");
+		LOGGER.info("Icee's Sakura Visuals 1.0.22 — preview cosmetics, saved looks, shield fix");
 	}
 }

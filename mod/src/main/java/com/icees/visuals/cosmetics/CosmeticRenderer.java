@@ -15,6 +15,8 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
@@ -75,30 +77,53 @@ public final class CosmeticRenderer {
 			double pz = Mth.lerp(partial, player.zo, player.getZ()) - cam.z;
 			float bodyYaw = Mth.rotLerp(partial, player.yBodyRotO, player.yBodyRot);
 
-			// Camera yaw relative to body — for billboards in local space
 			float camRelYaw = camera.yRot() - bodyYaw;
 			float camPitch = camera.xRot();
-
-			float bright = IceesConfig.brightnessFactor();
 
 			matrices.pushPose();
 			matrices.translate(px, py, pz);
 			matrices.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
-
-			if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
-			if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
-			if (IceesConfig.shield) drawShield(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize));
-			if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize));
-			if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize));
-			if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
-			if (IceesConfig.jumpCircles && !player.onGround()) {
-				drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
-			}
-
+			drawAll(matrices, consumers, player, time, camRelYaw, camPitch, false);
 			matrices.popPose();
 		} catch (Throwable t) {
 			disabledForSession = true;
 			IceesVisualsClient.LOGGER.error("Cosmetics crashed — disabled for this session", t);
+		}
+	}
+
+	/**
+	 * Cosmetics in the Orbit skin preview (same pose space as the GUI entity).
+	 * {@code bodyRot} matches LivingEntityRenderState.bodyRot.
+	 */
+	public static void renderInGuiPreview(PoseStack matrices, MultiBufferSource buffers, float bodyRot) {
+		if (disabledForSession) return;
+		Minecraft client = Minecraft.getInstance();
+		LocalPlayer player = client.player;
+		if (player == null || buffers == null) return;
+		try {
+			float time = player.tickCount + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+			matrices.pushPose();
+			matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyRot));
+			drawAll(matrices, buffers, player, time, 0f, 0f, true);
+			matrices.popPose();
+		} catch (Throwable t) {
+			IceesVisualsClient.LOGGER.warn("Cosmetic GUI preview failed", t);
+		}
+	}
+
+	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
+		float time, float camRelYaw, float camPitch, boolean preview) {
+		float bright = IceesConfig.brightnessFactor();
+		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize));
+		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize));
+		if (IceesConfig.shield && (preview || holdingMinecraftShield(player))) {
+			drawShield(matrices, consumers, player, time, bright, IceesConfig.sizeFactor(IceesConfig.shieldSize), preview);
+		}
+		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize));
+		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize));
+		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
+		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
+			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
 		}
 	}
 
@@ -690,29 +715,76 @@ public final class CosmeticRenderer {
 		matrices.popPose();
 	}
 
-	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick) {
+	/** True when a vanilla shield is in main or off hand (Schild draußen). */
+	private static boolean holdingMinecraftShield(LocalPlayer player) {
+		return isShieldStack(player.getMainHandItem()) || isShieldStack(player.getOffhandItem());
+	}
+
+	private static boolean isShieldStack(ItemStack stack) {
+		return !stack.isEmpty() && stack.is(Items.SHIELD);
+	}
+
+	/**
+	 * Glowing shield plate on the arm that holds a Minecraft shield.
+	 * Only drawn while a shield is in hand — see holdingMinecraftShield.
+	 */
+	private static void drawShield(PoseStack matrices, MultiBufferSource buffers, LocalPlayer player,
+		float time, float bright, float thick, boolean preview) {
 		ShieldStyle style = IceesConfig.shieldStyle;
 		float[] c = IceesConfig.color(IceesConfig.shieldTint, style.r, style.g, style.b);
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
+
+		boolean main = isShieldStack(player.getMainHandItem());
+		boolean off = isShieldStack(player.getOffhandItem());
+		boolean blocking = player.isBlocking();
+		float raise = blocking ? 1f : 0.35f;
+
+		if (preview && !main && !off) {
+			// Preview: show on offhand side so you can see the form
+			drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, -1f, 0.7f);
+			return;
+		}
+		if (off) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, -1f, raise);
+		if (main) drawShieldPlate(matrices, vc, glow, style, c, bright, thick, time, 1f, raise);
+	}
+
+	private static void drawShieldPlate(PoseStack matrices, VertexConsumer vc, VertexConsumer glow,
+		ShieldStyle style, float[] c, float bright, float thick, float time, float side, float raise) {
 		matrices.pushPose();
-		matrices.translate(0.42f * thick, 1.1f, 0.05f);
-		matrices.mulPose(Axis.YP.rotationDegrees(-18f));
-		matrices.mulPose(Axis.ZP.rotationDegrees(8f + Mth.sin(time * 0.12f) * 2f));
+		// Arm / offhand position — larger, readable from F5
+		matrices.translate(side * 0.55f * thick, 0.95f + raise * 0.25f, 0.28f + raise * 0.15f);
+		matrices.mulPose(Axis.YP.rotationDegrees(side * -55f));
+		matrices.mulPose(Axis.XP.rotationDegrees(-12f - raise * 25f));
+		matrices.mulPose(Axis.ZP.rotationDegrees(side * (6f + Mth.sin(time * 0.15f) * 2f)));
+
 		float w = switch (style) {
-			case TOWER -> 0.28f * thick;
-			case KITE -> 0.32f * thick;
-			default -> 0.36f * thick;
+			case TOWER -> 0.38f * thick;
+			case KITE -> 0.42f * thick;
+			case ROUND -> 0.48f * thick;
+			default -> 0.44f * thick;
 		};
 		float h = switch (style) {
-			case TOWER -> 0.7f * thick;
-			case KITE -> 0.55f * thick;
-			default -> 0.48f * thick;
+			case TOWER -> 0.95f * thick;
+			case KITE -> 0.78f * thick;
+			case ROUND -> 0.7f * thick;
+			default -> 0.72f * thick;
 		};
-		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.04f, c[0], c[1], c[2], 0.95f * bright);
-		sheetYZ(matrices, vc, -w, -h * 0.5f, -0.02f, -w, h * 0.5f, 0.06f, c[0] * 0.8f, c[1] * 0.8f, c[2] * 0.85f, 0.7f * bright);
+
+		float a = 0.95f * bright;
+		// Face + back so it's visible from every angle
+		sheet(matrices, vc, -w, -h * 0.5f, 0, w, h * 0.5f, 0.06f, c[0], c[1], c[2], a);
+		sheet(matrices, vc, -w, -h * 0.5f, 0.06f, w, h * 0.5f, 0, c[0] * 0.75f, c[1] * 0.75f, c[2] * 0.8f, a * 0.85f);
+		sheetYZ(matrices, vc, -w, -h * 0.5f, -0.02f, -w, h * 0.5f, 0.08f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.8f);
+		sheetYZ(matrices, vc, w, -h * 0.5f, -0.02f, w, h * 0.5f, 0.08f, c[0] * 0.85f, c[1] * 0.85f, c[2] * 0.9f, a * 0.8f);
+
+		// Soft outer glow
+		sheet(matrices, glow, -w * 1.2f, -h * 0.55f, -0.04f, w * 1.2f, h * 0.55f, 0.1f,
+			c[0], c[1], c[2], 0.35f * bright);
+		billboardOrb(matrices, glow, 0, 0, 0.08f, 0.18f * thick, c[0], c[1], c[2], bright, time);
+
 		if (style == ShieldStyle.CRYSTAL || style == ShieldStyle.SAKURA) {
-			billboardOrb(matrices, glow, 0, 0, 0.05f, 0.12f * thick, c[0], c[1], c[2], bright, time);
+			billboardOrb(matrices, glow, 0, h * 0.15f, 0.1f, 0.1f * thick, c[0], c[1], c[2], bright * 1.1f, time);
 		}
 		matrices.popPose();
 	}
