@@ -84,7 +84,8 @@ public final class CosmeticRenderer {
 
 			matrices.pushPose();
 			matrices.translate(px, py, pz);
-			matrices.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
+			// Same body frame as LivingEntityRenderer.setupRotations / HumanoidModel
+			matrices.mulPose(Axis.YP.rotationDegrees(180f - bodyYaw));
 			drawAll(matrices, consumers, player, time, camRelYaw, camPitch, headYawRel, headPitch, false);
 			matrices.popPose();
 		} catch (Throwable t) {
@@ -118,11 +119,14 @@ public final class CosmeticRenderer {
 	private static void drawAll(PoseStack matrices, MultiBufferSource consumers, LocalPlayer player,
 		float time, float camRelYaw, float camPitch, float headYawRel, float headPitch, boolean preview) {
 		float bright = IceesConfig.brightnessFactor() * (preview ? 1.15f : 1f);
-		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), preview);
-		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize), preview);
-		// Shield cosmetic removed
-		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headYawRel, headPitch, preview);
-		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, preview);
+		// HumanoidModel crouch: head.y += 4.2, body.y += 3.2 (model units / 16)
+		boolean crouch = !preview && player.isCrouching();
+		float headDrop = crouch ? 4.2f / 16f : 0f;
+		float bodyDrop = crouch ? 3.2f / 16f : 0f;
+		if (IceesConfig.cape) drawCape(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.capeSize), bodyDrop);
+		if (IceesConfig.wings) drawWings(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.wingSize), bodyDrop);
+		if (IceesConfig.halo) drawHalo(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.haloSize), headYawRel, headPitch, headDrop);
+		if (IceesConfig.hat) drawHat(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.hatSize), headYawRel, headPitch, headDrop);
 		if (IceesConfig.aura) drawAura(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.auraSize), camRelYaw, camPitch);
 		if (IceesConfig.jumpCircles && (preview || !player.onGround())) {
 			drawJumpCircles(matrices, consumers, time, bright, IceesConfig.sizeFactor(IceesConfig.jumpCircleSize));
@@ -131,7 +135,7 @@ public final class CosmeticRenderer {
 
 	/* ===================== WINGS — distinct models ===================== */
 
-	private static void drawWings(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, boolean preview) {
+	private static void drawWings(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
 		WingStyle style = IceesConfig.wingStyle;
 		float[] col = tintWings(style.r, style.g, style.b);
 		CR = col[0]; CG = col[1]; CB = col[2];
@@ -140,9 +144,9 @@ public final class CosmeticRenderer {
 		VertexConsumer hard = buffers.getBuffer(RenderTypes.eyes(TEX_WING));
 		for (int side : new int[]{-1, 1}) {
 			matrices.pushPose();
-			// World (-bodyYaw): back=-Z. Preview (vanilla body): back=+Z — mirror local Z.
-			matrices.translate(side * 0.16f, 1.05f, preview ? 0.15f : 0.1f);
-			if (preview) matrices.scale(1f, 1f, -1f);
+			// Vanilla body: back=+Z. Local wing sheets use -Z — mirror onto the back.
+			matrices.translate(side * 0.16f, 1.05f - bodyDrop, 0.15f);
+			matrices.scale(1f, 1f, -1f);
 			matrices.mulPose(Axis.ZP.rotationDegrees(side * (-36f + beat * 22f)));
 			matrices.mulPose(Axis.YP.rotationDegrees(side * 18f));
 
@@ -331,17 +335,14 @@ public final class CosmeticRenderer {
 	}
 
 	private static void drawHat(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
-		float headYawRel, float headPitch, boolean preview) {
+		float headYawRel, float headPitch, float headDrop) {
 		HatStyle style = IceesConfig.hatStyle;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		matrices.pushPose();
-		// Pivot at neck. Preview shares vanilla body frame (+angles).
-		// World uses -bodyYaw — invert head so the hat tracks the visible skull.
-		matrices.translate(0, 1.5f, 0);
-		float yaw = preview ? headYawRel : -headYawRel;
-		float pitch = preview ? headPitch : -headPitch;
-		matrices.mulPose(Axis.YP.rotationDegrees(yaw));
-		matrices.mulPose(Axis.XP.rotationDegrees(pitch));
+		// Same signs as HumanoidModel head (yRot / xRot). Drop with crouch (head.y += 4.2).
+		matrices.translate(0, 1.5f - headDrop, 0);
+		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
 		matrices.translate(0, 0.22f + 0.04f * thick, 0);
 		float s = 0.85f + thick * 0.2f;
 
@@ -537,17 +538,15 @@ public final class CosmeticRenderer {
 	/* ===================== HALO — distinct models ===================== */
 
 	private static void drawHalo(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick,
-		float headYawRel, float headPitch, boolean preview) {
+		float headYawRel, float headPitch, float headDrop) {
 		HaloStyle style = IceesConfig.haloStyle;
 		float[] c = tintHalo(style.r, style.g, style.b); CR = c[0]; CG = c[1]; CB = c[2];
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_HALO));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
 		matrices.pushPose();
-		matrices.translate(0, 1.5f, 0);
-		float yaw = preview ? headYawRel : -headYawRel;
-		float pitch = preview ? headPitch : -headPitch;
-		matrices.mulPose(Axis.YP.rotationDegrees(yaw));
-		matrices.mulPose(Axis.XP.rotationDegrees(pitch));
+		matrices.translate(0, 1.5f - headDrop, 0);
+		matrices.mulPose(Axis.YP.rotationDegrees(headYawRel));
+		matrices.mulPose(Axis.XP.rotationDegrees(headPitch));
 		matrices.translate(0, 0.55f + 0.08f * thick, 0);
 
 		switch (style) {
@@ -694,18 +693,18 @@ public final class CosmeticRenderer {
 
 	/* ===================== CAPE — distinct models ===================== */
 
-	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, boolean preview) {
+	private static void drawCape(PoseStack matrices, MultiBufferSource buffers, float time, float bright, float thick, float bodyDrop) {
 		CapeStyle style = IceesConfig.capeStyle;
 		float[] c1 = tintCape(style.r1, style.g1, style.b1); CR = c1[0]; CG = c1[1]; CB = c1[2];
 		float[] c2 = tintCape(style.r2, style.g2, style.b2); C2R = c2[0]; C2G = c2[1]; C2B = c2[2];
 		float sway = Mth.sin(time * 0.16f) * 0.2f;
 		VertexConsumer vc = buffers.getBuffer(RenderTypes.eyes(TEX_CAPE));
 		VertexConsumer glow = buffers.getBuffer(RenderTypes.eyes(TEX_AURA));
-		// World (-bodyYaw): back = -Z. Preview (vanilla 180-bodyRot): back = +Z.
-		float back = preview ? 0.22f : -0.22f;
+		// Vanilla body frame: back = +Z
+		float back = 0.22f;
 
 		matrices.pushPose();
-		matrices.translate(0, 1.35f, back);
+		matrices.translate(0, 1.35f - bodyDrop, back);
 		matrices.mulPose(Axis.XP.rotationDegrees(10f + sway * 16f));
 
 		switch (style) {
