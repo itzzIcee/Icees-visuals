@@ -581,7 +581,7 @@ public class OrbitScreen extends Screen {
 		graphics.blit(RenderPipelines.GUI_TEXTURED, TEX_PANEL,
 			panelX - 12, panelY - 12, 0f, 0f, panelW + 24, panelH + 24, 512, 512, -1);
 
-		Component brand = Component.literal("Icee's visuals").withStyle(Style.EMPTY.withFont(TITLE_FONT));
+		Component brand = Component.literal("Icee's Visuals").withStyle(Style.EMPTY.withFont(TITLE_FONT));
 		graphics.drawString(this.font, brand, panelX + 30, panelY + 16, SakuraTheme.titleGlow(), false);
 		graphics.drawString(this.font, brand, panelX + 28, panelY + 14, SakuraTheme.title(), false);
 		graphics.drawString(this.font, "soft orbit", panelX + 30, panelY + 42, SakuraTheme.muted(), false);
