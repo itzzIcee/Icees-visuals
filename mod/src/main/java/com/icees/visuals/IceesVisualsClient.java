@@ -53,6 +53,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			(graphics, tickCounter) -> PvpVisualsRenderer.renderHud(graphics)
 		);
 
-		LOGGER.info("Icee's Sakura Visuals 1.0.14 — PvP cosmetics");
+		LOGGER.info("Icee's Sakura Visuals 1.0.15 — 3D world PvP FX");
 	}
 }

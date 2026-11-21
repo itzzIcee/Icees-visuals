@@ -417,7 +417,7 @@ public class OrbitScreen extends Screen {
 
 		String tip = switch (tab) {
 			case COSMETICS -> "Forms + size + colour. Third person for body cosmetics.";
-			case PVP -> "Hit particles, mace shockwave, weapon FX + choose your hit animation.";
+			case PVP -> "3D world FX — shockwave on ground, debris in air, hit anim at the target.";
 			case THEMES -> IceesConfig.fallTheme == FallTheme.OFF ? "Themes off." : IceesConfig.fallTheme.description + "  (in the air, not on screen)";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";
