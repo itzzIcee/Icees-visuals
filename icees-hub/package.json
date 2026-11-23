@@ -1,0 +1,25 @@
+{
+  "name": "icees-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "icee's Hub Discord bot for rules, tickets, emojis, stickers, and soundboard sounds.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "register": "tsx src/register.ts",
+    "register:global": "tsx src/register.ts --global",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/lib/*.test.ts src/commands/*.test.ts"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "discord.js": "^14.26.4",
+    "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
