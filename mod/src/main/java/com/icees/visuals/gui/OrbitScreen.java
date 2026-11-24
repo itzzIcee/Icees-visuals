@@ -39,7 +39,7 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { COSMETICS, THEMES, SKIES, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, THEMES, SKYS, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
 	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, JUMP, TRAIL }
 
 	private Tab tab = Tab.COSMETICS;
@@ -87,7 +87,7 @@ public class OrbitScreen extends Screen {
 		int ty = panelY + 64;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
-		addTab(tx, ty, "Skies", Tab.SKIES); tx += 48;
+		addTab(tx, ty, "Skys", Tab.SKYS); tx += 48;
 		addTab(tx, ty, "Configs", Tab.CONFIGS); tx += 62;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
@@ -101,7 +101,7 @@ public class OrbitScreen extends Screen {
 		switch (tab) {
 			case COSMETICS -> buildCosmetics(x, y, w);
 			case THEMES -> buildThemes(x, y, w);
-			case SKIES -> buildSkies(x, y, w);
+			case SKYS -> buildSkys(x, y, w);
 			case CONFIGS -> buildConfigs(x, y, w);
 			case OVERLAY -> buildOverlay(x, y, w);
 			case CPVP -> buildCpvp(x, y, w);
@@ -110,7 +110,7 @@ public class OrbitScreen extends Screen {
 		}
 	}
 
-	private void buildSkies(int x, int y, int w) {
+	private void buildSkys(int x, int y, int w) {
 		int col = 0;
 		int rowY = y;
 		for (SkyStyle sky : SkyStyle.values()) {
@@ -655,7 +655,7 @@ public class OrbitScreen extends Screen {
 				: IceesConfig.fallTheme == FallTheme.CUSTOM
 					? "Custom · " + IceesConfig.customThemeStyle.title + " · H" + IceesConfig.customThemeHue
 					: IceesConfig.fallTheme.description;
-			case SKIES -> IceesConfig.skyStyle == SkyStyle.OFF
+			case SKYS -> IceesConfig.skyStyle == SkyStyle.OFF
 				? "Vanilla sky."
 				: IceesConfig.skyStyle.description + (IceesConfig.skyAnimated ? "  ·  animated" : "  ·  static");
 			case CONFIGS -> "Save writes Themes + Cosmetics into a slot. Load restores them.";

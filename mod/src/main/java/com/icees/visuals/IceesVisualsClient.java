@@ -85,6 +85,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			LOGGER.error("HUD hook failed", t);
 		}
 
-		LOGGER.info("Icee's Visuals 1.0.53 — custom skies");
+		LOGGER.info("Icee's Visuals 1.0.54 — Skys");
 	}
 }
