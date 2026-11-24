@@ -7,6 +7,7 @@ import com.icees.visuals.config.IceesConfig;
 import com.icees.visuals.config.VisualPresets;
 import com.icees.visuals.effects.CustomThemeStyle;
 import com.icees.visuals.effects.FallTheme;
+import com.icees.visuals.effects.SkyStyle;
 import com.icees.visuals.keybind.IceesKeybinds;
 import com.icees.visuals.overlay.OverlayMaterial;
 import net.minecraft.client.Minecraft;
@@ -38,7 +39,7 @@ public class OrbitScreen extends Screen {
 	private static final Identifier TEX_ROW_HOVER = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/row_hover.png");
 	private static final Identifier TEX_SCRIM = Identifier.fromNamespaceAndPath("icees-visuals", "textures/gui/scrim.png");
 
-	private enum Tab { COSMETICS, THEMES, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
+	private enum Tab { COSMETICS, THEMES, SKIES, CONFIGS, OVERLAY, CPVP, GUI, KEYBIND }
 	private enum CosmeticPick { WINGS, HALO, HAT, CAPE, AURA, JUMP, TRAIL }
 
 	private Tab tab = Tab.COSMETICS;
@@ -86,6 +87,7 @@ public class OrbitScreen extends Screen {
 		int ty = panelY + 64;
 		addTab(tx, ty, "Cosmetics", Tab.COSMETICS); tx += 78;
 		addTab(tx, ty, "Themes", Tab.THEMES); tx += 56;
+		addTab(tx, ty, "Skies", Tab.SKIES); tx += 48;
 		addTab(tx, ty, "Configs", Tab.CONFIGS); tx += 62;
 		addTab(tx, ty, "Overlay", Tab.OVERLAY); tx += 58;
 		addTab(tx, ty, "CPvP", Tab.CPVP); tx += 44;
@@ -99,12 +101,41 @@ public class OrbitScreen extends Screen {
 		switch (tab) {
 			case COSMETICS -> buildCosmetics(x, y, w);
 			case THEMES -> buildThemes(x, y, w);
+			case SKIES -> buildSkies(x, y, w);
 			case CONFIGS -> buildConfigs(x, y, w);
 			case OVERLAY -> buildOverlay(x, y, w);
 			case CPVP -> buildCpvp(x, y, w);
 			case GUI -> buildGui(x, y, w);
 			case KEYBIND -> buildKeybind(x, y, w);
 		}
+	}
+
+	private void buildSkies(int x, int y, int w) {
+		int col = 0;
+		int rowY = y;
+		for (SkyStyle sky : SkyStyle.values()) {
+			boolean on = IceesConfig.skyStyle == sky;
+			SkyStyle selected = sky;
+			int bx = x + col * (w / 2 + 4);
+			addHit(bx, rowY, w / 2 - 4, 18, (on ? "●  " : "○  ") + sky.title, on, () -> IceesConfig.skyStyle = selected);
+			col++;
+			if (col >= 2) {
+				col = 0;
+				rowY += 20;
+			}
+		}
+		if (col != 0) rowY += 20;
+		rowY += 10;
+		addHit(x, rowY, w, 22,
+			"Animated  ·  " + onOff(IceesConfig.skyAnimated),
+			IceesConfig.skyAnimated,
+			() -> IceesConfig.skyAnimated = !IceesConfig.skyAnimated);
+		rowY += 28;
+		rowY = addStepper(x, rowY, w, "Anim Speed", IceesConfig.skySpeed, 10, v -> {
+			IceesConfig.skySpeed = v;
+			IceesConfig.skyAnimated = true;
+		});
+		addStepper(x, rowY, w, "Brightness", IceesConfig.skyBrightness, 10, v -> IceesConfig.skyBrightness = v);
 	}
 
 	/** Save / load Themes + Cosmetics looks into named slots. */
@@ -624,6 +655,9 @@ public class OrbitScreen extends Screen {
 				: IceesConfig.fallTheme == FallTheme.CUSTOM
 					? "Custom · " + IceesConfig.customThemeStyle.title + " · H" + IceesConfig.customThemeHue
 					: IceesConfig.fallTheme.description;
+			case SKIES -> IceesConfig.skyStyle == SkyStyle.OFF
+				? "Vanilla sky."
+				: IceesConfig.skyStyle.description + (IceesConfig.skyAnimated ? "  ·  animated" : "  ·  static");
 			case CONFIGS -> "Save writes Themes + Cosmetics into a slot. Load restores them.";
 			case OVERLAY -> "Rainbow or Custom Hue·Sat·Val outline.";
 			case CPVP -> "Motion blur, no hurt cam, fullbright, low particles.";

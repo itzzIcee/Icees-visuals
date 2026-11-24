@@ -5,6 +5,7 @@ import com.icees.visuals.config.VisualPresets;
 import com.icees.visuals.cosmetics.CosmeticRenderer;
 import com.icees.visuals.cosmetics.MovementTrailRenderer;
 import com.icees.visuals.cpvp.MotionBlurRenderer;
+import com.icees.visuals.effects.CustomSkyRenderer;
 import com.icees.visuals.effects.FallParticleRenderer;
 import com.icees.visuals.gui.OrbitScreen;
 import com.icees.visuals.keybind.IceesKeybinds;
@@ -65,6 +66,7 @@ public final class IceesVisualsClient implements ClientModInitializer {
 		});
 
 		try {
+			WorldRenderEvents.BEFORE_ENTITIES.register(CustomSkyRenderer::render);
 			WorldRenderEvents.AFTER_ENTITIES.register(CosmeticRenderer::render);
 			WorldRenderEvents.AFTER_ENTITIES.register(MovementTrailRenderer::render);
 			WorldRenderEvents.AFTER_ENTITIES.register(FallParticleRenderer::render);
@@ -83,6 +85,6 @@ public final class IceesVisualsClient implements ClientModInitializer {
 			LOGGER.error("HUD hook failed", t);
 		}
 
-		LOGGER.info("Icee's Visuals 1.0.52 — cosmetics sync between players");
+		LOGGER.info("Icee's Visuals 1.0.53 — custom skies");
 	}
 }

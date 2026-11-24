@@ -12,6 +12,7 @@ import com.icees.visuals.cosmetics.ShieldStyle;
 import com.icees.visuals.cosmetics.WingStyle;
 import com.icees.visuals.effects.CustomThemeStyle;
 import com.icees.visuals.effects.FallTheme;
+import com.icees.visuals.effects.SkyStyle;
 import com.icees.visuals.overlay.OverlayMaterial;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.ARGB;
@@ -58,6 +59,13 @@ public final class IceesConfig {
 	public static int customThemeHue = 330;
 	public static int customThemeSat = 70;
 	public static int customThemeVal = 100;
+
+	/* —— Custom Skies —— */
+	public static SkyStyle skyStyle = SkyStyle.OFF;
+	public static boolean skyAnimated = true;
+	public static int skySpeed = 5;
+	public static int skyBrightness = 8;
+
 	public static int cosmeticBrightness = 7;
 	/** Legacy global size — migrated into per-cosmetic sizes. */
 	public static int cosmeticSize = 5;
@@ -287,6 +295,10 @@ public final class IceesConfig {
 			customThemeHue = Math.floorMod(data.customThemeHue, 360);
 			if (data.customThemeSat >= 0 && data.customThemeSat <= 100) customThemeSat = data.customThemeSat;
 			if (data.customThemeVal >= 0 && data.customThemeVal <= 100) customThemeVal = data.customThemeVal;
+			skyStyle = safeEnum(SkyStyle.class, data.skyStyle, SkyStyle.OFF);
+			skyAnimated = data.skyAnimated;
+			if (data.skySpeed >= 1) skySpeed = clamp10(data.skySpeed);
+			if (data.skyBrightness >= 1) skyBrightness = clamp10(data.skyBrightness);
 			if (data.cosmeticBrightness >= 1) cosmeticBrightness = clamp10(data.cosmeticBrightness);
 			if (data.cosmeticSize >= 1) cosmeticSize = clamp10(data.cosmeticSize);
 			if (data.cosmeticThickness >= 1) cosmeticThickness = clamp10(data.cosmeticThickness);
@@ -362,6 +374,10 @@ public final class IceesConfig {
 		data.customThemeHue = customThemeHue;
 		data.customThemeSat = customThemeSat;
 		data.customThemeVal = customThemeVal;
+		data.skyStyle = skyStyle.name();
+		data.skyAnimated = skyAnimated;
+		data.skySpeed = skySpeed;
+		data.skyBrightness = skyBrightness;
 		data.cosmeticBrightness = cosmeticBrightness;
 		data.cosmeticSize = cosmeticSize; data.cosmeticThickness = cosmeticThickness;
 		data.wingSize = wingSize; data.haloSize = haloSize; data.hatSize = hatSize;
@@ -423,6 +439,7 @@ public final class IceesConfig {
 		int fallIntensity = 5; int fallSize = 5; int fallSpeed = 5; int fallSpread = 5;
 		int fallRangeChunks = 3; int fallOpacity = 7;
 		String customThemeStyle = "PETALS"; int customThemeHue = 330; int customThemeSat = 70; int customThemeVal = 100;
+		String skyStyle = "OFF"; boolean skyAnimated = true; int skySpeed = 5; int skyBrightness = 8;
 		int cosmeticBrightness = 7; int cosmeticSize = 5; int cosmeticThickness = 5;
 		int wingSize = 5; int haloSize = 5; int hatSize = 5; int capeSize = 5; int auraSize = 5; int shieldSize = 5;
 		boolean customColor = true; int cosmeticHue = 330; int cosmeticSat = 70; int cosmeticVal = 100;
