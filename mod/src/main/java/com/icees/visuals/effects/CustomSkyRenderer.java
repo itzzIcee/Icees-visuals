@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,12 +15,17 @@ import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 /**
- * Panoramic custom sky dome — world-locked, optional slow spin / UV drift when Animated is on.
+ * Upper-hemisphere sky dome in world space (around the camera, depth-tested).
+ * Terrain occludes it — looks like sky in the air, not a screen overlay.
+ * Animated: slow spin. Static: same dome, fixed orientation.
  */
 public final class CustomSkyRenderer {
-	private static final int SEG_H = 48;
+	private static final int SEG_H = 64;
 	private static final int SEG_V = 24;
-	private static final float RADIUS = 90f;
+	/** Far enough that normal terrain stays in front of the dome. */
+	private static final float RADIUS = 512f;
+	/** Dip slightly below horizon so the seam doesn’t flash. */
+	private static final float HORIZON_DIP = 0.08f;
 
 	private CustomSkyRenderer() {}
 
@@ -41,39 +45,30 @@ public final class CustomSkyRenderer {
 		PoseStack matrices = context.matrices();
 		if (consumers == null || matrices == null) return;
 
-		Camera camera = client.gameRenderer.getMainCamera();
 		float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
 		float time = client.level.getGameTime() + partial;
 		float bright = 0.55f + IceesConfig.clamp10(IceesConfig.skyBrightness) * 0.05f;
 		float speed = 0.15f + IceesConfig.clamp10(IceesConfig.skySpeed) * 0.12f;
 		boolean animated = IceesConfig.skyAnimated;
 
-		// Animated: swirl UV scroll + slow dome spin. Static: world-locked eyes layer.
-		VertexConsumer vc = animated
-			? consumers.getBuffer(RenderTypes.energySwirl(tex, time * 0.0007f * speed, time * 0.00025f * speed))
-			: consumers.getBuffer(RenderTypes.eyes(tex));
+		// Same solid fullbright layer for both modes — static was invisible with eyes()/energySwirl.
+		VertexConsumer vc = consumers.getBuffer(RenderTypes.entityTranslucentEmissive(tex));
 
 		matrices.pushPose();
-		// Counter camera so the dome stays world-locked
-		matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
-		matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+		// Pose stack is already camera-relative with world axes — do NOT counter-rotate
+		// (that stuck the texture to the screen). Only spin when Animated is on.
 		if (animated) {
-			matrices.mulPose(Axis.YP.rotationDegrees(time * 0.45f * speed));
-			matrices.mulPose(Axis.ZP.rotationDegrees(Mth.sin(time * 0.025f * speed) * 3.5f));
-			matrices.mulPose(Axis.XP.rotationDegrees(Mth.sin(time * 0.018f * speed) * 2f));
+			matrices.mulPose(Axis.YP.rotationDegrees(time * 0.4f * speed));
 		}
 
 		drawDome(matrices, vc, bright);
-		// Soft second pass when animated so motion reads clearly
-		if (animated) {
-			matrices.mulPose(Axis.YP.rotationDegrees(18f + time * 0.12f * speed));
-			VertexConsumer soft = consumers.getBuffer(RenderTypes.eyes(tex));
-			drawDome(matrices, soft, bright * 0.35f);
-		}
 		matrices.popPose();
 	}
 
-	/** Inward-facing sphere (equirectangular UV). */
+	/**
+	 * Inward-facing upper dome only (horizon → zenith).
+	 * Looking down shows the world; looking up / at the horizon shows the sky.
+	 */
 	private static void drawDome(PoseStack matrices, VertexConsumer vc, float bright) {
 		PoseStack.Pose pose = matrices.last();
 		Matrix4f m = pose.pose();
@@ -83,12 +78,17 @@ public final class CustomSkyRenderer {
 		for (int iv = 0; iv < SEG_V; iv++) {
 			float v0 = iv / (float) SEG_V;
 			float v1 = (iv + 1) / (float) SEG_V;
-			float pitch0 = (float) Math.PI * (v0 - 0.5f);
-			float pitch1 = (float) Math.PI * (v1 - 0.5f);
+			// pitch: -dip at horizon → +π/2 at zenith
+			float pitch0 = -HORIZON_DIP + v0 * ((float) Math.PI * 0.5f + HORIZON_DIP);
+			float pitch1 = -HORIZON_DIP + v1 * ((float) Math.PI * 0.5f + HORIZON_DIP);
 			float y0 = Mth.sin(pitch0) * RADIUS;
 			float y1 = Mth.sin(pitch1) * RADIUS;
 			float r0 = Mth.cos(pitch0) * RADIUS;
 			float r1 = Mth.cos(pitch1) * RADIUS;
+
+			// Map dome V to upper half of panorama (sky content)
+			float tv0 = 0.5f - v0 * 0.5f;
+			float tv1 = 0.5f - v1 * 0.5f;
 
 			for (int ih = 0; ih < SEG_H; ih++) {
 				float u0 = ih / (float) SEG_H;
@@ -101,9 +101,7 @@ public final class CustomSkyRenderer {
 				float x01 = Mth.cos(yaw0) * r1, z01 = Mth.sin(yaw0) * r1;
 				float x11 = Mth.cos(yaw1) * r1, z11 = Mth.sin(yaw1) * r1;
 
-				// Flip winding so faces look inward; V flipped for panorama upright
-				float tv0 = 1f - v0;
-				float tv1 = 1f - v1;
+				// Inward winding
 				vert(vc, m, pose, x00, y0, z00, u0, tv0, bright, light, overlay);
 				vert(vc, m, pose, x01, y1, z01, u0, tv1, bright, light, overlay);
 				vert(vc, m, pose, x11, y1, z11, u1, tv1, bright, light, overlay);
@@ -119,6 +117,6 @@ public final class CustomSkyRenderer {
 			.setUv(u, v)
 			.setOverlay(overlay)
 			.setLight(light)
-			.setNormal(pose, 0f, 1f, 0f);
+			.setNormal(pose, 0f, -1f, 0f);
 	}
 }
