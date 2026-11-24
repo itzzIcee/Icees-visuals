@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "com.icees.visuals.mixin",
+  "compatibilityLevel": "JAVA_21",
+	"client": [
+    "GameRendererMixin",
+    "ClientLevelMixin",
+    "SplashManagerMixin",
+    "GuiEntityRendererMixin",
+    "PipBufferAccessor",
+    "SkyRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
